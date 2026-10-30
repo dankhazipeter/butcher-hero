@@ -20,10 +20,7 @@ public final class RewardVision {
         guard hud else{return .init(reward:nil,texts:[],gameHUDVisible:false,freeCardVisible:false)}
         // Independent, conservative presence check: OCR missing the word FREE
         // must not by itself turn a still-visible card into a successful claim.
-        let badgePixels=pixels.count(in:.init(x:0.008,y:0.575,width:0.066,height:0.040)) {r,g,b in
-            g>145 && g>r+40 && g>b+30
-        }
-        let cardVisible=badgePixels>=12
+        let cardVisible=pixels.hasFreeBadge()
         var texts=try recognize(image,roi:roi)
         guard hud,let badge=texts.first(where:{
             $0.text.trimmingCharacters(in:.whitespacesAndNewlines).uppercased()=="FREE" &&
@@ -34,8 +31,19 @@ public final class RewardVision {
         guard green>=12 else{return .init(reward:nil,texts:texts,gameHUDVisible:hud,freeCardVisible:cardVisible)}
         func amountCandidates()->[RewardText] { texts.filter {
             $0.confidence>=0.45 && $0.y>=badge.y+0.040 && $0.y<badge.y+0.073 &&
-            $0.x>=0.055 && $0.x<0.15 && !$0.text.contains("m") && !$0.text.contains("h") && RewardAmount.parse($0.text) != nil
-        }.sorted{$0.height>$1.height} }
+            $0.x>=0.035 && $0.x<0.15 && !$0.text.contains("m") && !$0.text.contains("h") && RewardAmount.parse($0.text) != nil
+        }.sorted {
+            // Preserve both the leading digit and magnitude. An OCR token such
+            // as8.3 must not outrank the complete18.3K at a slightly smaller x.
+            let suffixes="KMBTКМВТ"
+            let a=$0.text.last.map{suffixes.contains($0)} ?? false
+            let b=$1.text.last.map{suffixes.contains($0)} ?? false
+            if a != b {return a}
+            return $0.width>$1.width
+        } }
+        if amountCandidates().isEmpty {
+            texts += try recognize(image,roi:.init(x:0.035,y:badge.y+0.046,width:0.13,height:0.039))
+        }
         if amountCandidates().isEmpty {
             texts += try recognize(image,roi:.init(x:0.065,y:badge.y+0.046,width:0.085,height:0.039))
         }
@@ -65,7 +73,7 @@ public final class RewardVision {
         request.recognitionLevel = .accurate; request.usesLanguageCorrection=false
         request.recognitionLanguages=["en-US"]; request.minimumTextHeight=0.018
         try VNImageRequestHandler(cgImage:scaled).perform([request])
-        let numbers=try NSRegularExpression(pattern:#"(?<![A-Za-z0-9.,])\d+(?:[.,]\d+)?[KMBT]?(?![A-Za-z0-9%])"#)
+        let numbers=try NSRegularExpression(pattern:#"(?<![\p{L}0-9.,])\d+(?:[.,]\d+)?[KMBTКМВТ]?(?![\p{L}0-9%])"#)
         func token(_ text:String,_ confidence:Float,_ b:CGRect)->RewardText {
             RewardText(text,confidence:confidence,rect:.init(
                 x:(rect.minX+b.minX*rect.width)/Double(image.width),
@@ -86,7 +94,7 @@ public final class RewardVision {
     }
 }
 
-private struct Pixels {
+struct Pixels {
     let w:Int,h:Int,data:[UInt8]
     init(_ image:CGImage)throws {
         w=image.width;h=image.height
@@ -104,5 +112,40 @@ private struct Pixels {
         var count=0
         for y in y0..<max(y0,y1) {for x in x0..<max(x0,x1) {let i=(y*w+x)*4;if matching(Int(data[i]),Int(data[i+1]),Int(data[i+2])){count+=1}}}
         return count
+    }
+    func hasFreeBadge()->Bool {
+        // A compact green component must contain white text and a dark outline.
+        // Green terrain alone is never evidence of a remaining reward card.
+        let x0=max(0,Int(Double(w)*0.002)),x1=min(w,Int(Double(w)*0.115))
+        let y0=max(0,Int(Double(h)*0.56)),y1=min(h,Int(Double(h)*0.635))
+        let rw=x1-x0,rh=y1-y0
+        guard rw>0,rh>0 else{return false}
+        var mask=[Bool](repeating:false,count:rw*rh)
+        for y in 0..<rh {for x in 0..<rw {
+            let i=((y+y0)*w+x+x0)*4,r=Int(data[i]),g=Int(data[i+1]),b=Int(data[i+2])
+            mask[y*rw+x]=g>145 && g>r+40 && g>b+30
+        }}
+        for start in mask.indices where mask[start] {
+            var queue=[start],head=0,minX=rw,maxX=0,minY=rh,maxY=0
+            mask[start]=false
+            while head<queue.count {
+                let index=queue[head],x=index%rw,y=index/rw;head+=1
+                minX=min(minX,x);maxX=max(maxX,x);minY=min(minY,y);maxY=max(maxY,y)
+                for (nx,ny) in [(x-1,y),(x+1,y),(x,y-1),(x,y+1)] where nx>=0 && nx<rw && ny>=0 && ny<rh {
+                    let next=ny*rw+nx
+                    if mask[next] {mask[next]=false;queue.append(next)}
+                }
+            }
+            let bw=maxX-minX+1,bh=maxY-minY+1,aspect=Double(bw)/Double(bh)
+            guard Double(bw)>=Double(w)*0.028,Double(bw)<=Double(w)*0.095,
+                  Double(bh)>=Double(h)*0.007,Double(bh)<=Double(h)*0.035,
+                  aspect>=1.2,aspect<=6.5,Double(queue.count)>=Double(bw*bh)*0.25 else{continue}
+            let rect=CGRect(x:Double(x0+minX-1)/Double(w),y:Double(y0+minY-1)/Double(h),
+                width:Double(bw+2)/Double(w),height:Double(bh+2)/Double(h))
+            let white=count(in:rect){r,g,b in min(r,min(g,b))>190 && max(r,max(g,b))-min(r,min(g,b))<65}
+            let dark=count(in:rect){r,g,b in max(r,max(g,b))<90}
+            if Double(white)>=Double(w*h)*0.000020 && Double(dark)>=Double(w*h)*0.000025 {return true}
+        }
+        return false
     }
 }

@@ -1,0 +1,161 @@
+import json
+from pathlib import Path
+import tempfile
+import threading
+import unittest
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
+
+from dashboard.server import Journal, aggregate, amount, make_server, parse_time, time_window
+
+
+def event(kind, second, claim="one", value="578", reward_kind="cutting_defense"):
+    return {"event": kind, "timestamp": f"2026-10-30T10:00:{second:02}.000Z",
+            "claimID": claim, "runID": "fixture", "schemaVersion": 1,
+            "reward": {"kind": reward_kind, "amount": value, "rawAmount": value}}
+
+
+class DashboardTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="butcher-dashboard-test-")
+        self.root = Path(self.temp.name)
+        self.path = self.root / "data/free-rewards/events.jsonl"
+        self.path.parent.mkdir(parents=True)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def write(self, rows):
+        self.path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    def result(self, query=None):
+        events, bad, exists = Journal(self.path).snapshot()
+        return aggregate(events, bad, exists, query or {"range": ["all"]}, parse_time("2026-10-30T11:00:00Z"))
+
+    def test_retry_counts_once_pending_excluded_correction_and_all_eight_types(self):
+        self.write([event("click_sent", 0), event("click_sent", 2), event("claim_confirmed_ui", 4),
+                    event("click_sent", 5, "pending"), event("click_sent", 7, "pending"),
+                    event("reward_corrected", 8, value="591")])
+        result = self.result()
+        self.assertEqual(result["clickAttempts"], 4)
+        self.assertEqual(result["confirmedClaims"], 1)
+        self.assertEqual(result["pendingClaims"], 1)
+        self.assertEqual(len(result["kinds"]), 8)
+        self.assertEqual(next(row["total"] for row in result["kinds"] if row["kind"] == "cutting_defense"), "591")
+        self.assertEqual(result["series"]["cutting_defense"][-1]["value"], "591")
+
+    def test_final_attempt_time_and_confirmation_after_range_end(self):
+        self.write([event("click_sent", 0), event("click_sent", 2), event("claim_confirmed_ui", 4)])
+        early = self.result({"from": ["2026-10-30T10:00:00Z"], "to": ["2026-10-30T10:00:01Z"]})
+        self.assertEqual(early["confirmedClaims"], 0)
+        self.assertEqual(early["clickAttempts"], 1)
+        final = self.result({"from": ["2026-10-30T10:00:02Z"], "to": ["2026-10-30T10:00:03Z"]})
+        self.assertEqual(final["confirmedClaims"], 1)
+
+    def test_unknown_or_bad_amount_never_in_total(self):
+        self.write([event("click_sent", 0, value="18K"), event("claim_confirmed_ui", 1, value="18K"),
+                    event("click_sent", 2, "unknown", "18000", "unknown"),
+                    event("claim_confirmed_ui", 3, "unknown", "18000", "unknown")])
+        result = self.result()
+        self.assertEqual(result["unknownConfirmed"], 2)
+        self.assertTrue(all(row["total"] == "0" for row in result["kinds"]))
+        self.assertEqual(amount("18000"), 18000)
+        self.assertIsNone(amount("Infinity"))
+
+    def test_append_partial_invalid_line_and_truncation(self):
+        self.write([event("click_sent", 0)])
+        reader = Journal(self.path)
+        self.assertEqual(len(reader.snapshot()[0]), 1)
+        line = json.dumps(event("claim_confirmed_ui", 2)).encode()
+        with self.path.open("ab") as output:
+            output.write(line[:20])
+        self.assertEqual(len(reader.snapshot()[0]), 1)
+        with self.path.open("ab") as output:
+            output.write(line[20:] + b"\nnot json\n")
+        events, bad, _ = reader.snapshot()
+        self.assertEqual(len(events), 2)
+        self.assertEqual(bad, 1)
+        self.path.write_text("")
+        self.assertEqual(reader.snapshot(), ([], 0, True))
+
+    def test_missing_file_and_atomic_replacement(self):
+        reader = Journal(self.path)
+        self.assertEqual(reader.snapshot(), ([], 0, False))
+        self.write([event("click_sent", 0)])
+        self.assertEqual(len(reader.snapshot()[0]), 1)
+        replacement = self.path.with_suffix(".new")
+        replacement.write_text(json.dumps(event("watcher_started", 3)) + "\n")
+        replacement.replace(self.path)
+        self.assertEqual(reader.snapshot()[0][0]["event"], "watcher_started")
+
+    def test_bucharest_day_boundary_naive_custom_and_latest_run(self):
+        now = parse_time("2026-10-30T11:00:00Z")
+        _, start, _ = time_window({"range": ["today"]}, [], now)
+        self.assertEqual(start, parse_time("2026-10-29T22:00:00Z"))
+        self.assertEqual(parse_time("2026-10-30T12:00"), parse_time("2026-10-30T10:00:00Z"))
+        self.write([event("watcher_started", 0), event("click_sent", 2), event("claim_confirmed_ui", 4),
+                    event("watcher_started", 10), event("click_sent", 12, "new"),
+                    event("claim_confirmed_ui", 14, "new")])
+        self.assertEqual(self.result({"range": ["run"]})["confirmedClaims"], 1)
+        with self.assertRaises(ValueError):
+            time_window({"range": ["nonsense"]}, [], now)
+
+    def test_exact_fractional_totals(self):
+        self.write([event("click_sent", 1, "a", "0.1", "regeneration"),
+                    event("claim_confirmed_ui", 2, "a"),
+                    event("click_sent", 3, "b", "0.2", "regeneration"),
+                    event("claim_confirmed_ui", 4, "b")])
+        result = self.result()
+        self.assertEqual(next(row["total"] for row in result["kinds"] if row["kind"] == "regeneration"), "0.3")
+
+    def test_new_fixed_run_does_not_mix_legacy_data(self):
+        run = event("watcher_started", 10)
+        run["message"] = "left event Free only; vision3"
+        self.write([event("click_sent", 0, "old", "8.3", "hp"),
+                    event("claim_confirmed_ui", 2, "old"),run,
+                    event("click_sent", 12, "new", "18300", "hp"),
+                    event("claim_confirmed_ui", 14, "new")])
+        current = self.result({"range": ["run"]})
+        self.assertEqual(current["confirmedClaims"], 1)
+        self.assertEqual(current["kinds"][0]["total"], "18300")
+        self.assertFalse(current["historicalDataWarning"])
+        self.assertTrue(self.result({"range": ["all"]})["historicalDataWarning"])
+
+    def test_http_read_only_restricted_paths_host_and_live_append(self):
+        self.write([event("click_sent", 0)])
+        server = make_server(self.root, 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = f"http://127.0.0.1:{server.server_port}"
+        try:
+            with urlopen(base + "/api/rewards?range=all") as response:
+                self.assertEqual(json.load(response)["confirmedClaims"], 0)
+            with self.path.open("a") as output:
+                output.write(json.dumps(event("claim_confirmed_ui", 2)) + "\n")
+            with urlopen(base + "/api/rewards?range=all") as response:
+                self.assertEqual(json.load(response)["confirmedClaims"], 1)
+            for path in ("/../AGENTS.md", "/data/free-rewards/events.jsonl"):
+                with self.assertRaises(HTTPError) as error:
+                    urlopen(base + path)
+                self.assertEqual(error.exception.code, 404)
+                error.exception.close()
+            with self.assertRaises(HTTPError) as error:
+                urlopen(Request(base + "/health", headers={"Host": "evil.example"}))
+            self.assertEqual(error.exception.code, 403)
+            error.exception.close()
+            with self.assertRaises(HTTPError) as error:
+                urlopen(Request(base + "/health", headers={"Origin": "https://evil.example"}))
+            self.assertEqual(error.exception.code, 403)
+            error.exception.close()
+            with self.assertRaises(HTTPError) as error:
+                urlopen(Request(base + "/api/rewards", data=b"{}", method="POST"))
+            self.assertEqual(error.exception.code, 405)
+            error.exception.close()
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30 (282)
 
+292–293:read-onlyPythonHTTPstatisztika csaklocalhoston, növekményes JSONL-
+olvasás, Decimalösszegek, claimID/finalclick szerinti könyvelési egyezés.
+Buildmentes böngészőfelület2sfrissítéssel. A gyűjtővision3strukturált
+Free-jelzést keres, nem puszta zöld pixelt; teljes nagyságrend/kezdőszámjegy
+elsőbbséges.8sblokkolás egyszeri képi diagnózist ment. Régi adatokhoz nem nyúltunk.
+
 286FELÜLÍRÁS:éles módbanRewardClaimVerificationváltja a végleges foglalást.
 Kézi gomb/húzásvédelem, elengedés után friss validálás;1s után megmaradt
 Freeújrapróbálható. Két HUD-képen hiányzó kártya igazol, külön pixeljelzés

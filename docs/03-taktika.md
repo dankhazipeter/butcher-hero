@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+293:felhasználói prioritás mostantól jó naplózott adatok, nem történeti
+helyreállítás. Javított gyűjtő külön új futás; a292-es élő nézet ezt mutatja
+alapból. Zöld fű nemFreekártya;18.3K=18300, teljes token kell.
+
 291:új kifejezett folytatásra aFreegyűjtés ismét fut; kézi húzásvédelem
 és a286-os újrapróba/könyvelés változatlan. CsakFree, nincs karaktermozgás,
 harc, bolt vagy ismeretlen felugró képernyő automatikus átugrása.

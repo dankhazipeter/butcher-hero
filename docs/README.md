@@ -2,6 +2,9 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Élő, helyi jutalomstatisztika](292-elo-jutalomstatisztika.md)
+- [Helyes új adatok:18,3K és a zöld fű téves kártyajelzése](293-free-igazolas-es-183k-javitasa.md)
+
 Felhasználói kérésre csak aFree-jutalom figyelése és átvétele engedélyezett,
 1s ütemmel és kézi húzásvédelemmel. A régi játékbot/heartbeat továbbraPAUSED.
 Minden lezárt változtatási kör automatikus commitot ÉS main-push-t kap.

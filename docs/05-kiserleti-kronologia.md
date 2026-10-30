@@ -2,6 +2,13 @@
 
 ## 2026-10-30
 
+292–293:helyi élőstatisztika elkészült. Felhasználói jelzésből reprodukált
+gyűjtőhiba:18.3K→8.3/8300és zöld fű miatti elmaradó igazolás. Javítva,
+13Swift+9statisztikai tesztPASS, újvision3gyűjtőPID2444. Felhasználói
+pontosításra múltbeli naplóátírás nincs, alapnézet csak az új futás.
+ÉlőHP18300ésutóképen+18.3Kigazolt;18:54:28Bucharest6claim/0függő,
+3HPátvétel54900-ra összesítve. API/CLIegyezésPASS, nézetmagátólfrissül.
+
 291:állandó felhasználói engedély automatikus commitra ÉS main-push-ra
 minden lezárt változtatási körben; AGENTSlegelső szabály frissítve.
 Külön kérésreFreegyűjtés újraindítva:90423PID,16:09:56Zkezdés,

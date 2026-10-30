@@ -16,5 +16,6 @@
   "visualLabels": { "portal": "BOSS TOWER", "counter": "0/9", "playerHealthLabel": "473M" },
   "verifiedCombatStats": null,
   "stoppedAt": "2026-10-30T12:50:59.818+02:00",
-  "nextStep": "User explicitly resumed Free-only collection (doc291). Run one 1s watcher with human-drag guard, 1s retry and disappearance-confirmed logging. No movement, combat, shop or unknown modal actions; legacy heartbeat PAUSED. Commit and push every completed change cycle automatically to origin/main."
+  "dashboardURL": "http://127.0.0.1:8765/",
+  "nextStep": "Vision3 Free-only watcher running; live 18.3K=18300 and grass-safe disappearance verified (doc293). Dashboard defaults to this NEW run and refreshes automatically. User prioritizes correct data from now on; do not reconcile history. No movement/combat/shop/unknown modal actions; heartbeat PAUSED. Commit and push every completed change cycle to origin/main."
 }

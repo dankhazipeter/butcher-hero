@@ -30,6 +30,18 @@ a program újraindítását is, az alábbi szűkFree-körben.
 
 ## ELSŐBBSÉG — FREE-GYŰJTÉS ÚJRA ENGEDÉLYEZVE, 2026-10-30 (291)
 
+Legújabb292–293:élő helyi statisztika http://127.0.0.1:8765/ (read-only,
+2sfrissítés), forrásdata/free-rewards/events.jsonl. Újgyűjtővision3:
+PID2444/session79280. Zöld fű tévesFreejelenlét és18.3K→8.3/8300hibák
+javítva,13Swiftteszt+9statisztikai tesztPASS. Csak az ÚJ futás adatai
+az alapnézet. A felhasználó legújabb prioritása:mostantól legyen jó;
+a múltat ne javítgassuk, ne találjunk ki utólagos átvételt. Történeti
+reconcile nem futott. Dashboardexecsession86374; a gyűjtőt nem vezérli.
+Friss folyamatadat:data/free-rewards/state.json, végponti bizonyíték293-ban.
+293élőPASS:16:52:31.854ZHP18300kattintás,34.166Zigazolás, utóképen+18.3K.
+18:54:28Bucharest:újfutás6igazolt/0függő,Health54900(3×18300).
+API/CLIugyanazonidőablakraegyezett. Az új nézet2sfrissül, nincs kézi reload.
+
 A felhasználó: „indítsd el a programot, újra fut a játék, gyűjtsük a
 jutalmakat”. Ez felülírja288STOP-ját kizárólag a bal oldali event alatti
 Free-jutalom figyelésére és átvételére.1s mintavétel, kézi húzásvédelem,

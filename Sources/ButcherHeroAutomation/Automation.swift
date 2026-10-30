@@ -198,14 +198,14 @@ private final class Journal {
         // restart. Every new attempt still needs stable, freshly validated UI.
         var dryGate=RewardGate()
         var state=WatchState(blockedFingerprint:nil,pid:getpid(),running:true,intervalSeconds:interval)
-        state.verificationMode="two HUD frames without Free card; retry visible card after 1s"
-        try journal.state(state);try journal.append("watcher_started",message:dryRun ? "dry run; no clicks":"left event Free only")
+        state.verificationMode="vision3: structured badge; complete magnitude; two HUD frames without card; 1s retry"
+        try journal.state(state);try journal.append("watcher_started",message:dryRun ? "dry run; no clicks":"left event Free only; vision3")
         defer {state.running=false;try? journal.state(state);try? journal.append("watcher_stopped")}
         print("Free-figyelő: \(interval)s; napló: \(root.appendingPathComponent("events.jsonl").path); PID \(getpid())\(dryRun ? " (csak megfigyelés)":"")")
         fflush(stdout)
         let started=ProcessInfo.processInfo.systemUptime
         var stableKey:String?,candidateID:String?,stableCount=0,lastError:String?
-        var pending:(id:String,reward:FreeReward,verification:RewardClaimVerification)?
+        var pending:(id:String,reward:FreeReward,verification:RewardClaimVerification,blockedProofSaved:Bool)?
         var mouseDeferred=false
         while !cancel.requested && ProcessInfo.processInfo.systemUptime-started<seconds {
             let tick=ProcessInfo.processInfo.systemUptime
@@ -234,7 +234,15 @@ private final class Journal {
                         // eventual disappearance may contribute to reward totals.
                         pending=nil;candidateID=p.id
                         stableKey=p.reward.fingerprint;stableCount=max(1,stableCount)
-                    } else{pending=p}
+                    } else {
+                        if !p.blockedProofSaved && ProcessInfo.processInfo.systemUptime-p.verification.sentAt>8 {
+                            let proof=try journal.image(frame.image,id:p.id,suffix:"verification-blocked")
+                            try journal.append("verification_blocked",claimID:p.id,reward:p.reward,evidence:proof,
+                                message:"HUD=\(observation.gameHUDVisible);card=\(observation.freeCardVisible);readable=\(observation.reward != nil). Not counted; retaining visual evidence.")
+                            p.blockedProofSaved=true
+                        }
+                        pending=p
+                    }
                     }
                 }
                 if let reward=observation.reward {
@@ -274,7 +282,7 @@ private final class Journal {
                             }
                             if let sent=sentAt {
                                 try journal.append("click_sent",claimID:id,reward:reward,evidence:before,at:sent)
-                                pending=(id,reward,RewardClaimVerification(sentAt:ProcessInfo.processInfo.systemUptime))
+                                pending=(id,reward,RewardClaimVerification(sentAt:ProcessInfo.processInfo.systemUptime),false)
                             }
                         }
                     }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Butcher Hero · Élő jutalomnapló</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <div><p class="eyebrow">BUTCHER HERO / JUTALOMNAPLÓ</p><h1>Amit összegyűjtöttünk<span>.</span></h1>
+      <p class="intro">Naplózott átvételek. Nyolc stat. Minden gyűjtésnek nyoma van.</p></div>
+      <div class="live-panel"><span id="connection" class="live-status">Kapcsolódás…</span>
+      <span id="collector" class="subtle">A gyűjtő ellenőrzése…</span><span id="updated" class="subtle">2 másodpercenként frissül</span></div>
+    </header>
+    <section class="filters" aria-label="Időszak kiválasztása">
+      <div class="range-buttons" role="group" aria-label="Gyors időszakok">
+        <button type="button" data-range="run" aria-pressed="true">Mostani futás</button>
+        <button type="button" data-range="today" aria-pressed="false">Ma</button>
+        <button type="button" data-range="hour" aria-pressed="false">Utolsó óra</button>
+        <button type="button" data-range="day" aria-pressed="false">24 óra</button>
+        <button type="button" data-range="all" aria-pressed="false">Minden</button>
+      </div>
+      <form id="custom-range"><label>Kezdet<input type="datetime-local" id="from" required></label>
+      <label>Vége<input type="datetime-local" id="to" required></label><button type="submit">Szűrés</button></form>
+    </section>
+    <p id="range-description" class="range-description">Időzóna: Europe/Bucharest</p>
+    <div class="notice" id="data-quality-note" role="status" hidden>Korábbi futások naplóadatai is szerepelnek: régi Health-félreolvasások és hiányzó átvételi igazolások maradhattak bennük. A javított gyűjtő adataihoz válaszd a Mostani futást.</div>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <section class="overview" aria-label="Összesítés">
+      <div><span class="metric-label">IGAZOLT ÁTVÉTEL</span><strong id="confirmed">—</strong><span class="metric-note">Kártyaeltűnéssel visszaigazolva</span></div>
+      <div><span class="metric-label">NEM IGAZOLT / FÜGGŐ</span><strong id="pending">—</strong><span class="metric-note">Nem része a jutalomösszegeknek</span></div>
+      <div><span class="metric-label">LEGUTÓBBI ÁTVÉTEL</span><strong id="last-claim" class="time-value">—</strong><span id="attempts" class="metric-note">— kattintási próbálkozás</span></div>
+    </section>
+    <section aria-labelledby="growth-title"><div class="section-heading"><h2 id="growth-title">Növekedés, statonként</h2><span class="subtle">Halmozott érték a kiválasztott időszakban</span></div>
+      <div id="stats-grid" class="stats-grid"></div>
+    </section>
+    <section class="ledger" aria-labelledby="ledger-title">
+      <div class="section-heading"><h2 id="ledger-title">Mikor, mit, mennyit?</h2><span id="recent-count" class="subtle">Legutóbbi átvételek</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Kattintás ideje</th><th>Jutalom</th><th class="numeric">Mennyiség</th><th>Állapot</th></tr></thead><tbody id="entries"></tbody></table></div>
+      <p id="empty" class="empty" hidden>Ebben az időszakban még nincs elküldött kattintás. A következő automatikusan megjelenik itt.</p>
+    </section>
+    <footer><span>Csak a helyi naplót olvassa. Nem vezérli a játékot.</span><span>A napló rögzített értékeit mutatjuk, nem a karakter szorzózott statváltozását.</span></footer>
+    <p id="announcer" class="sr-only" aria-live="polite"></p>
+  </main>
+</body>
+</html>

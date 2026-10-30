@@ -46,6 +46,23 @@ final class RewardTests:XCTestCase {
         XCTAssertEqual(observed.reward?.kind,"hp")
         XCTAssertEqual(observed.reward?.amount,"18000","Merged timer text must not hide18K or become millions")
     }
+    func testHealth183KPreservesLeadingDigitAndSuffix()throws {
+        let observed=try RewardVision().observe(image("docs/references/2026-10-30/free-health-18-3k-misread.png"))
+        XCTAssertEqual(observed.reward?.kind,"hp")
+        XCTAssertEqual(observed.reward?.amount,"18300","Not8.3,8300 or a cropped token")
+    }
+    func testGreenGrassIsNotAFreeBadgeButActualBadgesAre()throws {
+        let absent=try image("docs/references/2026-10-30/free-absent-grass-false-positive.jpg")
+        let observed=try RewardVision().observe(absent)
+        XCTAssertTrue(observed.gameHUDVisible)
+        XCTAssertNil(observed.reward)
+        XCTAssertFalse(observed.freeCardVisible,"Green grass alone must not block confirmation forever")
+        for path in ["docs/references/2026-10-30/free-health-18-3k-misread.png",
+                     "docs/references/2026-10-30/free-578-moving-before.png",
+                     "docs/references/2026-10-30/free-hp-18k-occluded.png"] {
+            XCTAssertTrue(try Pixels(image(path)).hasFreeBadge(),"Keep conservative presence protection on real green FREE badges")
+        }
+    }
     func testHeldMouseAndReleaseCooldown(){
         XCTAssertFalse(RewardInputPolicy.permitsClick(anyButtonDown:true,secondsSinceButtonActivity:100))
         XCTAssertFalse(RewardInputPolicy.permitsClick(anyButtonDown:false,secondsSinceButtonActivity:0.1))
@@ -133,7 +150,7 @@ final class RewardTests:XCTestCase {
         XCTAssertFalse(gate.permits(reward),"A sent click is not released by observing the same card")
     }
     func testRewardNumbersPreserveMagnitudeAndRejectTimersPricesAndNoise(){
-        for (text,value) in [("591","591"),("+1,25M","1250000"),("1.5K","1500"),("473M","473000000"),("0.5","0.5")] {
+        for (text,value) in [("591","591"),("+1,25M","1250000"),("1.5K","1500"),("473M","473000000"),("0.5","0.5"),("18.3К","18300")] {
             XCTAssertEqual(RewardAmount.parse(text),value)
         }
         for text in ["3h 12m","200 gems","FREE","1.2%","740GKC","-12","0",""]{XCTAssertNil(RewardAmount.parse(text))}

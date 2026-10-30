@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-30
 
+292–293:újread-onlystatisztika ésvision3gyűjtő. A régi8.3/8300Health-
+adatok és egyes nemigazolt tételek hibás forrásból származhatnak; a
+felhasználó kifejezetten a MOSTANTÓL jó működést kéri. Nincs történeti
+reconcile. Az új futás élő18.3K→18300és füves területen kártyaeltűnéses
+igazolásaPASS;6claim/0függő,HP54900a18:54:28-as képen. A régi adatok
+kiválasztásakor adatminőségi figyelmeztetés marad. Új ismeretlen modal
+kezeléséhez továbbra is konkrét képi példa kell; nem kattintunk vakon.
+
 291ELSŐBBSÉG:felhasználói folytatásraFreefigyelő újra fut,90423PID,
 két új igazolt átvétel;288STOP-ja e szűk körben felülírva. Automatikus
 commit ÉS push kötelező minden lezárt változtatási körben. Az ismeretlen

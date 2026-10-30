@@ -10,6 +10,11 @@ dokumentáció követve vannak. [Bekötési jegyzet](docs/290-github-main-elso-f
 
 ## Free-jutalom figyelő — 2026-10-30
 
+Élő statisztika: [helyi jutalomnézet](http://127.0.0.1:8765/).
+Indítása: `./scripts/start-reward-dashboard.sh` (Python3.10+, külön csomag nélkül).
+Látható lapon2s-onként frissül a helyi naplóból. Alapból csak a mostani
+gyűjtőfutást mutatja; kézi oldalfrissítés nem kell. Részletek: [292](docs/292-elo-jutalomstatisztika.md).
+
 Az első automatizáció elkészült: másodpercenként figyeli a bal oldali event
 alattiFree-jutalmat, átveszi és naplózza a8jutalomtípus egyikeként.
 Most csak ez fut; a korábbi teljes játékbot nem aktív.

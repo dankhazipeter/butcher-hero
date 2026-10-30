@@ -16,6 +16,8 @@ public enum RewardAmount {
     /// Decimal strings preserve large M/B rewards without floating-point rounding.
     public static func parse(_ text: String) -> String? {
         let s=text.trimmingCharacters(in:.whitespacesAndNewlines).uppercased()
+            .replacingOccurrences(of:"К",with:"K").replacingOccurrences(of:"М",with:"M")
+            .replacingOccurrences(of:"В",with:"B").replacingOccurrences(of:"Т",with:"T")
         guard s.range(of:#"^\+?\d+(?:[.,]\d+)?\s*[KMBT]?$"#,options:.regularExpression) != nil else{return nil}
         let suffix=s.last!, power: Int
         switch suffix {case "K":power=3; case "M":power=6; case "B":power=9; case "T":power=12; default:power=0}
