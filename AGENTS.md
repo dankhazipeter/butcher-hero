@@ -13,7 +13,11 @@ commitokat. Pusztán olvasási/megfigyelési körhöz nem kell üres commit.
 Nyers felvételek, futó naplók, build és titkok nem kerülhetnek commitba;
 a szükséges kis tesztreferenciák igen. Ha a commit akadályba ütközik, ezt
 jelezzük, nem állítjuk sikeresnek. Git-szerzői identitást nem találunk ki.
-Távoli repó bekötése/push külön felhasználói kérésre; most nincs remote/push.
+Távoli repó bekötése/push felhasználói kérésre;290óta a megadott cél:
+https://github.com/dankhazipeter/butcher-hero. Egyetlen munkág egyelőremain,
+upstreamorigin/main. AzoriginSSH-címegit@github.com:dankhazipeter/butcher-hero.git;
+SSHdankhazipeterként hitelesít, aHTTPSmásik fiókkal403-at adott. Globális
+hitelesítést nem módosítunk; új ág/PR jelenleg nem szükséges.
 A játék STOP-ját ez az adminisztratív kérés nem oldja fel. Részletek289.
 
 ## ELSŐBBSÉG — FELHASZNÁLÓI STOP, 2026-10-30 12:50:59 Bucharest

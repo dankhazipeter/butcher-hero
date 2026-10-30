@@ -1,5 +1,12 @@
 # Butcher Hero — új kezdet, 2026-10-29
 
+## Verziókezelés
+
+GitHub: [dankhazipeter/butcher-hero](https://github.com/dankhazipeter/butcher-hero).
+Egyelőre amainágat használjuk, minden lezárt változtatási kör külön commit.
+Nyers futások, naplók és buildfájlok helyben maradnak; a kód, tesztek és
+dokumentáció követve vannak. [Bekötési jegyzet](docs/290-github-main-elso-feltoltes.md).
+
 ## Free-jutalom figyelő — 2026-10-30
 
 Az első automatizáció elkészült: másodpercenként figyeli a bal oldali event

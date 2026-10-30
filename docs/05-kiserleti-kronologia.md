@@ -2,6 +2,11 @@
 
 ## 2026-10-30
 
+290:felhasználói kérésreGitHuboriginbekötés ésmainfeltöltés.
+HTTPSwebdream-hufiókkal403; meglévőSSHdankhazipeterhitelesítéssel siker.
+11137afkezdeti állapot feltöltve, upstreamorigin/main. Nincs globális
+fiókváltás, új ág/PR vagy játékindítás; a dokumentáció külön commitot kap.
+
 289:felhasználói állandó kérés minden lezárt változtatási kör utáni commit.
 Korábban nem volt helyiGit; kezdeti projektállapotot rögzítünk, nyers
 futás/build/napló nélkül, aktív tesztképek megőrzésével. Nincs remote/push,

@@ -9,6 +9,8 @@ nincs megfigyelés, input vagy újraindítás.
 
 - [Kötelező commit minden változtatási kör után és helyi Git](289-kotelezo-commit-es-helyi-git.md)
 
+- [GitHub-repó bekötése és első main-feltöltés](290-github-main-elso-feltoltes.md)
+
 - [Húzásvédelem éles igazolása: várakozás, elengedés és két sikeres átvétel](287-huzasvedelem-elo-igazolasa.md)
 
 - [Kézi húzásvédelem,1másodperces Free-újrapróba és egyszeri könyvelés](286-kezi-huzasvedelem-es-free-ujraproba.md)

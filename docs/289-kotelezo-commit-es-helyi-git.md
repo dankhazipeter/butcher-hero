@@ -1,5 +1,9 @@
 # Kötelező commit és helyi Git — 2026-10-30
 
+Frissebb állapot: a felhasználó megadta aGitHub-célt, a remote és az első
+main-push elkészült. [290 — GitHub main](290-github-main-elso-feltoltes.md).
+Az alábbi„nincs remote/push”a helyi tároló létrehozásának akkori állapota.
+
 ## Felhasználói kérés
 
 Minden változtatási kör után commit készüljön. A felhasználó hamarosan
