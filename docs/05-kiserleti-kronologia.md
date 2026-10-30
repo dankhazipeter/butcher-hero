@@ -2,6 +2,12 @@
 
 ## 2026-10-30
 
+309diagnóziskiegészítés: felhasználói takaróablak/felvillanás megfelel
+a kód aktiválás+feltételes fókuszvisszaadásának. AzonosHealth18300új
+claimID-k között köztesreward=nil nullázta a stabilitási kaput; nem végleges
+tiltás. Friss elutasítási kép továbbra nincs, konkrét előszűrő nem ismert.
+Csak dokumentálás, nincs gyűjtőinput-/kódváltozás vagy újraindítás.
+
 310: felhasználói kérésre HU/EN fejlécválasztó és külön nyelvi fájlok.
 Élő váltás, megjegyzett választás, dátum/szám/ARIA/állapot/tooltip is fordítva.
 Fordítási kulcsok/helyőrzők, böngészős scriptregisztráció, élő kirajzolás,

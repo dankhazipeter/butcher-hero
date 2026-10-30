@@ -44,3 +44,35 @@ olvasásából nem állítható biztosan, melyik frissguardág utasított el.
 Nem lazítjuk vakon a kattintásvédelmet; a pontos okhoz friss elutasítási
 kép és részletes indok kell. Külön javításra a felhasználótól irányt kérünk;
 a jelmagyarázat módosítása nem nyúl a gyűjtő kódjához.
+
+## Felhasználói fókuszmegfigyelés és a stabilitási kapu — későbbi diagnózis
+
+A felhasználó szerint egy másik ablak takarta a játékot. A bot próbájára
+a játék felvillant, majd eltűnt; később már előtérben volt, mégsem vette
+fel a Health-et. A takart ablak kezelésének bővítését most nem kéri,
+éjszaka nem dolgozik a gépen. Ez nem a gyűjtés leállításának kérése.
+
+Biztos kódviselkedés: Capture.click aktiválja a játékot,180msután friss
+képen újraellenőriz. A defer sikertelen ellenőrzéskor is visszaaktiválja
+az előző alkalmazást, ha nincs lenyomott egérgomb. Ez megfelel a leírt
+felvillanásnak; nem bizonyítja, hogy egérkattintás is kiment a játékba.
+
+Külön biztos következtetés a naplóból és az állapotgépből: az egymást
+követő Health18300reward_detected események új claimID-t kapnak ugyanazzal
+a fingerprinttel. Példák UTC21:30:15/18/21/24/27/30és21:31:04/07/10/13.
+Közöttük nincs más összegű reward_detected vagy Healthclick_sent, nincs
+emberi input miatti input_deferred sem. A forrás szerint ilyenkor egy
+köztes reward=nil megfigyelés törli a stableKey-t és stableCountot.
+Tehát szakadozott a felismerés, és gyakran nem lett meg a kattintáshoz
+szükséges két egymást követő azonos olvasás. Nem tartós duplakattintás-
+foglalás akadályozta. UTC21:31:26kor ismét próbálkozott, de a friss
+kattintás előtti guard megint elutasította.
+
+A fő ciklusban a reward=nil a HUD/FREEbadge előszűrésből is jöhet;
+önmagában a szám vagy típus bizonytalansága még rewardobjektumot adna.
+Ez szűkíti az irányt, de a köztes képek és az elutasítás friss képe nélkül
+nem állítjuk biztosan, melyik képi ág hibázott, illetve mikor volt a játék
+valóban előtérben. Az előtér önmagában nem javítja meg a szakadozó látást.
+
+Ebben a körben kizárólag diagnózis és dokumentálás történt. Nincs lazított
+kattintásvédelem, új háttérablak-kezelés vagy gyűjtő-újraindítás.

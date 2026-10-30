@@ -12,6 +12,9 @@ többször elutasította, nincs elküldött input/igazolás. Worker66095ésképi
 friss,SmashDefense83321:32:03Zátvéve. Az összevont guardüzenetből nem
 ismert a konkrét ág; friss elutasítási kép/részletes napló kell, nem vak
 védelem-lazítás. A felhasználó kéziHealthátvétele nem botjutalom.
+Kiegészítés: a sok azonos összegű új claimID köztesreward=nil felismerést
+bizonyít a stabilitási kapuban. A pontos HUD/FREEelőszűrés nincs képpel
+azonosítva. Előtérbe kerüléstől ez nem oldódik meg; nem végleges foglalás.
 
 307: statösszeg-animáció kész, valódi CountUp-könyvtáras képkockatesztekkel.
 Pontosság csak kijelzési rétegben interpolált; napló/tooltip változatlan.

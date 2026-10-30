@@ -17,6 +17,11 @@ Ez felülírja308 jelmagyarázat-változatlanságát; a kártyapárok megmaradna
 Külön309incidens: worker66095friss,SmashDefense83321:32:03Zigazolt,
 deHealth18300kattintás előtti guardon elutasítva, többször nincs input.
 A konkrét guardág még nem ismert; a frissképidő nem jelent hibátlan gyűjtést.
+309kiegészítés: azonos18300fingerprint új claimID-kkel ismétlődik, köztes
+reward=nil miatt törlődik a kétstabilképes kapu; nem végleges foglalás.
+A felvillanást az aktiválás+hiba esetén is fókuszvisszaadás magyarázza.
+Felhasználó most nem kér külön takartablak-támogatást. Pontos hibás képi
+előszűrés továbbra ismeretlen; a mostani kör csak diagnózis, nincs javítás.
 
 308: statkártyák két oszlopban, négy sorban: Health/HealthRegen;
 PierceDamage/CutDefense; CutDamage/SmashDefense; SmashDamage/PierceDefense.
