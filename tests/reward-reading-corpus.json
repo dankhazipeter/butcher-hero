@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "review": "A címkék a valódi képernyőképek vizuális ellenőrzéséből származnak, nem a felismerő kimenetéből. Az amount a kijelzett, esetleg kerekített érték normalizálása.",
+  "samples": [
+    {"id":"cut-550-rock","image":"docs/references/2026-10-30/corpus-cut550.png","hud":true,"card":true,"kind":"cutting_damage","amount":"550","note":"Világoskék fejsze, pajzs nélkül; sziklás háttér."},
+    {"id":"cut-555-grass-tall","image":"docs/references/2026-10-30/corpus-cut555.png","hud":true,"card":true,"kind":"cutting_damage","amount":"555","note":"Fejsze pajzs nélkül, magasabb ablak, narancs sziklaháttér. Nem a kalibráláshoz használt kép."},
+    {"id":"cut-555-calibration","image":"docs/references/2026-10-30/corpus-cut555-calibration.png","hud":true,"card":true,"kind":"cutting_damage","amount":"555","note":"Fejsze pajzs nélkül; a current sablon forrása. A cut-555-grass-tall külön ellenőrző kép."},
+    {"id":"regen-81-desert","image":"docs/references/2026-10-30/corpus-regen81.png","hud":true,"card":true,"kind":"regeneration","amount":"81","note":"Zöld szív kereszttel; a világban más jutalomszámok is vannak."},
+    {"id":"regen-83-desert","image":"docs/references/2026-10-30/corpus-regen83.png","hud":true,"card":true,"kind":"regeneration","amount":"83","note":"Zöld szív kereszttel; inaktív ablakterület."},
+    {"id":"pierce-516-path","image":"docs/references/2026-10-30/corpus-pierce516.png","hud":true,"card":true,"kind":"piercing_damage","amount":"516","note":"Nyíl pajzs nélkül; közeli világidőzítő."},
+    {"id":"pierce-540-ice","image":"docs/references/2026-10-30/corpus-pierce540.png","hud":true,"card":true,"kind":"piercing_damage","amount":"540","note":"Nyíl pajzs nélkül, jeges háttér."},
+    {"id":"pierce-defense-611-path","image":"docs/references/2026-10-30/corpus-piercedef611.png","hud":true,"card":true,"kind":"piercing_defense","amount":"611","note":"Nyíl barna pajzsban, alatta világidőzítő."},
+    {"id":"pierce-defense-616-tall","image":"docs/references/2026-10-30/corpus-piercedef616.png","hud":true,"card":true,"kind":"piercing_defense","amount":"616","note":"Nyíl barna pajzsban, magasabb ablak."},
+    {"id":"cut-defense-578-before","image":"docs/references/2026-10-30/free-578-moving-before.png","hud":true,"card":true,"kind":"cutting_defense","amount":"578","note":"Arany fejsze világoskék pajzsban; húzás közbeni eset."},
+    {"id":"cut-defense-578-still-visible","image":"docs/references/2026-10-30/free-578-moving-unconfirmed.png","hud":true,"card":true,"kind":"cutting_defense","amount":"578","note":"Sikertelen input után megmaradt kártya, NEM igazolt átvétel."},
+    {"id":"cut-defense-593-desert","image":"docs/references/2026-10-30/corpus-cutdef593.png","hud":true,"card":true,"kind":"cutting_defense","amount":"593","note":"Arany fejsze világoskék pajzsban; sivatag."},
+    {"id":"hp-18k-overlap","image":"docs/references/2026-10-30/free-hp-18k-occluded.png","hud":true,"card":true,"kind":"hp","amount":"18000","note":"Piros szív, 18K: átfedő világidőzítő, K=1000, nem pontos belső érték."},
+    {"id":"hp-18-3k-leading-digit","image":"docs/references/2026-10-30/free-health-18-3k-misread.png","hud":true,"card":true,"kind":"hp","amount":"18300","note":"18.3K, nem 8.3 vagy 8300. A vezető 1 és a K is kötelező."},
+    {"id":"smash-680","image":"docs/references/2026-10-30/free-smash-680-before.png","hud":true,"card":true,"kind":"smash_damage","amount":"680","note":"Lila kalapács pajzs nélkül."},
+    {"id":"smash-688-green-a","image":"docs/references/2026-10-30/free-smash-688-green-a.png","hud":true,"card":true,"kind":"smash_damage","amount":"688","note":"Aktuális HUD, füves háttér; korábban unknown."},
+    {"id":"smash-688-green-b","image":"docs/references/2026-10-30/free-smash-688-green-b.png","hud":true,"card":true,"kind":"smash_damage","amount":"688","note":"Második önálló képkocka, ugyanaz a jutalomtípus."},
+    {"id":"smash-688-green-c","image":"docs/references/2026-10-30/free-smash-688-green-c.png","hud":true,"card":true,"kind":"smash_damage","amount":"688","note":"Harmadik önálló képkocka, nem tesztből gyártott variáns."},
+    {"id":"smash-defense-802-ice","image":"docs/references/2026-10-30/corpus-smashdef802.png","hud":true,"card":true,"kind":"smash_defense","amount":"802","note":"Lila kalapács barna pajzsban, jeges háttér."},
+    {"id":"smash-defense-809-grass","image":"docs/references/2026-10-30/free-smash-defense-809-green.png","hud":true,"card":true,"kind":"smash_defense","amount":"809","note":"Kalapács pajzsban: nem smash damage, nem unknown."},
+    {"id":"absent-green-grass","image":"docs/references/2026-10-30/free-absent-grass-false-positive.jpg","hud":true,"card":false,"kind":null,"amount":null,"note":"A zöld fű nem FREE kártya. Korábbi hamis jelenlét."},
+    {"id":"absent-after-18k","image":"docs/references/2026-10-30/free-18k-confirmed-after.png","hud":true,"card":false,"kind":null,"amount":null,"note":"Átvétel után eltűnt kártya; a lebegő jutalomszám nem új ajánlat."},
+    {"id":"absent-after-18-3k","image":"docs/references/2026-10-30/free-health-18-3k-confirmed.png","hud":true,"card":false,"kind":null,"amount":null,"note":"A +18.3K utóeffektus nem új FREE ajánlat."},
+    {"id":"absent-idle","image":"docs/runs/20261029-223657-10037739-observe/frame-00000.png","hud":true,"card":false,"kind":null,"amount":null,"note":"Üres jutalomhely normál HUD-on."},
+    {"id":"modal-stats-top","image":"docs/references/2026-10-30/reward-stats-top.png","hud":false,"card":false,"kind":null,"amount":null,"note":"Statpanel: sem kattintás, sem eltűnésből átvétel-igazolás."},
+    {"id":"modal-stats-bottom","image":"docs/references/2026-10-30/reward-stats-bottom.png","hud":false,"card":false,"kind":null,"amount":null,"note":"Görgetett statpanel: nincs játék-HUD vagy FREE jutalom."},
+    {"id":"modal-inventory","image":"docs/references/2026-10-30/corpus-inventory-modal.png","hud":false,"card":false,"kind":null,"amount":null,"note":"Aktuális hátizsákpanel: takart játék-HUD, nem szabad átvételt igazolni vagy jutalmat kattintani."}
+  ]
+}

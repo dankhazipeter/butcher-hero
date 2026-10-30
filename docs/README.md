@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Valódi mintaképek és kötelező commit/push előtti tesztkapu](297-kepi-regresszios-korpusz-es-tesztkapu.md)
+
 - [Hiányzó smash jutalmak: felismerés és az aktuális statisztika javítása](296-smash-jutalmak-felismerese.md)
 
 - [Közös vonaldiagram a jutalmak darabszámának és arányának összehasonlítására](295-kozos-darabszamgrafikon.md)

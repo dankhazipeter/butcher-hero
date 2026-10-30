@@ -2,6 +2,13 @@
 
 ## 2026-10-30
 
+297:felhasználói kérés: rögzített mintaképek, commit/push előtti automata
+regresszió.27valódi kép,20pozitív/7negatív, mind a8típusból több példa.
+Első futás FAIL: a külön555CutDamage-kép unknown. Új current sablon másik,
+vizuálisan ellenőrzött képből; újrafutás17Swift/13Python/3Gitkapu/5NodePASS.
+A kapuk külön ideiglenes repóban igazoltan blokkolják a hibás commit/push-t,
+és nem keverik az indexet/feltöltendő commitot a munkafával. Részletek297.
+
 296: felhasználói smash-hibajelzés.4kalapácsos és3pajzsos korábbiunknown
 az aktuális futásban képből pontosítva; új valódi HUD-sablonok.15Swift,
 13Python,5NodePASS. Gyűjtő29305 --resume-run, eredeti futáskezdés megmarad.

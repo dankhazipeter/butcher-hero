@@ -1,5 +1,35 @@
 # Butcher Hero — aktív projektutasítások
 
+## Kötelező képi regresszió commit ÉS push előtt — 2026-10-30 (297)
+
+Minden lezárt változtatási körben a `scripts/check-rewards.sh` összes
+ellenőrzésének sikeresnek kell lennie. A verziózott `.githooks/pre-commit`
+és `pre-push` ezt automatikusan megköveteli: commit előtt az index pontos
+tartalmát, push előtt a feltöltendő commit tartalmát teszteli, külön ideiglenes
+másolatban. Nem elég egy másik, esetleg nem stage-elt munkapéldány sikere.
+Hibánál nincs commit/push; javítunk, újratesztelünk. A kaput nem kerüljük meg
+`--no-verify`, kapcsolók vagy az ellenőrzések kikommentezése útján.
+Új klónban kötelező `./scripts/install-git-hooks.sh`; a helyi
+`core.hooksPath=.githooks` beállítás nem kerül át automatikusan Gitből.
+
+A `tests/reward-reading-corpus.json` vizuálisan ellenőrzött, rögzített
+elvárásokat tartalmaz: kép → HUD/kártyajelenlét, típus és normalizált összeg.
+Minden új felismerési esethez és hibajavításhoz adjunk valódi mintaképet és
+képből ellenőrzött címkét; típusonként legalább két külön kép maradjon.
+A felismerő kimenetéből tilos automatikusan átírni az elvárt eredményt.
+Valódi címkehiba csak dokumentált képi bizonyítékkal javítható. A kalibrációs
+kép mellett külön ellenőrző kép is kell; a negatív/eltűnéses eseteket megőrizzük.
+A helyi kattintási és utóképek továbbra minden próbához megmaradnak; a Gitbe
+csak a kiválasztott, ellenőrzött tesztreferenciák kerülnek, nem a teljes napló.
+
+297:27kép,20pozitív/7negatív;17Swift+13statisztika+3Gitkapu+5NodePASS.
+Az új teszt önállóan felfedte az555CutDamage→unknown hibát; valódi current
+sablonnal javítva, külön kalibrációs és ellenőrző képpel, változatlan küszöbökkel.
+Régi átvételeket nem könyvelünk újra. Free-only kör és PAUSED heartbeat marad.
+Friss sablonnal figyelő37802/session48218, --resume-run; korábbi29305leállítva.
+A18:09:22Zmentett képen inventorynyitva, HUDnemlátható: a függő18300nem
+igazolt. Nem gyártunk utólagos átvételt és nem zárjuk be a felhasználó paneljét.
+
 ## Kötelező automatikus commit ÉS push minden lezárt változtatási kör után — 2026-10-30
 
 A felhasználó kérése: minden érdemi kód-, teszt-, konfiguráció- vagy

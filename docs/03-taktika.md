@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30
 
+297:felismerési javítás csak rögzített képi elvárásokkal és a teljes
+tesztkapu sikerével zárható. Nem módosítjuk az elvárt címkét azért, hogy
+a hibás felismerő átmenjen. Új esethez külön kalibrációs/ellenőrző kép;
+teszt nem vezérel játékot, régi jutalmakat nem könyvel. Az555CutDamage
+hibát az új készlet fedezte fel, nem a felhasználó újabb jelzése.
+
 296: smash-statisztika hiányánál a bizonytalan típusú, már igazolt tételek
 képeit nézzük, nem könyvelünk új átvételt. Technikai javítás után --resume-run
 őrzi meg az aktuális kör statisztikáját. Nincs összegből kitalált típus.

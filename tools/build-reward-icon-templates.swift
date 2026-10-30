@@ -5,8 +5,12 @@ import Darwin
 
 // Targeted current-HUD calibration. Coordinates are the recorded FREE badge
 // bottom plus0.001, exactly as used by RewardVision. Other templates stay intact.
-if CommandLine.arguments.contains("--current-smash-only") {
-    let current:[(String,String,Double)]=[
+let currentSmash=CommandLine.arguments.contains("--current-smash-only")
+let currentCut=CommandLine.arguments.contains("--current-cut-only")
+if currentSmash || currentCut {
+    let current:[(String,String,Double)]=currentCut ? [
+        ("cutting_damage","docs/references/2026-10-30/corpus-cut555-calibration.png",0.6009687281992045)
+    ] : [
         ("smash_damage","docs/references/2026-10-30/free-smash-688-green-a.png",0.6005699232803566),
         ("smash_defense","docs/references/2026-10-30/free-smash-defense-809-green.png",0.6008839419575099)
     ]
@@ -19,7 +23,7 @@ if CommandLine.arguments.contains("--current-smash-only") {
         CGImageDestinationAddImage(out,crop,nil)
         guard CGImageDestinationFinalize(out) else{fatalError(kind)}
     }
-    print("Two current-HUD smash references calibrated from visually verified real cards.")
+    print("\(current.count) current-HUD references calibrated from visually verified real cards.")
     exit(0)
 }
 

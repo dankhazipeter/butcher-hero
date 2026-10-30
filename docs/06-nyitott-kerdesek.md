@@ -2,6 +2,13 @@
 
 ## Aktív — 2026-10-30
 
+297:a jelenlegi27képes korpusz mind a8jutalomtípust több példával fedi,
+de nem bizonyít minden jövőbeli UI-/méret-/háttérváltozatot. K-s valós
+Healthképek vannak; M/B/T-s FREEkártyához még nincs címkézett valódi kép
+(a numerikus parser egységtesztje nem helyettesíti ezt). Új eseteket képi
+ellenőrzés után bővítünk. A helyi Git-kapuk új klónnál telepítendők;
+ez nem szerveroldali GitHub-ágvédelem. A futó gyűjtés külön marad.
+
 296: az aktuális futás hiányzó smash-típusai valódi képek alapján javítva,
 az új minták14képi/alap- és1CLI-integrációs tesztben ellenőrizve.
 A régi teljes történetet nem javítjuk; az új jövőbeli körökben továbbra

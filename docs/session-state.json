@@ -17,5 +17,5 @@
   "verifiedCombatStats": null,
   "stoppedAt": "2026-10-30T12:50:59.818+02:00",
   "dashboardURL": "http://127.0.0.1:8765/",
-  "nextStep": "Free-only watcher29305 running with current-HUD smash references. Technical --resume-run preserves the collection starting16:50:44.381Z. Seven uncertain types in this current run corrected from original images only (doc296); older runs untouched. Live dashboard auto-updates. No movement/combat/shop/unknown modal actions; heartbeat PAUSED. Commit and push every completed change cycle to origin/main."
+  "nextStep": "Free-only watcher37802/session48218 resumed with current-HUD cut and smash references. Technical --resume-run preserves the collection starting16:50:44.381Z. Inventory was open in18:09:22Z proof; no invented confirmation or automatic menu action. Doc297:27 reviewed screenshot fixtures, at least2per kind, mandatory exact-index/commit test gates before commit AND push. Live dashboard auto-updates. No movement/combat/shop/unknown modal actions; heartbeat PAUSED."
 }

@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-30 (282)
 
+297:verziózott27képes, kézzel ellenőrzött ground-truth jegyzék a
+tests/reward-reading-corpus.json-ban. RewardCorpusTests ugyanazt a
+RewardVision láncot futtatja, mint az élő gyűjtő; típust, normalizált összeget,
+HUD- és kártyajelenlétet ellenőriz. Típusonként minimum2külön képfájl/hash.
+Git-kapuk az index/feltöltendő commit pontos, ideiglenes másolatán futtatják
+a teljes jutalom- és statisztikateszteket; a munkafa és élő napló érintetlen.
+Új cutting_damage_current valódiHUDsablon; küszöbök változatlanok.
+
 296: a típusonként összevont sablonillesztés aktuális HUD-mintákat is
 használ, változatlan küszöbökkel. Technikai --resume-run különválasztja
 a folyamat újraindítását a gyűjtési időszak kezdetétől. A --current-run
