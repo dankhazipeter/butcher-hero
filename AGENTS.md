@@ -1,5 +1,12 @@
 # Butcher Hero — aktív projektutasítások
 
+305: a dashboard mindhárom jutalomikon-helyén átlátszó CSS-háttér kell
+(statkártya, Mikor/mit/mennyit táblázat, darabgrafikon-jelmagyarázat).
+A PNG-k már RGBA átlátszók voltak; a fehér csempét a CSS okozta.
+Ez felülírja294 fehér CSS-háttérre vonatkozó döntését, nem a képi sablonokat.
+Új regresszió ellenőrzi, hogy egyik ikon-szabály se kapjon fedő hátteret.
+Gyűjtő/szerver újraindítása nem szükséges; a meglévő oldal újratöltendő.
+
 304: a statisztika tetején külön GYŰJTŐPROGRAM ÁLLAPOTA sáv jelzi a Fut,
 Leállítva, Indul/újraindul, Mozgás miatt várakozik, Nincs friss képolvasás
 és Nem ellenőrizhető állapotot. Ez független az oldal adatkapcsolat-jelzésétől.

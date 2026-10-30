@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30 (282)
 
+305: a külön UI-only RGBA ikonok átlátszóságát a CSS is megőrzi:
+.stat-head img, .entry-kind img és .frequency-key img background:transparent.
+Nincs képfájl-/sabloncsere. A PNG-alfa és az összes ikonháttér-szabály
+Node-regressziója a meglévő teljes commit/push/PR-tesztkapu része.
+
 304:watcher_state külön stateKnown/processAlive mezőket ad. Hiányzó/hibás
 adat vagy ellenőrizhetetlenPID nem bizonyítottleállás. dashboard/status.js
 tesztelhetőállapotgép; élőfolyamat+frissképidő=Fut, hiányzóelsőkép=indulás,

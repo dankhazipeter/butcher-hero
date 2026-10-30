@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+305: a fehér ikonhátterek CSS-oka javítva, mindhárom felhasználási helyen
+regresszió védi az átlátszóságot. A böngészős kapcsolat hibája miatt a friss
+élőképet ebben a körben nem tudtuk ellenőrizni; meglévő oldalon reload kell.
+
 304:a gyűjtő állapota külön jól látható sávban megjelent; hiányzó/elavult
 állapotadat nem marad zöld. Ez a folyamat és a képfeldolgozás működését
 jelzi, nem önálló számlastat-növekedési bizonyíték. A szándékos leállást és

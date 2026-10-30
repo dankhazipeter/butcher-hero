@@ -2,6 +2,13 @@
 
 ## 2026-10-30
 
+305: a felhasználói képen a táblázat törtfehér hátterén fehér ikonlapkák
+látszanak. Bizonyított ok: meglévő RGBA PNG mellett két explicit #fff CSS-
+ikonháttér. Mindkettő transparent lett, a jelmagyarázatot is beleértve.
+Új Node-regresszió; a gyűjtő változatlan66095, friss sikeres képidővel.
+A böngészőkapcsolat browser.user unavailable hibája miatt új vizuális
+utóellenőrzés nem sikerült; a forrás és a kiszolgált CSS külön ellenőrizve.
+
 304:felhasználó kéri, hogy az oldal mutassa, fut-e a program. A korábbi
 aprófejléc helyett külön, feltűnő állapotsáv készült, élőPID+képidő alapján.
 9újregresszió; teljes23Swift/15Python/3Gitkapu/9felügyelet/12NodePASS.

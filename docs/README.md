@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Átlátszó ikonok minden statisztikai háttéren](305-atlatszo-dashboard-ikonok.md)
+
 - [Jól látható, automatikusan frissülő gyűjtőállapot](304-lathato-gyujtoallapot.md)
 
 - [Apple Vision kiváltása, számjegyminták és folyamatos gyűjtés](303-vision-kivaltasa-es-szamjegymintak.md)

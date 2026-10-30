@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+305: képháttér-problémánál először különítjük el a PNG-alfa és a CSS
+hatását. Most a képek átlátszók; csak a megjelenítés változik. UI-javítás
+miatt nincs gyűjtőleállás vagy a felismerési sablonok újragenerálása.
+
 304:az élő statisztikai kapcsolatot nem keverjük a gyűjtő működésével.
 Külön szöveges/színes állapotsáv és utolsó sikeres képidő. A leállási,
 elakadási és kapcsolathibás UIágakat tesztadatokkal vizsgáljuk, nem az élő

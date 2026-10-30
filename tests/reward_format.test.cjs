@@ -49,3 +49,14 @@ test("all eight UI-only icons are small RGBA PNGs with a transparent corner",()=
     assert.equal(decoded[4],0,kind+": transparent background, not a brown/black square");
   }
 });
+
+test("reward icons remain transparent on cards, ledger and frequency legend",()=>{
+  const css=fs.readFileSync(path.join(__dirname,"../dashboard/style.css"),"utf8");
+  const rules=[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+  for(const selector of [".stat-head img",".entry-kind img",".frequency-key img"]) {
+    const backgrounds=rules.filter(([,selectors])=>selectors.split(",").map(s=>s.trim()).includes(selector))
+      .flatMap(([, ,body])=>[...body.matchAll(/(?:^|;)\s*background(?:-color)?\s*:\s*([^;]+)/g)].map(m=>m[1].trim()));
+    assert.ok(backgrounds.length>0,selector+": explicit transparent background required");
+    assert.ok(backgrounds.every(value=>value==="transparent"),selector+": no opaque icon tile in any rule");
+  }
+});
