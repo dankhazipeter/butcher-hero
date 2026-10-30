@@ -1,5 +1,13 @@
 # Butcher Hero — aktív projektutasítások
 
+307: a statkártyák összértéke CountUp.js2.10.1 helyi, rögzített könyvtárral
+0,65s alatt animálódik. Első betöltés/időszakváltás/reduced-motion/háttérlap
+nem animál; azonos poll nem indítja újra, gyors új cél a jelenlegi képkockáról
+indul. Pontos tooltip/aria/napló változatlan. Nem biztonságosan ábrázolható
+számnál az eredeti pontos szövegből formázott végérték azonnal jelenik meg.
+5 új, valódi könyvtárral futó Node-regresszió. Gyűjtő66095 nem állt le;
+csak read-only szerver új PID89001/session10556 az új statikus útvonalakhoz.
+
 306: a Mikor/mit/mennyit lista mennyisége is közös K/M/B/T formátumú,
 például18300→+18,3K. A teljes érték title/aria-label mezőben megmarad;
 napló/API változatlan. A tényleges app.js listakirajzolását Node-teszt

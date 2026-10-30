@@ -311,9 +311,9 @@ def make_server(root: Path, port: int):
                         payload = aggregate(events, malformed, exists, parse_qs(url.query), now)
                     payload["watcher"] = watcher_state(root / "data/free-rewards/state.json", now)
                     self.send_json(200, payload)
-                elif url.path in ("/", "/app.js", "/format.js", "/status.js", "/style.css"):
-                    name = {"/": "index.html", "/app.js": "app.js", "/format.js": "format.js", "/status.js": "status.js", "/style.css": "style.css"}[url.path]
-                    mime = {"index.html": "text/html", "app.js": "text/javascript", "format.js": "text/javascript", "status.js": "text/javascript", "style.css": "text/css"}[name]
+                elif url.path in ("/", "/app.js", "/format.js", "/status.js", "/animation.js", "/vendor/countUp.umd.js", "/style.css"):
+                    name = {"/": "index.html", "/app.js": "app.js", "/format.js": "format.js", "/status.js": "status.js", "/animation.js": "animation.js", "/vendor/countUp.umd.js": "vendor/countUp.umd.js", "/style.css": "style.css"}[url.path]
+                    mime = "text/html" if name=="index.html" else "text/css" if name=="style.css" else "text/javascript"
                     self.send_bytes(200, (static / name).read_bytes(), mime + "; charset=utf-8")
                 elif url.path.startswith("/icons/") and url.path[7:] in {kind + ".png" for kind in KINDS}:
                     self.send_bytes(200, (icons / url.path[7:]).read_bytes(), "image/png", "private, max-age=3600")

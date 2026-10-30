@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+307: az animáció jelzi az új statösszeget, nem jutalomigazolás. Változatlan
+adatpoll nem mozgathatja a számot; szűrőváltáskor nem sugallunk új bevételt.
+Csökkentett mozgásnál/háttérlapon nincs animálás. A könyvelés nem használ
+animációs köztes értéket, és a fejlesztés miatt a gyűjtő nem áll le.
+
 306: a felhasználó kérésére az értékek a táblázatban is játékhoz hasonló
 K/M alakban látszanak. A rövidített kijelzés nem adatkerekítés: pontos
 naplóérték rámutatásra elérhető, a könyvelést nem módosítjuk.

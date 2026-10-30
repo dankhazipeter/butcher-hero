@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30 (282)
 
+307: helyi CountUp.js2.10.1 UMD + dashboard/animation.js adapter,
+WeakMapban elemenkénti aktuális cél és animáció.0,65s easing, közös compact
+formázás; csupán vizuális interpoláció. Scriptútvonalak explicit engedélyezve,
+CSP továbbra self-only. Valódi vendor kódot tesztelő szimulált képkockaóra,
+sem külső CDN, sem új csomagtelepítés nem kell a klónozóknak.
+
 306: a lista numeric cellája is RewardFormat.formatCompactot használ.
 Title és aria-label továbbra formatExact, a forrásadat változatlan.
 A Node-regresszió vm-ben a valódi app.js-t futtatja minimális teszt-DOMmal,

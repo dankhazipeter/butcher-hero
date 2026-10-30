@@ -214,6 +214,9 @@ class DashboardTests(unittest.TestCase):
         static=self.root / "dashboard"
         static.mkdir()
         (static / "status.js").write_text("/* collector status fixture */")
+        (static / "animation.js").write_text("/* animation fixture */")
+        (static / "vendor").mkdir()
+        (static / "vendor/countUp.umd.js").write_text("/* countup fixture */")
         server = make_server(self.root, 0)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -222,6 +225,10 @@ class DashboardTests(unittest.TestCase):
             with urlopen(base + "/status.js") as response:
                 self.assertTrue(response.headers["Content-Type"].startswith("text/javascript"))
                 self.assertEqual(response.read(),b"/* collector status fixture */")
+            for name in ("animation.js", "vendor/countUp.umd.js"):
+                with urlopen(base + "/" + name) as response:
+                    self.assertTrue(response.headers["Content-Type"].startswith("text/javascript"))
+                    self.assertIn(b"fixture", response.read())
             with urlopen(base + "/api/rewards?range=all") as response:
                 self.assertEqual(json.load(response)["confirmedClaims"], 0)
             with self.path.open("a") as output:

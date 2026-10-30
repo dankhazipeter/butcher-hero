@@ -85,6 +85,7 @@ test("actual ledger rendering uses compact amounts and retains exact tooltips",a
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../dashboard/app.js"),"utf8"),{
     document,Intl,Date,URLSearchParams,AbortSignal,
     RewardFormat:require("../dashboard/format.js"),RewardStatus:require("../dashboard/status.js"),
+    RewardAnimation:require("../dashboard/animation.js"),
     ResizeObserver:class {observe() {}},setInterval(){},setTimeout(){},clearTimeout(){},
     fetch:async()=>({ok:true,json:async()=>data}),
   });

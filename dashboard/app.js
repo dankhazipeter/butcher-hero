@@ -12,6 +12,11 @@
   const frequencyButtons=new Map();
   const linePatterns=["","7 3","","2 3","","8 3 2 3","5 3","1 4"];
   const {formatExact:decimal,formatCompact:compact}=RewardFormat;
+  const animateValue=RewardAnimation.createAnimator({
+    CountUp:globalThis.countUp?.CountUp,formatCompact:compact,formatExact:decimal,
+    reducedMotion:()=>typeof matchMedia==="function" && matchMedia("(prefers-reduced-motion: reduce)").matches,
+    hidden:()=>document.hidden,
+  });
   function renderCollector() {
     const status=RewardStatus.collectorStatus(snapshot?.watcher,snapshot?.generatedAt,Date.now(),statusConnected);
     $("collector-panel").dataset.state=status.state;
@@ -180,7 +185,7 @@
         $("stats-grid").append(card);cards.set(row.kind,card);
       }
       const value=card.querySelector(".stat-value");
-      value.textContent=`+${compact(row.total)}`;
+      animateValue(value,row.total,mode==="custom"?`${mode}:${$("from").value}:${$("to").value}`:mode);
       value.title=`Pontos naplóérték: +${decimal(row.total)}`;
       value.setAttribute("aria-label",`${row.label}: +${decimal(row.total)}`);
       card.querySelector(".stat-count").textContent=`${data.collectionCounts[row.kind]} igazolt átvétel`;

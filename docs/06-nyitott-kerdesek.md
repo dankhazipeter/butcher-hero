@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+307: statösszeg-animáció kész, valódi CountUp-könyvtáras képkockatesztekkel.
+Pontosság csak kijelzési rétegben interpolált; napló/tooltip változatlan.
+Böngészőkapcsolat továbbra elérhetetlen, ezért élő vizuális finomhangolás
+nem igazolt. HTTP-s kiszolgálás működik, a gyűjtő nem állt le.
+
 305: a fehér ikonhátterek CSS-oka javítva, mindhárom felhasználási helyen
 regresszió védi az átlátszóságot. A böngészős kapcsolat hibája miatt a friss
 élőképet ebben a körben nem tudtuk ellenőrizni; meglévő oldalon reload kell.

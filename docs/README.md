@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Animált statértékek helyi CountUp.js könyvtárral](307-animalt-statosszegek.md)
+
 - [K/M számformátum a jutalomlistában is](306-kompakt-jutalomlista.md)
 
 - [Átlátszó ikonok minden statisztikai háttéren](305-atlatszo-dashboard-ikonok.md)
