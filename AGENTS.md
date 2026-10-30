@@ -1,5 +1,12 @@
 # Butcher Hero — aktív projektutasítások
 
+299:elsőGitHubCI valóban futott, de a Swift6.1.2fordító a régi bottargeten
+még a tesztek előtt hibázott. Nem OCRhiba és nem pusztán runnerkapacitás.
+Az@mainforrás BotMain.swiftnévre váltott, swipe-sugár explicitDouble/CGFloat,
+ExpandedMapDetectorösszetett kifejezése azonos számítású ciklusra bontva.
+A régi bot továbbraPAUSED, nincs új játékinput vagy stratégiamódosítás.
+Bizonyíték és a helyi/távoli eredmények külön követése:docs/299.
+
 ## Klónozók és PR-ok kötelező ellenőrzése — 2026-10-30 (298)
 
 Új klón után `make setup`; minden érdemi körben `make test` kötelező.

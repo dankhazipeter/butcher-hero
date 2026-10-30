@@ -36,9 +36,16 @@ final class ExpandedMapDetector {
     }
     func difference(_ image: CGImage) -> Double? {
         guard let patch = Self.patch(image) else { return nil }
-        return [reference, greenReference].compactMap { $0 }.map { reference in
-            Double(zip(reference, patch).reduce(0) { $0 + abs(Int($1.0) - Int($1.1)) }) / Double(reference.count)
-        }.min()
+        var best: Double?
+        for reference in [reference, greenReference].compactMap({ $0 }) {
+            var total = 0
+            for (referencePixel, imagePixel) in zip(reference, patch) {
+                total += abs(Int(referencePixel) - Int(imagePixel))
+            }
+            let difference = Double(total) / Double(reference.count)
+            best = min(best ?? difference, difference)
+        }
+        return best
     }
     func matches(_ image: CGImage) -> Bool { (difference(image) ?? .infinity) < 18 }
 }

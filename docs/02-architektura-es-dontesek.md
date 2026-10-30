@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30 (282)
 
+299:SwiftPMa tesztcsomag mellett a régi executabletargetet is fordítja.
+A Swift6.1CI main.swift+@main ütközését szabványosBotMain.swiftelnevezés
+oldja fel; explicit numerikus típusok és egyszerűbb azonos képletű ciklus
+csökkentik a fordítóverzió-függést. Nem hagyunk ki targetet/tesztet aCIzöldítéséért.
+
 298:Makefileegységes setup/test/test-vision belépési pont. A teljes make test
 beköti a helyi hookokat, majd a meglévő check-rewards.sh futtatót használja.
 GitHubActions ugyanazt a parancsot futtatja macos-15gépen push/PR eseményre;

@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+299:első távoli futás piros lett a régi bot Swift6.1fordíthatósága miatt,
+nem a27képes elvárásokon bukott. Javítás után külön távoli újraellenőrzés kell;
+puszta helyiPASSnem bizonyítja aCIkörnyezetet. Részletek299.
+
 298:közreműködői make setup/test és push/PRCI bekötve; helyi teljes teszt
 PASS. A távoli GitHubfutás eredményét külön kell ellenőrizni a feltöltés után.
 Merge-tiltó required-check szabályt nem módosítottunk, nem állítjuk aktívnak.

@@ -2,6 +2,10 @@
 
 ## 2026-10-30
 
+299:elsőGitHubfutás41106695612FAIL, job124238278204naplója szerint
+Swift6.1.2/macOS15.8.2fordítási hibák a régi bottargetben. HelyiSwift6.4.2
+előzőleg átment. Három szűk kompatibilitásjavítás, elvárt képi címkék változatlanok.
+
 298:új kiegészítő kérés a klónozók/PR-beküldők ellenőrzésére. Makefile,
 CONTRIBUTING, PR-sablon és macOSGitHubActions készült ugyanarra a tesztre.
 A helyi hook klónozáskor nem magától aktiválódik; make test telepíti is.

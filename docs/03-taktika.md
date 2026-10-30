@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+299:távoliCIpiros esetén a tényleges naplóból diagnosztizálunk. A runner-
+kapacitásról szóló NOTICE nem magyarázta a hibát; konkrét fordítási hibák
+voltak. Nem gyengítjük a tesztet vagy cseréljük le a képi elvárást emiatt.
+
 298:közreműködőknél is helyi make test és PR-on látható GitHubellenőrzés.
 A helyi siker nem helyettesíti a szerveroldali futást; jóváhagyásra váró
 fork-ellenőrzés nemPASS. Merge-tilalmat nem ígérünk külön repószabály nélkül.

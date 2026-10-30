@@ -8712,11 +8712,15 @@ private final class SwipeController {
         defer { endSyntheticInput() }
 
         if globalInput {
-            let radius = dragDistanceFraction.map { windowFrame.height * $0 } ??
-                (min(windowFrame.width, windowFrame.height) * 0.072)
+            let radius: Double
+            if let dragDistanceFraction {
+                radius = Double(windowFrame.height) * dragDistanceFraction
+            } else {
+                radius = Double(min(windowFrame.width, windowFrame.height)) * 0.072
+            }
             let endpoint = CGPoint(
-                x: touchAnchor.x + normalized.x * radius,
-                y: touchAnchor.y + normalized.y * radius
+                x: touchAnchor.x + CGFloat(normalized.x * radius),
+                y: touchAnchor.y + CGFloat(normalized.y * radius)
             )
             let savedCursor = CGEvent(source: nil)?.location
             let cancellation = RunCancellation.shared

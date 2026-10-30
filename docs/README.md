@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Első távoli CI és Swift-fordítókompatibilitás](299-elso-ci-es-swift-kompatibilitas.md)
+
 - [Egyszerű tesztparancs, klónozói hook és PR-ellenőrzés](298-klonozoi-tesztparancs-es-pr-ci.md)
 
 - [Valódi mintaképek és kötelező commit/push előtti tesztkapu](297-kepi-regresszios-korpusz-es-tesztkapu.md)
