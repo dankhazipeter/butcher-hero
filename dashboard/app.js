@@ -7,20 +7,7 @@
   const short = new Intl.DateTimeFormat("hu-HU", {timeZone:zone,hour:"2-digit",minute:"2-digit"});
   let mode = "run", snapshot, sequence = 0, pollVersion = 0, timer, lastCount;
   let cards = new Map();
-  function decimal(value) {
-    if (value == null) return "?";
-    const [integer, fraction] = String(value).split(".");
-    const tail=fraction?fraction.replace(/0+$/, ""):"";
-    return integer.replace(/\B(?=(\d{3})+(?!\d))/g,"\u202f") + (tail ? "," + tail : "");
-  }
-  function compact(value) {
-    const n = Number(value);
-    if (n >= 1e12) return (n/1e12).toLocaleString("hu-HU", {maximumFractionDigits:1})+"T";
-    if (n >= 1e9) return (n/1e9).toLocaleString("hu-HU", {maximumFractionDigits:1})+"B";
-    if (n >= 1e6) return (n/1e6).toLocaleString("hu-HU", {maximumFractionDigits:1})+"M";
-    if (n >= 1e3) return (n/1e3).toLocaleString("hu-HU", {maximumFractionDigits:1})+"K";
-    return n.toLocaleString("hu-HU", {maximumFractionDigits:2});
-  }
+  const {formatExact:decimal,formatCompact:compact}=RewardFormat;
   function field(tag, text, className) {
     const node = document.createElement(tag); node.textContent = text;
     if(className) node.className=className;
@@ -96,7 +83,10 @@
         card.append(svgNode("svg",{class:"spark",role:"img","aria-label":`${row.label} halmozott gyűjtése` }));
         $("stats-grid").append(card);cards.set(row.kind,card);
       }
-      card.querySelector(".stat-value").textContent=`+${decimal(row.total)}`;
+      const value=card.querySelector(".stat-value");
+      value.textContent=`+${compact(row.total)}`;
+      value.title=`Pontos naplóérték: +${decimal(row.total)}`;
+      value.setAttribute("aria-label",`${row.label}: +${decimal(row.total)}`);
       card.querySelector(".stat-count").textContent=`${row.count} igazolt átvétel`;
       draw(card,row,data.series[row.kind]);
     }

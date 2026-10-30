@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+294:a rövidített statkijelzés nem csökkentheti a napló pontosságát.
+Összehasonlításhoz továbbra a teljes értéket használjuk; a UI-ikonok
+háttéreltávolítása nem módosítja a gyűjtő felismerését vagy inputját.
+
 293:felhasználói prioritás mostantól jó naplózott adatok, nem történeti
 helyreállítás. Javított gyűjtő külön új futás; a292-es élő nézet ezt mutatja
 alapból. Zöld fű nemFreekártya;18.3K=18300, teljes token kell.

@@ -2,6 +2,10 @@
 
 ## 2026-10-30
 
+294:kért K/M számkijelzés és fehér hátterű, áttetsző UI-ikonok elkészültek.
+5Node/9Python-tesztPASS, böngészőben201300→201K,3780→3,7K; pontos
+adatok változatlanok. Statikus kiszolgáló újraindult, gyűjtő2444végig futott.
+
 292–293:helyi élőstatisztika elkészült. Felhasználói jelzésből reprodukált
 gyűjtőhiba:18.3K→8.3/8300és zöld fű miatti elmaradó igazolás. Javítva,
 13Swift+9statisztikai tesztPASS, újvision3gyűjtőPID2444. Felhasználói

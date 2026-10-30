@@ -30,6 +30,14 @@ a program újraindítását is, az alábbi szűkFree-körben.
 
 ## ELSŐBBSÉG — FREE-GYŰJTÉS ÚJRA ENGEDÉLYEZVE, 2026-10-30 (291)
 
+Legújabb294:statkártyák és tengelyek közösK/M/B/T-kijelzése,100alatti
+skálaérték egy tizedeslevágással,100-tól egész.2360000→2,3M,99800000→99,8M.
+Ez felhasználói példákból választott megjelenítési szabály, nem biztos
+játékbelső algoritmus. Pontos napló/API/táblázat/tooltip változatlan.
+Új áttetsző UI-ikonok:dashboard/icons/, fehér CSS-háttérrel; a gyűjtő
+felismerési sablonjait NE cseréljük le ezekre.5Node+9Python-tesztPASS.
+Csak statisztikaszerver indult újra,execsession2939;gyűjtő2444változatlanul fut.
+
 Legújabb292–293:élő helyi statisztika http://127.0.0.1:8765/ (read-only,
 2sfrissítés), forrásdata/free-rewards/events.jsonl. Újgyűjtővision3:
 PID2444/session79280. Zöld fű tévesFreejelenlét és18.3K→8.3/8300hibák

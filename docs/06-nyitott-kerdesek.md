@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+294:kért kijelzési szabály megvalósítva és tesztelve, de a játék pontos,
+minden egységváltásra érvényes formázási algoritmusa nem bizonyított.
+Új felhasználói játékpéldák alapján később szűken módosítható. A pontos
+adatokat sem a rövidítés, sem a cserélt UI-ikon nem módosítja.
+
 292–293:újread-onlystatisztika ésvision3gyűjtő. A régi8.3/8300Health-
 adatok és egyes nemigazolt tételek hibás forrásból származhatnak; a
 felhasználó kifejezetten a MOSTANTÓL jó működést kéri. Nincs történeti

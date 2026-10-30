@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [K/M statkijelzés és barna háttér nélküli UI-ikonok](294-jatekos-szamformatum-es-tiszta-ikonok.md)
+
 - [Élő, helyi jutalomstatisztika](292-elo-jutalomstatisztika.md)
 - [Helyes új adatok:18,3K és a zöld fű téves kártyajelzése](293-free-igazolas-es-183k-javitasa.md)
 

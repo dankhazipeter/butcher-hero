@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30 (282)
 
+294:dashboard/format.js közös, szövegalapú K/M/B/T megjelenítési formázó,
+az adatréteget nem érinti. dashboard/icons/ különRGBA UI-képek;
+a felismerési erőforrások megmaradnak. Ikoncache1óra, API továbbra no-store.
+
 292–293:read-onlyPythonHTTPstatisztika csaklocalhoston, növekményes JSONL-
 olvasás, Decimalösszegek, claimID/finalclick szerinti könyvelési egyezés.
 Buildmentes böngészőfelület2sfrissítéssel. A gyűjtővision3strukturált

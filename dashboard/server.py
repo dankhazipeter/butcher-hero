@@ -231,17 +231,18 @@ def watcher_state(path: Path, now: datetime):
 def make_server(root: Path, port: int):
     journal = Journal(root / "data/free-rewards/events.jsonl")
     static = root / "dashboard"
-    icons = root / "Sources/RewardAutomationCore/Resources/RewardIcons"
+    # UI-only cutouts. Recognition templates are deliberately untouched.
+    icons = static / "icons"
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
 
-        def send_bytes(self, status, data, mime):
+        def send_bytes(self, status, data, mime, cache="no-store"):
             self.send_response(status)
             self.send_header("Content-Type", mime)
             self.send_header("Content-Length", str(len(data)))
-            self.send_header("Cache-Control", "no-store")
+            self.send_header("Cache-Control", cache)
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
             self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'")
@@ -275,12 +276,12 @@ def make_server(root: Path, port: int):
                         payload = aggregate(events, malformed, exists, parse_qs(url.query), now)
                     payload["watcher"] = watcher_state(root / "data/free-rewards/state.json", now)
                     self.send_json(200, payload)
-                elif url.path in ("/", "/app.js", "/style.css"):
-                    name = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css"}[url.path]
-                    mime = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css"}[name]
+                elif url.path in ("/", "/app.js", "/format.js", "/style.css"):
+                    name = {"/": "index.html", "/app.js": "app.js", "/format.js": "format.js", "/style.css": "style.css"}[url.path]
+                    mime = {"index.html": "text/html", "app.js": "text/javascript", "format.js": "text/javascript", "style.css": "text/css"}[name]
                     self.send_bytes(200, (static / name).read_bytes(), mime + "; charset=utf-8")
                 elif url.path.startswith("/icons/") and url.path[7:] in {kind + ".png" for kind in KINDS}:
-                    self.send_bytes(200, (icons / url.path[7:]).read_bytes(), "image/png")
+                    self.send_bytes(200, (icons / url.path[7:]).read_bytes(), "image/png", "private, max-age=3600")
                 else:
                     self.send_json(404, {"error": "Nincs ilyen oldal."})
             except (ValueError, OverflowError) as error:
