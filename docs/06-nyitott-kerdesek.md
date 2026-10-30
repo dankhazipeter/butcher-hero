@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+303lezárás:4490c33kód távoliGitHubCI41119975619SUCCESS. Nem maradt
+nyitott a régebbiSwift/VisionmiattiCI-piros ennél a kódnál.20:05:33Z
+36igazoltátvétel/0OCRhiba/0közbensőújraindítás; hosszútávú stabilitást
+tovább figyeljük, M/B/Tképi glyphlefedettség továbbra nincs igazolva.
+
 303:a CPUhipotézis nem volt véglegesjavítás; most a natívOCRkikerült aFree-
 útvonalból. Az újbackend29mintán és friss élőátvételekkel igazolt,9perces
 ellenőrzéskor0OCRhiba. Ez nem örökstabilitás-bizonyíték; felügyelet marad.

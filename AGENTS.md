@@ -20,6 +20,10 @@ kitalált szám. K/M/B/Tparser megmaradt, képiM/B/Tglyph még nincs igazolva.
 A karaktermodell pontosítása atomiJSONcserével, leállítás nélkül történt;
 legújabbRegen83már helyes. Friss valós állapot mindigdata/free-rewards/state.json.
 A régiCPU/névlegesrunning=truejegyzet nem aktuális működési bizonyíték.
+Lezárási303bizonyíték:4490c33kódcommitGitHubCI41119975619/job124283917935
+SUCCESSmacOS15környezetben, helyi23Swift/13statisztika/3kapu/9felügyelet/
+5NodeisPASS.20:05:33Zugyanaz a66095worker,36igazolt átvétel/0OCRhiba/
+0közbensőújraindítás. A régebbiCI-hibák történetiek, ez a kód távol is átment.
 
 302:a push előtti tesztkör különOCRellenőrzése is hibával állt meg; a live-
 hibával való azonosság nem igazolt. A kapu BLOKKOLTA a feltöltést, nem került

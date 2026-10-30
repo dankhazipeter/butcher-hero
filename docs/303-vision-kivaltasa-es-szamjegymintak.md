@@ -110,3 +110,16 @@ Regen83(3),CutDefense593(2),SmashDefense833(1). Kizárólag
 reward_correctedesemények kerültek hozzáadásra; eredeti sor nem változott,
 új átvételi igazolás nem keletkezett, korábbi gyűjtési futáshoz nem nyúltunk.
 A két új regressziós kép a futás közben látott83/593eset bizonyítéka.
+
+## Távoli CI és folyamatos élő eredmény
+
+Kódcommit `4490c33`: a tényleges GitHub-futás
+[41119975619](https://github.com/dankhazipeter/butcher-hero/actions/runs/41119975619)
+SUCCESS, a `Reward tests (macOS)` job `124283917935` minden lépése sikeres.
+A Tesseracttelepítés és a közös `make test` is valóban lefutott; ez nem
+helyiPASSból következtetett vagy kihagyottCIeredmény.
+
+20:05:33Z-kor a66095worker továbbra azonos, aktuális képidővel;
+36igazolt átvétel,0OCRhiba,0közbenső újraindítás. A commit/push tesztkapui
+közben sem állt le a gyűjtés. A branchrequired-check szabály külön kérdés:
+az automatikusCI most működik, szerveroldali merge-tilalmat nem állítottunk be.
