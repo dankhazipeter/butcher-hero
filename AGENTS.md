@@ -1,5 +1,10 @@
 # Butcher Hero — aktív projektutasítások
 
+306: a Mikor/mit/mennyit lista mennyisége is közös K/M/B/T formátumú,
+például18300→+18,3K. A teljes érték title/aria-label mezőben megmarad;
+napló/API változatlan. A tényleges app.js listakirajzolását Node-teszt
+futtatja teszt-DOMon, K/M/100M/kisérték/hiányzóösszeg esetekkel.
+
 305: a dashboard mindhárom jutalomikon-helyén átlátszó CSS-háttér kell
 (statkártya, Mikor/mit/mennyit táblázat, darabgrafikon-jelmagyarázat).
 A PNG-k már RGBA átlátszók voltak; a fehér csempét a CSS okozta.

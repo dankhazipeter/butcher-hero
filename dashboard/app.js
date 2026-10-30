@@ -193,8 +193,13 @@
       const type=field("td",""),label=field("span","","entry-kind");
       if(cards.has(row.kind)) {const image=document.createElement("img");image.src=`/icons/${row.kind}.png`;image.alt="";label.append(image);}
       label.append(document.createTextNode(row.label));type.append(label);
+      const amount=field("td",row.amount==null?"?":`+${compact(row.amount)}`,"numeric");
+      if(row.amount!=null) {
+        amount.title=`Pontos naplóérték: +${decimal(row.amount)}`;
+        amount.setAttribute("aria-label",`${row.label}: +${decimal(row.amount)}`);
+      }
       tr.append(field("td",date.format(new Date(row.at))),type,
-        field("td",row.amount==null?"?":`+${decimal(row.amount)}`,"numeric"),
+        amount,
         field("td",row.confirmed?"Átvéve":"Nem igazolt",`claim-state${row.confirmed?"":" pending"}`));
       $("entries").append(tr);
     }

@@ -2,6 +2,11 @@
 
 ## 2026-10-30
 
+306: felhasználói kérésre a lista+18300helyett+18,3K kijelzést kapott.
+Közös formázó, pontos tooltip/akadálymentes címke; hiányzó összeg továbbra?.
+Valódi appkirajzolási regresszió7formátumteszttel együttPASS.
+A gyűjtő és szerver nem igényel újraindítást; meglévő lapon reload kell.
+
 305: a felhasználói képen a táblázat törtfehér hátterén fehér ikonlapkák
 látszanak. Bizonyított ok: meglévő RGBA PNG mellett két explicit #fff CSS-
 ikonháttér. Mindkettő transparent lett, a jelmagyarázatot is beleértve.

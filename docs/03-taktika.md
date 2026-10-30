@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+306: a felhasználó kérésére az értékek a táblázatban is játékhoz hasonló
+K/M alakban látszanak. A rövidített kijelzés nem adatkerekítés: pontos
+naplóérték rámutatásra elérhető, a könyvelést nem módosítjuk.
+
 305: képháttér-problémánál először különítjük el a PNG-alfa és a CSS
 hatását. Most a képek átlátszók; csak a megjelenítés változik. UI-javítás
 miatt nincs gyűjtőleállás vagy a felismerési sablonok újragenerálása.

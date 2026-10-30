@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [K/M számformátum a jutalomlistában is](306-kompakt-jutalomlista.md)
+
 - [Átlátszó ikonok minden statisztikai háttéren](305-atlatszo-dashboard-ikonok.md)
 
 - [Jól látható, automatikusan frissülő gyűjtőállapot](304-lathato-gyujtoallapot.md)

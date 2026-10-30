@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30 (282)
 
+306: a lista numeric cellája is RewardFormat.formatCompactot használ.
+Title és aria-label továbbra formatExact, a forrásadat változatlan.
+A Node-regresszió vm-ben a valódi app.js-t futtatja minimális teszt-DOMmal,
+nem pusztán a formázófüggvényt vagy egy forráskódrészlet jelenlétét teszteli.
+
 305: a külön UI-only RGBA ikonok átlátszóságát a CSS is megőrzi:
 .stat-head img, .entry-kind img és .frequency-key img background:transparent.
 Nincs képfájl-/sabloncsere. A PNG-alfa és az összes ikonháttér-szabály
