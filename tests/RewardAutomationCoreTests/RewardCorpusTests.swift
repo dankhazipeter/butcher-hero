@@ -68,10 +68,11 @@ final class RewardCorpusTests: XCTestCase {
                 project.appendingPathComponent(sample.image) as CFURL, nil), label)
             let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil), label)
             let actual = try vision.observe(image)
+            let diagnostics = "\(label); actual reward=\(String(describing: actual.reward)); OCR=\(actual.texts)"
             XCTAssertEqual(actual.gameHUDVisible, sample.hud, "HUD: \(label)")
             XCTAssertEqual(actual.freeCardVisible, sample.card, "Card presence: \(label)")
-            XCTAssertEqual(actual.reward?.kind, sample.kind, "Kind: \(label)")
-            XCTAssertEqual(actual.reward?.amount, sample.amount, "Normalized amount: \(label)")
+            XCTAssertEqual(actual.reward?.kind, sample.kind, "Kind: \(diagnostics)")
+            XCTAssertEqual(actual.reward?.amount, sample.amount, "Normalized amount: \(diagnostics)")
             if sample.kind == nil { XCTAssertNil(actual.reward, "Must not create a reward: \(label)") }
         }
     }

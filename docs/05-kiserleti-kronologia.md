@@ -2,6 +2,17 @@
 
 ## 2026-10-30
 
+300:két jogos felhasználói hibajelzés.37802PIDélt,18:23után Visionhibán
+beragadt, nem volt felhasználóiSTOP. Új45731worker18:40:22CutDefense593,
+18:40:55HP18300,18:41:27Pierce540. Elsőleválasztott47677felügyelő és47679
+worker a rövid parancs után eltűnt; újabbkiesés. Tartós68833sessionben
+48519felügyelő/48521worker:18:47:32SmashDefense833,18:48:04Regen83,
+18:49:41HP18300; utóbbi időszakban folyamatos friss képidő. Indító javítva.
+
+301:másodikCI41108249493fordításPASS, de háromképiassertFAIL két külön
+esetben:593CutDefense és takart18K. Elvárásokat nem gyengítettük; igazítási
+tűrés és kontrasztos számosOCRtartalék kapott külön tesztet, helybenPASS.
+
 299:elsőGitHubfutás41106695612FAIL, job124238278204naplója szerint
 Swift6.1.2/macOS15.8.2fordítási hibák a régi bottargetben. HelyiSwift6.4.2
 előzőleg átment. Három szűk kompatibilitásjavítás, elvárt képi címkék változatlanok.

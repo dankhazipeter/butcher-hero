@@ -2,6 +2,17 @@
 
 ## Aktív — 2026-10-30 (282)
 
+300:Pythonfelügyelő külön folyamatként a sikeres képfeldolgozás frissülését
+ellenőrzi, nem aPIDlétét. Egyetlen sajátgyerek, különflock;35–50smértékű
+maximális elakadási ablak a türelmi időkkel. SajátJSONLállapotnapló,
+jutalomnaplóba nem könyvel. Tartós előtérsession kell; rövid execnohupja
+nem maradt életben. KéziSTOPmindkét folyamatot leállítja.
+
+301:ikonjelölt kis pixeles eltolási környezetben, típusonként összevont
+legjobb referenciahiba, eredeti0.48/0.035küszöbök. Szám-OCRcsak sikertelen
+eredeti próbák után kap fehérszöveg/feketeháttér maszkot, ugyanabban a
+számsorROIban, ugyanazzal a szigorú értékparserrel.
+
 299:SwiftPMa tesztcsomag mellett a régi executabletargetet is fordítja.
 A Swift6.1CI main.swift+@main ütközését szabványosBotMain.swiftelnevezés
 oldja fel; explicit numerikus típusok és egyszerűbb azonos képletű ciklus

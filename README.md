@@ -37,6 +37,10 @@ Csak a két friss játékképen eltűnt kártyát könyveli, claimenként egysze
 [Húzásvédelem és újrapróba részletei](docs/286-kezi-huzasvedelem-es-free-ujraproba.md).
 
 Indítás: `./scripts/start-free-rewards.sh`, leállítás: `./scripts/stop-free-rewards.sh`.
+Az indítót tartós terminálmunkamenetben hagyjuk futni: felügyeli és elakadáskor
+újraindítja a saját gyűjtőjét. Technikai folytatás: `--resume-run`.
+A tesztek közben nem állítjuk le; a kéziSTOPa felügyelőt is leállítja.
+[Felügyelet és kiesések tanulságai](docs/300-gyujtes-helyreallitasa-es-felugyelete.md).
 Terminálban közvetlenül: `.build/release/ButcherHeroAutomation watch-free --interval 1`.
 Összesítés: `.build/release/ButcherHeroAutomation stats --from <ISO8601> --to <ISO8601>`.
 Napló: `data/free-rewards/events.jsonl`, státusz: `data/free-rewards/state.json`.

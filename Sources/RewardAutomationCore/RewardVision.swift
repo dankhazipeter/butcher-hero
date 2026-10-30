@@ -47,6 +47,11 @@ public final class RewardVision {
         if amountCandidates().isEmpty {
             texts += try recognize(image,roi:.init(x:0.065,y:badge.y+0.046,width:0.085,height:0.039))
         }
+        if amountCandidates().isEmpty {
+            // Cartoon white digits can merge with world timers on older Vision
+            // models. Retry the number-only region on a white/black mask.
+            texts += try recognize(image,roi:.init(x:0.065,y:badge.y+0.046,width:0.085,height:0.043),highContrast:true)
+        }
         let amount=amountCandidates().first
         let icon=CGRect(x:0.025,y:badge.y+badge.height+0.001,width:0.100,height:0.052)
         let match=icons.match(image,rect:icon),kind=match.kind
@@ -63,11 +68,20 @@ public final class RewardVision {
         let green=pixels.count(in:.init(x:0.34,y:0.40,width:0.30,height:0.16)){r,g,b in g>145 && g>r*3/2 && g>b*5/4}
         return red>=35 && green>=20
     }
-    private func recognize(_ image:CGImage,roi:CGRect)throws->[RewardText] {
+    func recognize(_ image:CGImage,roi:CGRect,highContrast:Bool=false)throws->[RewardText] {
         let rect=CGRect(x:roi.minX*Double(image.width),y:roi.minY*Double(image.height),width:roi.width*Double(image.width),height:roi.height*Double(image.height)).integral
-        guard let crop=image.cropping(to:rect),let c=CGContext(data:nil,width:crop.width*3,height:crop.height*3,bitsPerComponent:8,bytesPerRow:0,space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue) else{return []}
+        guard let crop=image.cropping(to:rect),let c=CGContext(data:nil,width:crop.width*3,height:crop.height*3,bitsPerComponent:8,bytesPerRow:0,space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue) else{return []}
         c.interpolationQuality = .high
         c.draw(crop,in:CGRect(x:0,y:0,width:c.width,height:c.height))
+        if highContrast,let bytes=c.data?.assumingMemoryBound(to:UInt8.self) {
+            for y in 0..<c.height {for x in 0..<c.width {
+                let i=y*c.bytesPerRow+x*4
+                let r=Int(bytes[i]),g=Int(bytes[i+1]),b=Int(bytes[i+2])
+                let white=min(r,min(g,b))>=175 && max(r,max(g,b))-min(r,min(g,b))<=65
+                let value:UInt8=white ? 255:0
+                bytes[i]=value;bytes[i+1]=value;bytes[i+2]=value;bytes[i+3]=255
+            }}
+        }
         guard let scaled=c.makeImage() else{return []}
         let request=VNRecognizeTextRequest()
         request.recognitionLevel = .accurate; request.usesLanguageCorrection=false

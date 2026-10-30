@@ -1,5 +1,29 @@
 # Butcher Hero — aktív projektutasítások
 
+## Élő gyűjtés elsőbbsége és tartós felügyelete — 2026-10-30 (300–301)
+
+A felhasználó nem kértSTOPot: a teszt/CIfejlesztés alatt aFreegyűjtést
+folytatni kell. Tesztet külön másolaton végzünk, csak éles betöltéskor rövid
+leállás; az utólagos élő igazolás kötelező. PusztaPID/running=true nem
+bizonyít működést: friss lastCheckedAt és valódi átvétel kell.
+Ne hagyjunk percekig régi képidővel futó folyamatot felügyelet nélkül.
+
+Indító: scripts/start-free-rewards.sh [--resume-run], ELŐTÉRBEN tartott
+tartós execsessionben, nem rövid parancsból leválasztott nohupgyerekként.
+Pythonfelügyelő:30sfriss sikeres feldolgozás nélkül újraindítja kizárólag
+a sajátFreeworkerét; induláskor45sgrace,5sSIGINTután szükség eseténkill.
+Technikai újraindulás --resume-run, nem nullázza a statisztikát. STOPkor
+stop-free-rewards.sh a felügyelőt is leállítja, nincs automatikus visszaindulás.
+Utolsó igazolt felügyelet48519/session68833, jelenlegworker50644.
+18:54:53élőVisionelakadást önállóan felismert,18:54:59újworker,
+18:56:06újPierce540igazolás és18:56:28frissképidő. Nem kéziSTOPvolt.
+19Swift+13statisztika+3Gitkapu+9felügyelet+5NodehelybenPASS.
+
+301:a másodikCI már lefordult, de régebbiVision két esetben eltért:
+593CutDefenseunknown és takart18Kösszegnil. Rögzített címkék változatlanok;
+szűk±1/±2pixeles ikonillesztés, változatlan küszöbök, valamint számsor-only
+fehér/feketeOCRtartalék. Külön regresszió mindkét ágra, nincs kitalált jutalom.
+
 299:elsőGitHubCI valóban futott, de a Swift6.1.2fordító a régi bottargeten
 még a tesztek előtt hibázott. Nem OCRhiba és nem pusztán runnerkapacitás.
 Az@mainforrás BotMain.swiftnévre váltott, swipe-sugár explicitDouble/CGFloat,

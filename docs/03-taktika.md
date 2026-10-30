@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+300:tesztfejlesztés nem jelentheti az engedélyezettFreegyűjtés elhanyagolását.
+Aktív gyűjtést csak betöltésre állítunk meg, nem a teljes teszt/CI idejére.
+Friss lastCheckedAt és átvételi utókép alapján mondunk működést, nem PIDből.
+Kézi átvételt nem írunk a bot hozamához; STOPután a felügyelő sem indulhat vissza.
+
 299:távoliCIpiros esetén a tényleges naplóból diagnosztizálunk. A runner-
 kapacitásról szóló NOTICE nem magyarázta a hibát; konkrét fordítási hibák
 voltak. Nem gyengítjük a tesztet vagy cseréljük le a képi elvárást emiatt.

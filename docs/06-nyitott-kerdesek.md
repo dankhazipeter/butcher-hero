@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+300:a korábbi élőgyűjtés-kiesés valós, nem felhasználóiSTOP. Tartós felügyelet
+és újra igazolt átvételek vannak;9felügyeleti teszt. A leválasztott indítást
+nem használjuk.301:a két régebbiVisionhiba javítása helyben célzottanPASS;
+új távoliCIeredményt még külön ellenőrizni kell. Az élő gyűjtő ettől külön fut.
+
 299:első távoli futás piros lett a régi bot Swift6.1fordíthatósága miatt,
 nem a27képes elvárásokon bukott. Javítás után külön távoli újraellenőrzés kell;
 puszta helyiPASSnem bizonyítja aCIkörnyezetet. Részletek299.

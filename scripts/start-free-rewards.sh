@@ -5,12 +5,6 @@ cd "$reward_project_dir"
 reward_binary="$reward_project_dir/.build/release/ButcherHeroAutomation"
 test -x "$reward_binary" || { echo 'Előbb: swift build -c release --product ButcherHeroAutomation'; exit 1; }
 mkdir -p data/free-rewards
-nohup "$reward_binary" watch-free --interval 1 >> data/free-rewards/watcher.log 2>&1 &
-reward_pid=$!
-sleep 1
-if kill -0 "$reward_pid" 2>/dev/null; then
-    echo "A Free-jutalom figyelő fut (PID $reward_pid). Napló: data/free-rewards/events.jsonl"
-else
-    tail -8 data/free-rewards/watcher.log
-    exit 1
-fi
+# Keep the supervisor attached to the persistent execution session. A detached
+# nohup child can be cleaned up when an automation tool's short command ends.
+exec python3 "$reward_project_dir/scripts/supervise-free-rewards.py" "$@"

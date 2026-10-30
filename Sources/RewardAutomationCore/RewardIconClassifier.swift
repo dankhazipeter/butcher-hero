@@ -22,8 +22,22 @@ public final class RewardIconClassifier {
     }
     public func match(_ image:CGImage,rect:CGRect)->RewardIconMatch {
         let pixels=CGRect(x:rect.minX*Double(image.width),y:rect.minY*Double(image.height),width:rect.width*Double(image.width),height:rect.height*Double(image.height)).integral
-        guard let crop=image.cropping(to:pixels),let signature=Self.signature(crop),templates.count>=8 else{return .init(kind:"unknown",error:1,margin:0)}
-        let scores=Self.kinds.map {kind in (kind,templates.filter{$0.0==kind}.map{Self.error(signature,$0.1)}.min() ?? 1)}.sorted{$0.1<$1.1}
+        // Vision versions differ by a few pixels in the FREE word's bounding
+        // box. Compare a bounded alignment neighbourhood, not a looser score.
+        var signatures=[[UInt8]]()
+        for dy in [-2,0,2] {for dx in [-1,0,1] {
+            let shifted=pixels.offsetBy(dx:CGFloat(dx),dy:CGFloat(dy))
+            guard shifted.minX>=0,shifted.minY>=0,
+                  shifted.maxX<=CGFloat(image.width),shifted.maxY<=CGFloat(image.height),
+                  let crop=image.cropping(to:shifted),let signature=Self.signature(crop) else{continue}
+            signatures.append(signature)
+        }}
+        guard !signatures.isEmpty,templates.count>=8 else{return .init(kind:"unknown",error:1,margin:0)}
+        let scores=Self.kinds.map {kind in
+            let references=templates.filter{$0.0==kind}
+            let best=signatures.flatMap {signature in references.map{Self.error(signature,$0.1)}}.min() ?? 1
+            return (kind,best)
+        }.sorted{$0.1<$1.1}
         let best=scores[0],margin=scores[1].1-best.1
         return .init(kind:best.1<0.48 && margin>0.035 ? best.0:"unknown",error:best.1,margin:margin)
     }

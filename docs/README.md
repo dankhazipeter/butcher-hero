@@ -2,6 +2,9 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [A gyűjtés kiesései, helyreállítása és automatikus felügyelete](300-gyujtes-helyreallitasa-es-felugyelete.md)
+- [Eltérő Vision-verziók képi regressziója](301-vision-verziok-kepsor-regresszioja.md)
+
 - [Első távoli CI és Swift-fordítókompatibilitás](299-elso-ci-es-swift-kompatibilitas.md)
 
 - [Egyszerű tesztparancs, klónozói hook és PR-ellenőrzés](298-klonozoi-tesztparancs-es-pr-ci.md)

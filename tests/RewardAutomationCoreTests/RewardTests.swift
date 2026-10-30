@@ -51,6 +51,24 @@ final class RewardTests:XCTestCase {
         XCTAssertEqual(observed.reward?.kind,"hp")
         XCTAssertEqual(observed.reward?.amount,"18300","Not8.3,8300 or a cropped token")
     }
+    func testHighContrastNumberFallbackReadsOccluded18K()throws {
+        let full=try image("docs/references/2026-10-30/free-hp-18k-occluded.png")
+        let vision=RewardVision()
+        let observation=try vision.observe(full)
+        let reward=try XCTUnwrap(observation.reward)
+        let texts=try vision.recognize(full,roi:.init(x:0.065,y:reward.badgeY+0.046,width:0.085,height:0.043),highContrast:true)
+        XCTAssertTrue(texts.contains{RewardAmount.parse($0.text)=="18000"},"White-number fallback: \(texts)")
+    }
+    func testDefenseIconSurvivesSmallOCRBadgeAlignmentDifferences()throws {
+        let full=try image("docs/references/2026-10-30/corpus-cutdef593.png")
+        let observation=try RewardVision().observe(full)
+        let badge=try XCTUnwrap(observation.texts.first{$0.text=="FREE"})
+        let rect=CGRect(x:0.025,y:badge.y+badge.height+0.001,width:0.100,height:0.052)
+        for dy in [-2.0,0,2.0] {
+            let match=RewardIconClassifier().match(full,rect:rect.offsetBy(dx:0,dy:dy/Double(full.height)))
+            XCTAssertEqual(match.kind,"cutting_defense","dy=\(dy); error=\(match.error); margin=\(match.margin)")
+        }
+    }
     func testGreenTerrainMustNotHideSmashDamageOrDefense()throws {
         for suffix in ["a","b","c"] {
             let observation=try RewardVision().observe(image("docs/references/2026-10-30/free-smash-688-green-\(suffix).png"))
