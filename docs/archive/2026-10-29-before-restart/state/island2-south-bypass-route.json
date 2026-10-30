@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "status": "supervised path reaches 18.8K golem approach at203913; automatic corridor replay not verified; no reverse traversal evidence",
+  "chart": 62,
+  "origin": {
+    "x": -1122.5512210193863,
+    "y": -90.25321041548129,
+    "evidence": "20260919-202055-150b4715-play/12 =202501-observe/0,104points,zero motion"
+  },
+  "units": "relative optical-flow image pixels; add origin for chart62 world",
+  "direction": "forward only",
+  "waypoints": [
+    {
+      "image": "docs/runs/20260919-202501-6c3e2d1b-observe/frame-00000.png",
+      "x": 0,
+      "y": 0,
+      "consensus": null,
+      "residual": null
+    },
+    {
+      "image": "docs/runs/20260919-202540-29a4b720-observe/frame-00000.png",
+      "x": -1.0003101568549688,
+      "y": 166.70257063882062,
+      "consensus": 49,
+      "residual": 1.999226700309611
+    },
+    {
+      "image": "docs/runs/20260919-202640-4d8ce6e6-observe/frame-00000.png",
+      "x": -3.8046684243876925,
+      "y": 358.56160494300127,
+      "consensus": 44,
+      "residual": 2.9128281271849277
+    },
+    {
+      "image": "docs/runs/20260919-202713-1dd870ae-observe/frame-00000.png",
+      "x": 144.81078288730362,
+      "y": 478.1413918455891,
+      "consensus": 72,
+      "residual": 2.5575952645858955
+    },
+    {
+      "image": "docs/runs/20260919-203123-26d31a9a-observe/frame-00000.png",
+      "x": 144.81078288730362,
+      "y": 478.1413918455891,
+      "consensus": 122,
+      "residual": 0.01641921847613156
+    },
+    {
+      "image": "docs/runs/20260919-203137-fd9cb459-observe/frame-00000.png",
+      "x": 146.6916340367376,
+      "y": 668.0473607473695,
+      "consensus": 33,
+      "residual": 2.6720652256923114
+    },
+    {
+      "image": "docs/runs/20260919-203159-8848a859-observe/frame-00000.png",
+      "x": -10.514300354693354,
+      "y": 807.8088219081112,
+      "consensus": 39,
+      "residual": 2.9159560051103313
+    },
+    {
+      "image": "docs/runs/20260919-203228-fb1a8bc1-observe/frame-00000.png",
+      "x": -171.12709240883896,
+      "y": 948.4524040110233,
+      "consensus": 53,
+      "residual": 2.8092483338452614
+    },
+    {
+      "image": "docs/runs/20260919-203251-0d4b43f9-observe/frame-00000.png",
+      "x": -328.4897339182729,
+      "y": 1089.8157029620722,
+      "consensus": 39,
+      "residual": 2.709570589133235
+    },
+    {
+      "image": "docs/runs/20260919-203323-670e9d47-observe/frame-00000.png",
+      "x": -539.1867348317041,
+      "y": 1089.8157029620722,
+      "consensus": 44,
+      "residual": 2.434643902026996
+    },
+    {
+      "image": "docs/runs/20260919-203351-a17dbee5-observe/frame-00000.png",
+      "x": -754.3655261229954,
+      "y": 1089.8157029620722,
+      "consensus": 39,
+      "residual": 2.6175367449315896
+    },
+    {
+      "image": "docs/runs/20260919-203412-fa93dd90-observe/frame-00000.png",
+      "x": -968.1682565266473,
+      "y": 1088.9637711438904,
+      "consensus": 44,
+      "residual": 1.7794954162732266
+    },
+    {
+      "image": "docs/runs/20260919-203503-bfdb10c5-observe/frame-00000.png",
+      "x": -1110.7432620790028,
+      "y": 958.8407894210613,
+      "consensus": 52,
+      "residual": 2.6214849288149655
+    },
+    {
+      "image": "docs/runs/20260919-203536-2b276c8d-observe/frame-00000.png",
+      "x": -1130.1398953229798,
+      "y": 779.9693803588121,
+      "consensus": 47,
+      "residual": 2.6300651222484164
+    },
+    {
+      "image": "docs/runs/20260919-203603-b9199f79-observe/frame-00000.png",
+      "x": -1264.3412393287797,
+      "y": 780.2334088148602,
+      "consensus": 53,
+      "residual": 1.9697116830212598
+    },
+    {
+      "image": "docs/runs/20260919-203702-0b614a6b-observe/frame-00000.png",
+      "x": -1311.5339749038083,
+      "y": 573.953051098413,
+      "consensus": 40,
+      "residual": 2.4238757002266995
+    },
+    {
+      "image": "docs/runs/20260919-203725-32a0169c-observe/frame-00000.png",
+      "x": -1311.775857672296,
+      "y": 362.4649611048758,
+      "consensus": 45,
+      "residual": 2.6049662719555657
+    },
+    {
+      "image": "docs/runs/20260919-203751-251f5f13-observe/frame-00000.png",
+      "x": -1128.6684735475262,
+      "y": 280.81793020132807,
+      "consensus": 57,
+      "residual": 1.659278315737861
+    },
+    {
+      "image": "docs/runs/20260919-203818-ccf9630c-observe/frame-00000.png",
+      "x": -928.8026850681737,
+      "y": 280.81793020132807,
+      "consensus": 48,
+      "residual": 2.288505026322093
+    },
+    {
+      "image": "docs/runs/20260919-203843-b35fb42e-observe/frame-00000.png",
+      "x": -731.1892834798052,
+      "y": 190.99364054079336,
+      "consensus": 13,
+      "residual": 1.7509172234775212
+    },
+    {
+      "image": "docs/runs/20260919-203913-ce0e5246-observe/frame-00000.png",
+      "x": -621.0919810296656,
+      "y": 129.3444882559125,
+      "consensus": 24,
+      "residual": 2.220268366419552
+    }
+  ]
+}

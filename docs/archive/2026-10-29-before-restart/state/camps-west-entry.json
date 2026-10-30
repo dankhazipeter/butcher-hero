@@ -1,0 +1,14 @@
+{
+  "space":"orange-skull",
+  "run":"20260919-175849-474f891c-play",
+  "status":"observed-directed-traversal-not-yet-repeat-tested",
+  "points":[
+    {"frame":3,"x":-30,"y":33.5,"source":"landmark"},
+    {"frame":9,"x":-30.58345947132319,"y":20.976356226034405,"source":"camera-odometry"},
+    {"frame":12,"x":-30.821063785847418,"y":14.168893451170987,"source":"camera-odometry"},
+    {"frame":14,"x":-27.021798792461006,"y":14.132835652842301,"source":"camera-odometry"},
+    {"frame":16,"x":-23.5,"y":12.5,"source":"landmark"}
+  ],
+  "endpointEvidence":"frame-00016.png: inside camp, two +0.5 shield effects",
+  "rewardEvidence":"frame-00026.png: +20 heart, 3m59s, own5.95K"
+}

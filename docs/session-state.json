@@ -1,0 +1,20 @@
+{
+  "session": "updated-game-2026-10-29",
+  "date": "2026-10-30",
+  "timezone": "Europe/Bucharest",
+  "mode": "stopped-by-user",
+  "automaticGameplay": false,
+  "automaticObservation": false,
+  "observationIntervalSeconds": 1,
+  "allowedAutomaticActions": [],
+  "rewardLog": "data/free-rewards/events.jsonl",
+  "watcherStatus": "data/free-rewards/state.json",
+  "heartbeat": "PAUSED",
+  "legacyState": "archived; requires fresh verification before reuse",
+  "archive": "docs/archive/2026-10-29-before-restart",
+  "lastRequestedScreenshot": "docs/runs/20261029-223657-10037739-observe/frame-00000.png",
+  "visualLabels": { "portal": "BOSS TOWER", "counter": "0/9", "playerHealthLabel": "473M" },
+  "verifiedCombatStats": null,
+  "stoppedAt": "2026-10-30T12:50:59.818+02:00",
+  "nextStep": "Explicit user STOP before computer shutdown; watcher stopped and heartbeat PAUSED. No observation, input or restart without a new explicit resume request. Preserve doc287 live drag-guard proof and local reward journal."
+}

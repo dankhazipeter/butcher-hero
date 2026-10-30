@@ -1,0 +1,23 @@
+# Új taktika — 2026-10-29
+
+## Aktív — 2026-10-30
+
+286:kézi játékot lenyomott egérgomb mellett nem szakítjuk meg jutalominputtal.
+Elengedés után frissFreeellenőrzés. Megmaradt kártya1s után újrapróba,
+csak két hiánykép könyvel; ugyanazt a jutalmat többször nem számoljuk.
+
+284:felhasználói18Kkézi átvétel nem bothozam. A kihagyott/takart számos
+kártyák felismerése és az el nem küldött kattintás utáni újrapróba javítva.
+
+A felhasználó a nyolcféleFree-jutalom felismerését, átvételét és időbélyeges
+naplózását kérte; ez fut1másodperces ellenőrzéssel(282). Karaktermozgás,
+harc és bolt nincs. Az alábbi teljesSTOPa tegnapi munkamenet története.
+
+FelhasználóiSTOP(281):játék teljesen bezárva,automatizáció nem fut.
+Új kérésig nincs megfigyelés vagy fejlesztési futás. AFreefigyelő félkész.
+
+Még nincs kialakított taktika; a felhasználó első lépésére várunk.
+Nincs mozgás, kattintás vagy automatikus játék. Képet a felhasználó jelzésére nézünk.
+
+A korábbi farmcélok, bosspróbák, fegyverajánlások és útvonalak történetiek.
+Az új verzióban friss ellenőrzést igényelnek. Az első kért kép:280.

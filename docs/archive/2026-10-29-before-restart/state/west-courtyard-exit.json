@@ -1,0 +1,9 @@
+{
+  "id": "western-dead-end-south-exit",
+  "anchor": "dusty-gulch-venom-guard",
+  "entry": {"minX": -72, "maxX": -56, "minY": -72, "maxY": -46},
+  "waypoints": [
+    {"x": -64.5, "y": -50.5, "evidence": "20260919-154908-d84f6df0-observe/frame-00000.png"},
+    {"x": -50, "y": -39, "evidence": "20260919-154946-e85074af-observe/frame-00000.png"}
+  ]
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "western-courtyard-northwest-unreachable",
+    "minX": -75, "maxX": -28, "minY": -78, "maxY": 8,
+    "blockedX": -0.75, "blockedY": -0.66,
+    "frontierX": -44.5, "frontierY": -14.5,
+    "evidence": "20260919-155210-a9525cac-play/frame-00010.png + frame-00023.png; frontier:20260919-153030-e1c1dbe7-observe/frame-00000.png"
+  },
+  {
+    "id": "northern-house-rock-face",
+    "minX": 5, "maxX": 35, "minY": -80, "maxY": -40,
+    "blockedX": -0.75, "blockedY": -0.66,
+    "frontierX": 24, "frontierY": -55,
+    "evidence": "20260919-163213-82c3f70f-observe/frame-00000.png; four SE 0.5s swipes:20260919-163628-48cf8ba6-nudge; endpoint20260919-163649-e051bfe3-observe/frame-00000.png. Only start-to-gate edge verified, east continuation exploratory."
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "space": "local-image-audit-20260919-183958",
+  "status": "supervisor-traversal-not-automatically-localized-or-repeat-tested",
+  "units": "screen-terrain-pixels",
+  "control": "two batches of 3 north swipes, duration0.45s each",
+  "points": [
+    {"image":"20260919-183958-bf5091b9-observe/frame-00000.png","x":0,"y":0},
+    {"image":"20260919-184008-75d23814-nudge/frame-00001.png","x":-1.33,"y":-73.00},
+    {"image":"20260919-184008-75d23814-nudge/frame-00002.png","x":-0.69,"y":-151.73},
+    {"image":"20260919-184013-a11f5741-observe/frame-00000.png","x":-0.20,"y":-222.47},
+    {"image":"20260919-184043-ab3cd7f0-nudge/frame-00001.png","x":-3.36,"y":-305.51},
+    {"image":"20260919-184043-ab3cd7f0-nudge/frame-00002.png","x":-3.06,"y":-373.13},
+    {"image":"20260919-184048-8623887b-observe/frame-00000.png","x":-6.65,"y":-452.02}
+  ],
+  "endpoint": "watchtower roof south of player; northwestern grass visually open"
+}

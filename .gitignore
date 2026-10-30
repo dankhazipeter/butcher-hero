@@ -1,0 +1,20 @@
+.build/
+.DS_Store
+
+# Local runtime output; preserve it on disk, not in source-control history.
+/data/
+/outputs/
+/docs/runs/*
+
+# Two existing screenshot fixtures used by the active RewardTests suite.
+!/docs/runs/20261029-224727-a64e5f83-observe/
+/docs/runs/20261029-224727-a64e5f83-observe/*
+!/docs/runs/20261029-224727-a64e5f83-observe/frame-00000.png
+!/docs/runs/20261029-223657-10037739-observe/
+/docs/runs/20261029-223657-10037739-observe/*
+!/docs/runs/20261029-223657-10037739-observe/frame-00000.png
+
+# Local credentials must not be committed.
+.env
+.env.*
+!.env.example
