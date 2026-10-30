@@ -3,7 +3,8 @@
 ## Verziókezelés
 
 GitHub: [dankhazipeter/butcher-hero](https://github.com/dankhazipeter/butcher-hero).
-Egyelőre amainágat használjuk, minden lezárt változtatási kör külön commit.
+Egyelőre amainágat használjuk; minden lezárt változtatási kör után
+automatikus commit és `git push origin main` készül, külön kérés nélkül.
 Nyers futások, naplók és buildfájlok helyben maradnak; a kód, tesztek és
 dokumentáció követve vannak. [Bekötési jegyzet](docs/290-github-main-elso-feltoltes.md).
 

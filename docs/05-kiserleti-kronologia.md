@@ -2,6 +2,12 @@
 
 ## 2026-10-30
 
+291:állandó felhasználói engedély automatikus commitra ÉS main-push-ra
+minden lezárt változtatási körben; AGENTSlegelső szabály frissítve.
+Külön kérésreFreegyűjtés újraindítva:90423PID,16:09:56Zkezdés,
+első593CutDefense16:10:02.768Zigazolt, következőpillanatkép2claim/1186.
+Nincs régi bot, új kód vagyheartbeat-aktiválás.
+
 290:felhasználói kérésreGitHuboriginbekötés ésmainfeltöltés.
 HTTPSwebdream-hufiókkal403; meglévőSSHdankhazipeterhitelesítéssel siker.
 11137afkezdeti állapot feltöltve, upstreamorigin/main. Nincs globális

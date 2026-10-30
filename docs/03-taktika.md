@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+291:új kifejezett folytatásra aFreegyűjtés ismét fut; kézi húzásvédelem
+és a286-os újrapróba/könyvelés változatlan. CsakFree, nincs karaktermozgás,
+harc, bolt vagy ismeretlen felugró képernyő automatikus átugrása.
+
 286:kézi játékot lenyomott egérgomb mellett nem szakítjuk meg jutalominputtal.
 Elengedés után frissFreeellenőrzés. Megmaradt kártya1s után újrapróba,
 csak két hiánykép könyvel; ugyanazt a jutalmat többször nem számoljuk.

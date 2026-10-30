@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30
 
+291ELSŐBBSÉG:felhasználói folytatásraFreefigyelő újra fut,90423PID,
+két új igazolt átvétel;288STOP-ja e szűk körben felülírva. Automatikus
+commit ÉS push kötelező minden lezárt változtatási körben. Az ismeretlen
+felugró képernyőkhöz később küldött felhasználói példák kellenek;
+most nincs vak továbblépés. Régi bot/heartbeat maradPAUSED.
+
 288ELSŐBBSÉG:felhasználóiSTOP, figyelő leállt,heartbeatPAUSED.
 Az alábbi fejlesztési kérdések későbbi folytatásra valók; most nincs
 automatikus megfigyelés vagy input, újraindítás csak új kérésre.

@@ -1,5 +1,9 @@
 # GitHub main — első feltöltés, 2026-10-30
 
+Új állandó munkarend291óta: minden lezárt változtatási kör commitja után
+automatikus `git push origin main`, külön kérés nélkül. Az alábbi bekötési
+történet megmarad; központi utasítás azAGENTS.mdlegelső szakaszában.
+
 ## Felhasználói kérés
 
 A felhasználó létrehozta a https://github.com/dankhazipeter/butcher-hero

@@ -1,5 +1,9 @@
 # Kötelező commit és helyi Git — 2026-10-30
 
+291FELÜLÍRÁS:az új állandó felhasználói utasítás szerint minden lezárt
+változtatási kör után automatikus commit ÉS main-push kell, külön kérés nélkül.
+[291 — automatikus feltöltés és folytatás](291-automatikus-commit-push-es-free-ujrainditas.md).
+
 Frissebb állapot: a felhasználó megadta aGitHub-célt, a remote és az első
 main-push elkészült. [290 — GitHub main](290-github-main-elso-feltoltes.md).
 Az alábbi„nincs remote/push”a helyi tároló létrehozásának akkori állapota.

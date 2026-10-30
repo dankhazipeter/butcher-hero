@@ -2,11 +2,11 @@
   "session": "updated-game-2026-10-29",
   "date": "2026-10-30",
   "timezone": "Europe/Bucharest",
-  "mode": "stopped-by-user",
+  "mode": "free-rewards-only",
   "automaticGameplay": false,
-  "automaticObservation": false,
+  "automaticObservation": true,
   "observationIntervalSeconds": 1,
-  "allowedAutomaticActions": [],
+  "allowedAutomaticActions": ["claim left event FREE reward"],
   "rewardLog": "data/free-rewards/events.jsonl",
   "watcherStatus": "data/free-rewards/state.json",
   "heartbeat": "PAUSED",
@@ -16,5 +16,5 @@
   "visualLabels": { "portal": "BOSS TOWER", "counter": "0/9", "playerHealthLabel": "473M" },
   "verifiedCombatStats": null,
   "stoppedAt": "2026-10-30T12:50:59.818+02:00",
-  "nextStep": "Explicit user STOP before computer shutdown; watcher stopped and heartbeat PAUSED. No observation, input or restart without a new explicit resume request. Preserve doc287 live drag-guard proof and local reward journal."
+  "nextStep": "User explicitly resumed Free-only collection (doc291). Run one 1s watcher with human-drag guard, 1s retry and disappearance-confirmed logging. No movement, combat, shop or unknown modal actions; legacy heartbeat PAUSED. Commit and push every completed change cycle automatically to origin/main."
 }

@@ -1,9 +1,10 @@
 # Butcher Hero — aktív projektutasítások
 
-## Kötelező commit minden lezárt változtatási kör után — 2026-10-30
+## Kötelező automatikus commit ÉS push minden lezárt változtatási kör után — 2026-10-30
 
 A felhasználó kérése: minden érdemi kód-, teszt-, konfiguráció- vagy
-dokumentációváltoztatási kör végén készüljön egy áttekinthető Git-commit.
+dokumentációváltoztatási kör végén készüljön egy áttekinthető Git-commit,
+majd automatikusan `git push origin main`, külön felhasználói kérés nélkül.
 Előtte releváns ellenőrzés, dokumentációfrissítés, diff- és staged-ellenőrzés.
 Csak a körhöz tartozó módosításokat stage-eljük; más felhasználói munkát nem
 foglalunk bele és nem írunk felül. Az induló commit kivételként a meglévő
@@ -13,12 +14,33 @@ commitokat. Pusztán olvasási/megfigyelési körhöz nem kell üres commit.
 Nyers felvételek, futó naplók, build és titkok nem kerülhetnek commitba;
 a szükséges kis tesztreferenciák igen. Ha a commit akadályba ütközik, ezt
 jelezzük, nem állítjuk sikeresnek. Git-szerzői identitást nem találunk ki.
-Távoli repó bekötése/push felhasználói kérésre;290óta a megadott cél:
+Ez állandó felhasználói felhatalmazás a körhöz tartozó commit feltöltésére;
+felülírja a korábbi „push csak külön kérésre” szabályt. Force-push és
+idegen változtatás felülírása nincs engedélyezve. Eltérő távoli történet,
+hitelesítési vagy hálózati hiba esetén jelezzük az akadályt, nem állítunk
+sikeres feltöltést. A commit után a távoli mainnel való egyezést ellenőrizzük.
+291óta minden lezárt változtatási kör automatikus push-célja:
 https://github.com/dankhazipeter/butcher-hero. Egyetlen munkág egyelőremain,
 upstreamorigin/main. AzoriginSSH-címegit@github.com:dankhazipeter/butcher-hero.git;
 SSHdankhazipeterként hitelesít, aHTTPSmásik fiókkal403-at adott. Globális
 hitelesítést nem módosítunk; új ág/PR jelenleg nem szükséges.
-A játék STOP-ját ez az adminisztratív kérés nem oldja fel. Részletek289.
+Részletek289–291. Egy pusztán Git-munkarendre vonatkozó kérés önmagában
+nem oldja fel a játék STOP-ját; a mostani felhasználó viszont külön kérte
+a program újraindítását is, az alábbi szűkFree-körben.
+
+## ELSŐBBSÉG — FREE-GYŰJTÉS ÚJRA ENGEDÉLYEZVE, 2026-10-30 (291)
+
+A felhasználó: „indítsd el a programot, újra fut a játék, gyűjtsük a
+jutalmakat”. Ez felülírja288STOP-ját kizárólag a bal oldali event alatti
+Free-jutalom figyelésére és átvételére.1s mintavétel, kézi húzásvédelem,
+1s újrapróba, eltűnés utáni egyszeri könyvelés és helyi naplózás marad.
+Mozgás, harc, bolt, vásárlás, reklám és ismeretlen modal kezelése nincs.
+A régi heartbeatPAUSED; nem indítunk második figyelőt. Friss futási állapot:
+data/free-rewards/state.json, részletek291. Az alábbiSTOP-történet megmarad.
+
+291élő indulás:90423PID/session95760,16:09:56Zwatcher_started,
+16:10:02.768Zelső593CutDefenseigazolva. Következőstats-pillanatkép:
+2claim,CutDefense1186,0függő. Utókép ellenőrizve; figyelő futva marad.
 
 ## ELSŐBBSÉG — FELHASZNÁLÓI STOP, 2026-10-30 12:50:59 Bucharest
 

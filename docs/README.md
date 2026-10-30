@@ -1,9 +1,12 @@
 # Kutatási napló
 
-## Aktuális: felhasználói stop, 2026-10-30
+## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
-Nincs futófigyelő vagy játékbot; heartbeatPAUSED. Új kifejezett folytatásig
-nincs megfigyelés, input vagy újraindítás.
+Felhasználói kérésre csak aFree-jutalom figyelése és átvétele engedélyezett,
+1s ütemmel és kézi húzásvédelemmel. A régi játékbot/heartbeat továbbraPAUSED.
+Minden lezárt változtatási kör automatikus commitot ÉS main-push-t kap.
+
+- [Automatikus commit+push és a Free-gyűjtés újraindítása](291-automatikus-commit-push-es-free-ujrainditas.md)
 
 - [Leállítás kikapcsolás előtt](288-felhasznaloi-stop-kikapcsolas-elott.md)
 
@@ -33,7 +36,7 @@ nincs megfigyelés, input vagy újraindítás.
 - [Visszaállítható archívum](archive/2026-10-29-before-restart/README.md)
 
 2026-10-30:korábban csak a bal oldaliFree-jutalom figyelő/átvevő futott
-1másodperces ellenőrzéssel és helyi naplóval;288óta leállítva.
+1másodperces ellenőrzéssel és helyi naplóval;288leállította,291újra engedélyezte.
 Az alábbi szeptemberi jegyzetek történeti anyagok, friss ellenőrzést igényelnek.
 
 ## Előző verzió — történeti jegyzetek
