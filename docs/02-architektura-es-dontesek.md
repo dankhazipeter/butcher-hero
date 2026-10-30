@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30 (282)
 
+295:érték- és darabsorozat külön APIcsatornán. A collectionSeries ismert
+típusú, igazolt claimenként1-et számol akkor is, ha az összeg hiányzik.
+Az ismeretlen típus unclassifiedClaims, az arányok nevezője az azonosított
+darabszám. Ugyanaz a végső kattintási idő/időablak és claimID-deduplikálás.
+
 294:dashboard/format.js közös, szövegalapú K/M/B/T megjelenítési formázó,
 az adatréteget nem érinti. dashboard/icons/ különRGBA UI-képek;
 a felismerési erőforrások megmaradnak. Ikoncache1óra, API továbbra no-store.

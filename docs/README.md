@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Közös vonaldiagram a jutalmak darabszámának és arányának összehasonlítására](295-kozos-darabszamgrafikon.md)
+
 - [K/M statkijelzés és barna háttér nélküli UI-ikonok](294-jatekos-szamformatum-es-tiszta-ikonok.md)
 
 - [Élő, helyi jutalomstatisztika](292-elo-jutalomstatisztika.md)

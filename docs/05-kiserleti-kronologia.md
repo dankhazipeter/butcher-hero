@@ -2,6 +2,10 @@
 
 ## 2026-10-30
 
+295:közös halmozott8vonalas darabszámgrafikon, jelmagyarázatban arányok,
+kapcsolható vonalak és időponti részletek.12Python/5NodePASS. Böngészőben
+8→7→8vonal,8tooltip-sor,mobil túlcsordulás nélkül. Gyűjtő2444végig futott.
+
 294:kért K/M számkijelzés és fehér hátterű, áttetsző UI-ikonok elkészültek.
 5Node/9Python-tesztPASS, böngészőben201300→201K,3780→3,7K; pontos
 adatok változatlanok. Statikus kiszolgáló újraindult, gyűjtő2444végig futott.

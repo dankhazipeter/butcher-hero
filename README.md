@@ -14,6 +14,8 @@ dokumentáció követve vannak. [Bekötési jegyzet](docs/290-github-main-elso-f
 Indítása: `./scripts/start-reward-dashboard.sh` (Python3.10+, külön csomag nélkül).
 Látható lapon2s-onként frissül a helyi naplóból. Alapból csak a mostani
 gyűjtőfutást mutatja; kézi oldalfrissítés nem kell. Részletek: [292](docs/292-elo-jutalomstatisztika.md).
+Közös darabszámgrafikon is összehasonlítja a nyolc jutalomtípus gyakoriságát,
+darabbal és aránnyal, a statértékek nagyságától függetlenül: [295](docs/295-kozos-darabszamgrafikon.md).
 
 Az első automatizáció elkészült: másodpercenként figyeli a bal oldali event
 alattiFree-jutalmat, átveszi és naplózza a8jutalomtípus egyikeként.

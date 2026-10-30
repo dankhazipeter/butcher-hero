@@ -30,6 +30,13 @@ a program újraindítását is, az alábbi szűkFree-körben.
 
 ## ELSŐBBSÉG — FREE-GYŰJTÉS ÚJRA ENGEDÉLYEZVE, 2026-10-30 (291)
 
+Legújabb295:közös8vonalas grafikonnal az IGAZOLT ÁTVÉTELEK DARABSZÁMA
+hasonlítható, nem a jutalmak összege.1átvétel=1db, újrapróbák nem külön;
+ismert típus hiányzó összeggel is darab, ismeretlen típus külön megjegyzés.
+Százalékok nevezője az azonosított, igazolt darabszám. ÚjAPImezők:
+collectionCounts/collectionSeries/unclassifiedClaims.12Python+5NodePASS.
+Statisztikaszerverexecsession85053; gyűjtő2444változatlanul futott.
+
 Legújabb294:statkártyák és tengelyek közösK/M/B/T-kijelzése,100alatti
 skálaérték egy tizedeslevágással,100-tól egész.2360000→2,3M,99800000→99,8M.
 Ez felhasználói példákból választott megjelenítési szabály, nem biztos

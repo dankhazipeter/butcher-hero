@@ -153,11 +153,19 @@ def aggregate(events, malformed, log_exists, query, now):
     totals = {kind: Decimal(0) for kind in KINDS}
     counts = dict.fromkeys(KINDS, 0)
     points = {kind: [] for kind in KINDS}
-    recent, unknown = [], 0
+    collection_counts = dict.fromkeys(KINDS, 0)
+    collection_points = {kind: [] for kind in KINDS}
+    recent, unknown, unclassified = [], 0, 0
     for claim, event in selected:
         reward = corrections.get(claim, event["reward"])
         kind, value = reward.get("kind"), amount(reward.get("amount"))
         success = claim in confirmed
+        if success:
+            if kind in KINDS:
+                collection_counts[kind] += 1
+                collection_points[kind].append(event["at"])
+            else:
+                unclassified += 1
         if success and kind in KINDS and value is not None:
             totals[kind] += value
             counts[kind] += 1
@@ -186,6 +194,19 @@ def aggregate(events, malformed, log_exists, query, now):
             samples.append({"at": stamp(at), "value": str(running)})
         samples.append({"at": stamp(end), "value": str(running)})
         series[kind] = samples
+    collection_series = {}
+    for kind, times in collection_points.items():
+        buckets = defaultdict(int)
+        for at in times:
+            buckets[int((at - start).total_seconds() // step)] += 1
+        running = 0
+        samples = [{"at": stamp(start), "count": 0}]
+        for index in sorted(buckets):
+            running += buckets[index]
+            at = min(end, start + timedelta(seconds=(index + 1) * step))
+            samples.append({"at": stamp(at), "count": running})
+        samples.append({"at": stamp(end), "count": running})
+        collection_series[kind] = samples
     errors = [event for event in events if event["event"] in ("observation_error", "capture_recovered")]
     latest_error = errors[-1] if errors and errors[-1]["event"] == "observation_error" else None
     runs = [event for event in events if event["event"] == "watcher_started"]
@@ -200,6 +221,8 @@ def aggregate(events, malformed, log_exists, query, now):
         "kinds": [{"kind": kind, "label": label, "total": str(totals[kind]), "count": counts[kind]}
                   for kind, label in KINDS.items()],
         "series": series, "recent": list(reversed(recent[-100:])),
+        "collectionCounts": collection_counts, "collectionSeries": collection_series,
+        "unclassifiedClaims": unclassified,
         "lastConfirmedAt": next((row["at"] for row in reversed(recent) if row["confirmed"]), None),
         "observationError": latest_error["message"] if latest_error else None,
         "historicalDataWarning": bool(selected) and not current_quality,

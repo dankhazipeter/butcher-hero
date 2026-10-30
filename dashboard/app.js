@@ -7,6 +7,9 @@
   const short = new Intl.DateTimeFormat("hu-HU", {timeZone:zone,hour:"2-digit",minute:"2-digit"});
   let mode = "run", snapshot, sequence = 0, pollVersion = 0, timer, lastCount;
   let cards = new Map();
+  const hiddenKinds=new Set();
+  const frequencyButtons=new Map();
+  const linePatterns=["","7 3","","2 3","","8 3 2 3","5 3","1 4"];
   const {formatExact:decimal,formatCompact:compact}=RewardFormat;
   function field(tag, text, className) {
     const node = document.createElement(tag); node.textContent = text;
@@ -54,6 +57,91 @@
     });
     svg.append(hit);
   }
+  function drawFrequency() {
+    if(!snapshot || !snapshot.collectionSeries) return;
+    const svg=$("frequency-svg"),host=$("frequency-chart"),tooltip=$("frequency-tooltip");
+    const width=Math.round(host.getBoundingClientRect().width);
+    if(width<=0) return;
+    const height=Math.round(svg.getBoundingClientRect().height)||300,left=52,right=20,top=24,bottom=height-42;
+    const start=Date.parse(snapshot.range.from),end=Date.parse(snapshot.range.to);
+    const maxCount=Math.max(1,...Object.values(snapshot.collectionCounts));
+    const raw=Math.max(1,Math.ceil(maxCount/5)),power=10**Math.floor(Math.log10(raw));
+    const step=[1,2,5,10].find(value=>value>=raw/power)*power;
+    const ceiling=Math.ceil(maxCount/step)*step;
+    const x=value=>left+(value-start)/Math.max(1,end-start)*(width-left-right);
+    const y=value=>bottom-value/ceiling*(bottom-top);
+    svg.setAttribute("viewBox",`0 0 ${width} ${height}`);svg.replaceChildren();tooltip.hidden=true;
+    svg.append(svgNode("title",{},"Igazolt gyűjtések jutalomtípusonként; a jutalom nagysága nem számít, egy átvétel egy darab."));
+    svg.append(svgNode("text",{x:left,y:13,class:"frequency-axis-label"},"Átvétel (db)"));
+    for(let count=0;count<=ceiling;count+=step) {
+      svg.append(svgNode("line",{x1:left,y1:y(count),x2:width-right,y2:y(count),class:"frequency-grid"}));
+      svg.append(svgNode("text",{x:left-9,y:y(count)+4,"text-anchor":"end"},decimal(count)));
+    }
+    const tickCount=width<600?3:5;
+    const timeFormat=end-start>24*3600e3
+      ? new Intl.DateTimeFormat("hu-HU",{timeZone:zone,month:"2-digit",day:"2-digit"}):short;
+    for(let i=0;i<tickCount;i++) {
+      const time=start+(end-start)*i/(tickCount-1);
+      svg.append(svgNode("text",{x:x(time),y:height-18,"text-anchor":i===0?"start":i===tickCount-1?"end":"middle"},timeFormat.format(new Date(time))));
+    }
+    svg.append(svgNode("text",{x:width-right,y:height-1,"text-anchor":"end",class:"frequency-axis-label"},"Idő · Europe/Bucharest"));
+    snapshot.kinds.forEach((row,index)=>{
+      if(hiddenKinds.has(row.kind)) return;
+      const points=snapshot.collectionSeries[row.kind];
+      let path=`M${x(Date.parse(points[0].at))},${y(points[0].count)}`;
+      for(let i=1;i<points.length;i++) path+=`H${x(Date.parse(points[i].at))}V${y(points[i].count)}`;
+      const group=svgNode("g",{class:`frequency-series frequency-${row.kind}`,"data-kind":row.kind});
+      const line=svgNode("path",{d:path,class:"frequency-line","stroke-dasharray":linePatterns[index]});
+      line.append(svgNode("title",{},`${row.label}: ${snapshot.collectionCounts[row.kind]} db`));
+      group.append(line,svgNode("circle",{cx:x(end),cy:y(points[points.length-1].count),r:3,class:"frequency-endpoint"}));
+      svg.append(group);
+    });
+    const guide=svgNode("line",{x1:left,y1:top,x2:left,y2:bottom,class:"frequency-guide",visibility:"hidden"});svg.append(guide);
+    const hit=svgNode("rect",{x:left,y:top,width:Math.max(1,width-left-right),height:bottom-top,class:"frequency-hit"});
+    hit.addEventListener("pointermove",event=>{
+      const box=svg.getBoundingClientRect(),localX=Math.max(left,Math.min(width-right,event.clientX-box.left));
+      const at=start+(localX-left)/(width-left-right)*(end-start);
+      guide.setAttribute("x1",localX);guide.setAttribute("x2",localX);guide.setAttribute("visibility","visible");
+      tooltip.replaceChildren(field("strong",date.format(new Date(at))));
+      for(const row of snapshot.kinds) {
+        if(hiddenKinds.has(row.kind)) continue;
+        let count=0;
+        for(const point of snapshot.collectionSeries[row.kind]) {if(Date.parse(point.at)>at) break;count=point.count;}
+        const detail=field("div","","frequency-tooltip-row");detail.append(field("span",row.label),field("span",`${count} db`));tooltip.append(detail);
+      }
+      tooltip.hidden=false;
+      const tw=tooltip.offsetWidth,th=tooltip.offsetHeight;
+      tooltip.style.left=`${Math.max(0,Math.min(width-tw,localX+12))}px`;
+      tooltip.style.top=`${Math.max(0,Math.min(height-th,event.clientY-box.top+12))}px`;
+    });
+    hit.addEventListener("pointerleave",()=>{guide.setAttribute("visibility","hidden");tooltip.hidden=true;});
+    svg.append(hit);
+  }
+  function renderFrequency(data) {
+    const classified=Object.values(data.collectionCounts).reduce((sum,value)=>sum+value,0);
+    data.kinds.forEach((row,index)=>{
+      let button=frequencyButtons.get(row.kind);
+      if(!button) {
+        button=field("button","",`frequency-key frequency-${row.kind}`);button.type="button";
+        button.setAttribute("aria-controls","frequency-svg");
+        const swatch=svgNode("svg",{viewBox:"0 0 24 8","aria-hidden":"true",class:"frequency-swatch"});
+        swatch.append(svgNode("path",{d:"M1 4H23","stroke-dasharray":linePatterns[index]}));
+        const image=document.createElement("img");image.src=`/icons/${row.kind}.png`;image.alt="";
+        button.append(swatch,image,field("span",row.label,"frequency-name"),field("span","","frequency-amount"));
+        button.addEventListener("click",()=>{
+          if(hiddenKinds.has(row.kind)) hiddenKinds.delete(row.kind);else hiddenKinds.add(row.kind);
+          button.setAttribute("aria-pressed",String(!hiddenKinds.has(row.kind)));drawFrequency();
+        });
+        $("frequency-legend").append(button);frequencyButtons.set(row.kind,button);
+      }
+      const count=data.collectionCounts[row.kind],share=classified?count/classified*100:0;
+      button.setAttribute("aria-pressed",String(!hiddenKinds.has(row.kind)));
+      button.querySelector(".frequency-amount").textContent=`${count} db · ${share.toLocaleString("hu-HU",{maximumFractionDigits:1})}%`;
+    });
+    $("frequency-summary").textContent=`${classified} azonosított, igazolt átvétel. Az arányok ezekre vonatkoznak; egy átvétel egy darab, a statértékétől függetlenül.`+
+      (data.unclassifiedClaims?` További ${data.unclassifiedClaims} igazolt átvétel típusa még ismeretlen, ezért nincs a vonalakon.`:"");
+    drawFrequency();
+  }
   function render(data) {
     snapshot=data;
     $("connection").textContent="ÉLŐ NAPLÓ"; $("connection").classList.remove("error");
@@ -87,9 +175,10 @@
       value.textContent=`+${compact(row.total)}`;
       value.title=`Pontos naplóérték: +${decimal(row.total)}`;
       value.setAttribute("aria-label",`${row.label}: +${decimal(row.total)}`);
-      card.querySelector(".stat-count").textContent=`${row.count} igazolt átvétel`;
+      card.querySelector(".stat-count").textContent=`${data.collectionCounts[row.kind]} igazolt átvétel`;
       draw(card,row,data.series[row.kind]);
     }
+    renderFrequency(data);
     $("entries").replaceChildren();
     for(const row of data.recent) {
       const tr=document.createElement("tr");
@@ -134,7 +223,10 @@
     const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
   }
   $("to").value=localInput(new Date());$("from").value=localInput(new Date(Date.now()-3600e3));
-  new ResizeObserver(()=>{if(snapshot) for(const row of snapshot.kinds) draw(cards.get(row.kind),row,snapshot.series[row.kind]);}).observe($("stats-grid"));
+  const layout=new ResizeObserver(()=>{
+    if(snapshot) {for(const row of snapshot.kinds) draw(cards.get(row.kind),row,snapshot.series[row.kind]);drawFrequency();}
+  });
+  layout.observe($("stats-grid"));layout.observe($("frequency-chart"));
   function poll() {const version=++pollVersion;clearTimeout(timer);refresh().finally(()=>{if(version===pollVersion) timer=setTimeout(poll,document.hidden?10000:2000);});}
   document.addEventListener("visibilitychange",()=>{if(!document.hidden) poll();});
   poll();

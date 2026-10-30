@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+295:gyűjtési gyakoriságot a közös DARABvonalakon hasonlítunk össze,
+nem aHealthésmás statok eltérő nagyságú összegeiből. Az ismeretlen típusok
+külön maradnak, nem torzítunk kitalált besorolással. A gyűjtő nem változott.
+
 294:a rövidített statkijelzés nem csökkentheti a napló pontosságát.
 Összehasonlításhoz továbbra a teljes értéket használjuk; a UI-ikonok
 háttéreltávolítása nem módosítja a gyűjtő felismerését vagy inputját.

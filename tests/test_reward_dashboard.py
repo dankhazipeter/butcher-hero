@@ -121,6 +121,45 @@ class DashboardTests(unittest.TestCase):
         self.assertFalse(current["historicalDataWarning"])
         self.assertTrue(self.result({"range": ["all"]})["historicalDataWarning"])
 
+    def test_collection_chart_counts_claims_not_amounts(self):
+        self.write([event("click_sent", 0, "big", "18300", "hp"),
+                    event("claim_confirmed_ui", 1, "big"),
+                    event("click_sent", 2, "small", "0.5", "regeneration"),
+                    event("claim_confirmed_ui", 3, "small"),
+                    event("click_sent", 4, "missing", None, "cutting_damage"),
+                    event("claim_confirmed_ui", 5, "missing"),
+                    event("click_sent", 6, "unknown", "999999", "unknown"),
+                    event("claim_confirmed_ui", 7, "unknown"),
+                    event("click_sent", 8, "pending", "18300", "hp")])
+        result = self.result()
+        self.assertEqual(result["collectionCounts"]["hp"], 1)
+        self.assertEqual(result["collectionCounts"]["regeneration"], 1)
+        self.assertEqual(result["collectionCounts"]["cutting_damage"], 1, "Known type still counts when amount is missing")
+        self.assertEqual(result["collectionSeries"]["hp"][-1]["count"], 1)
+        self.assertEqual(result["collectionSeries"]["regeneration"][-1]["count"], 1)
+        self.assertEqual(result["unclassifiedClaims"], 1)
+        self.assertEqual(sum(result["collectionCounts"].values()), result["confirmedClaims"]-result["unclassifiedClaims"])
+        self.assertEqual(len(result["collectionSeries"]), 8)
+
+    def test_collection_chart_retry_time_window_and_corrected_kind(self):
+        self.write([event("click_sent", 0, reward_kind="unknown"),
+                    event("click_sent", 2, reward_kind="unknown"),
+                    event("claim_confirmed_ui", 4),
+                    event("reward_corrected", 6, reward_kind="hp", value="18300")])
+        early = self.result({"from": ["2026-10-30T10:00:00Z"], "to": ["2026-10-30T10:00:01Z"]})
+        self.assertEqual(sum(early["collectionCounts"].values()), 0)
+        final = self.result({"from": ["2026-10-30T10:00:02Z"], "to": ["2026-10-30T10:00:03Z"]})
+        self.assertEqual(final["collectionCounts"]["hp"], 1)
+        self.assertEqual(final["collectionSeries"]["hp"][-1]["count"], 1)
+        self.assertEqual(final["unclassifiedClaims"], 0)
+
+    def test_empty_collection_chart_has_zero_integer_series(self):
+        result = self.result()
+        self.assertEqual(result["unclassifiedClaims"], 0)
+        self.assertTrue(all(count == 0 for count in result["collectionCounts"].values()))
+        for series in result["collectionSeries"].values():
+            self.assertTrue(all(point["count"] == 0 and isinstance(point["count"], int) for point in series))
+
     def test_http_read_only_restricted_paths_host_and_live_append(self):
         self.write([event("click_sent", 0)])
         server = make_server(self.root, 0)
