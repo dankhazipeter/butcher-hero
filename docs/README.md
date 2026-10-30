@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [CPU-s OCR és valóban blokkoló tesztkapu](302-cpu-ocr-es-blokkolo-tesztkapu.md)
+
 - [A gyűjtés kiesései, helyreállítása és automatikus felügyelete](300-gyujtes-helyreallitasa-es-felugyelete.md)
 - [Eltérő Vision-verziók képi regressziója](301-vision-verziok-kepsor-regresszioja.md)
 

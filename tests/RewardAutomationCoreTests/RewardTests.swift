@@ -1,8 +1,22 @@
 import XCTest
 import ImageIO
+import Vision
 @testable import RewardAutomationCore
 
 final class RewardTests:XCTestCase {
+    func testOCRUsesSupportedCPUDevices()throws {
+        let request=VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        try RewardVision.useCPUForSupportedStages(request)
+        var checked=0
+        for (stage,devices) in try request.supportedComputeStageDevices {
+            guard devices.contains(where:{if case .cpu = $0 {return true};return false}) else{continue}
+            let chosen=try XCTUnwrap(request.computeDevice(for:stage))
+            guard case .cpu = chosen else{return XCTFail("CPU must be selected for \(stage)")}
+            checked+=1
+        }
+        XCTAssertGreaterThan(checked,0)
+    }
     private var project:URL {URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()}
     private func image(_ path:String)throws->CGImage {
         let source=try XCTUnwrap(CGImageSourceCreateWithURL(project.appendingPathComponent(path) as CFURL,nil))

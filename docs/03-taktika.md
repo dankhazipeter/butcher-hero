@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+302:átmenetiOCRinfrastruktúrahibánál sincs tesztkapu-megkerülés. CPU-
+feldolgozási kísérlet támogatott eszközökkel, képi elvárások változatlanok.
+A felügyelt gyűjtő közben külön marad, betöltéshez is előre fordított bináris kell.
+
 300:tesztfejlesztés nem jelentheti az engedélyezettFreegyűjtés elhanyagolását.
 Aktív gyűjtést csak betöltésre állítunk meg, nem a teljes teszt/CI idejére.
 Friss lastCheckedAt és átvételi utókép alapján mondunk működést, nem PIDből.

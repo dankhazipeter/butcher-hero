@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30 (282)
 
+302:VNRequest.supportedComputeStageDevices alapján mindenCPUtámogatású
+szakaszra explicitCPUeszköz, setComputeDeviceAPIval. Nem használunk
+deprecatedusesCPUOnlyt, nem választunk nem támogatott eszközt. Különunit
+igazolja a konfigurációt. Éles build előkészítése külön .build/reward-staging
+könyvtárban, így a futó releasebinárist a fordítás nem cseréli le.
+
 300:Pythonfelügyelő külön folyamatként a sikeres képfeldolgozás frissülését
 ellenőrzi, nem aPIDlétét. Egyetlen sajátgyerek, különflock;35–50smértékű
 maximális elakadási ablak a türelmi időkkel. SajátJSONLállapotnapló,

@@ -1,5 +1,15 @@
 # Butcher Hero — aktív projektutasítások
 
+302:a push előtti tesztkör különOCRellenőrzése is hibával állt meg; a live-
+hibával való azonosság nem igazolt. A kapu BLOKKOLTA a feltöltést, nem került
+megkerülésre. Most támogatott
+VisioncomputeStageenkéntCPU-eszközt választunk a hivatalos macOS14+APIval.
+Ez az accelerator-munkamenetek hibáját kerülő HIPOTÉZIS, nem bizonyított
+véglegesgyökérok.20Swift/13statisztika/3kapu/9felügyelet/5NodehelybenPASS.
+Előre fordítottCPUrelease betöltve;54705felügyelő/54789worker,session90309.
+19:10:19HP18300igazolás,19:10:34frissképidő, hosszú távú stabilitás nem állított.
+A remoteCIeredmény még külön igazolandó. Futó gyűjtőt ne állítsuk le a tesztekhez.
+
 ## Élő gyűjtés elsőbbsége és tartós felügyelete — 2026-10-30 (300–301)
 
 A felhasználó nem kértSTOPot: a teszt/CIfejlesztés alatt aFreegyűjtést

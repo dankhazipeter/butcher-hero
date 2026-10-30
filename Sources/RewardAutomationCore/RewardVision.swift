@@ -1,6 +1,7 @@
 import Foundation
 import CoreGraphics
 import Vision
+import CoreML
 
 public struct RewardObservation: Codable {
     public let reward: FreeReward?
@@ -12,6 +13,15 @@ public struct RewardObservation: Codable {
 public final class RewardVision {
     private let icons=RewardIconClassifier()
     public init(){}
+    static func useCPUForSupportedStages(_ request:VNRequest)throws {
+        // Avoid long-lived accelerator sessions shared with the game's renderer
+        // and concurrent offline OCR tests. Never select an unsupported device.
+        for (stage,devices) in try request.supportedComputeStageDevices {
+            if let cpu=devices.first(where:{if case .cpu = $0 {return true};return false}) {
+                request.setComputeDevice(cpu,for:stage)
+            }
+        }
+    }
     public func observe(_ image:CGImage)throws->RewardObservation {
         // Only the left reward panel below the event. Never inspect shop buttons.
         let roi=CGRect(x:0,y:0.43,width:0.17,height:0.30)
@@ -86,6 +96,7 @@ public final class RewardVision {
         let request=VNRecognizeTextRequest()
         request.recognitionLevel = .accurate; request.usesLanguageCorrection=false
         request.recognitionLanguages=["en-US"]; request.minimumTextHeight=0.018
+        try Self.useCPUForSupportedStages(request)
         try VNImageRequestHandler(cgImage:scaled).perform([request])
         let numbers=try NSRegularExpression(pattern:#"(?<![\p{L}0-9.,])\d+(?:[.,]\d+)?[KMBTКМВТ]?(?![\p{L}0-9%])"#)
         func token(_ text:String,_ confidence:Float,_ b:CGRect)->RewardText {
