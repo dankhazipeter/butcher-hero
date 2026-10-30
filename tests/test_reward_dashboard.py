@@ -3,10 +3,11 @@ from pathlib import Path
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from dashboard.server import Journal, aggregate, amount, make_server, parse_time, time_window
+from dashboard.server import Journal, aggregate, amount, make_server, parse_time, time_window, watcher_state
 
 
 def event(kind, second, claim="one", value="578", reward_kind="cutting_defense"):
@@ -177,13 +178,50 @@ class DashboardTests(unittest.TestCase):
         self.write(rows + [new_error])
         self.assertEqual(self.result()["observationError"], "new process error")
 
+    def test_watcher_status_checks_worker_liveness_and_preserves_frame_age(self):
+        path=self.path.with_name("state.json")
+        path.write_text(json.dumps({"pid":123,"running":True,"lastCheckedAt":"2026-10-30T10:00:00Z","waitingForMouseRelease":True}))
+        now=parse_time("2026-10-30T10:00:12Z")
+        with patch("dashboard.server.os.kill"):
+            state=watcher_state(path,now)
+        self.assertTrue(state["stateKnown"])
+        self.assertTrue(state["running"])
+        self.assertEqual(state["frameAgeSeconds"],12)
+        self.assertTrue(state["waitingForMouseRelease"])
+        with patch("dashboard.server.os.kill",side_effect=ProcessLookupError):
+            self.assertFalse(watcher_state(path,now)["running"])
+        with patch("dashboard.server.os.kill",side_effect=PermissionError):
+            self.assertFalse(watcher_state(path,now)["stateKnown"])
+
+    def test_watcher_missing_invalid_starting_and_stopped_states(self):
+        path=self.path.with_name("state.json")
+        now=parse_time("2026-10-30T10:00:12Z")
+        self.assertFalse(watcher_state(path,now)["stateKnown"])
+        for content in ["not json", "[]", '{}', '{"pid":true,"running":true}', '{"pid":99999999999999999,"running":true}']:
+            path.write_text(content)
+            self.assertFalse(watcher_state(path,now)["stateKnown"],content)
+        path.write_text(json.dumps({"pid":123,"running":True}))
+        with patch("dashboard.server.os.kill"):
+            state=watcher_state(path,now)
+        self.assertTrue(state["running"])
+        self.assertIsNone(state["lastCheckedAt"])
+        path.write_text(json.dumps({"pid":123,"running":False}))
+        with patch("dashboard.server.os.kill"):
+            self.assertFalse(watcher_state(path,now)["running"])
+
     def test_http_read_only_restricted_paths_host_and_live_append(self):
         self.write([event("click_sent", 0)])
+        static=self.root / "dashboard"
+        static.mkdir()
+        (static / "status.js").write_text("/* collector status fixture */")
         server = make_server(self.root, 0)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         base = f"http://127.0.0.1:{server.server_port}"
         try:
+            with urlopen(base + "/status.js") as response:
+                self.assertTrue(response.headers["Content-Type"].startswith("text/javascript"))
+                self.assertEqual(response.read(),b"/* collector status fixture */")
             with urlopen(base + "/api/rewards?range=all") as response:
                 self.assertEqual(json.load(response)["confirmedClaims"], 0)
             with self.path.open("a") as output:

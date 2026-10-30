@@ -235,22 +235,31 @@ def aggregate(events, malformed, log_exists, query, now):
 def watcher_state(path: Path, now: datetime):
     try:
         state = json.loads(path.read_text())
+        if not isinstance(state, dict) or not isinstance(state.get("running"), bool):
+            raise ValueError("Missing collector state")
         pid = state.get("pid")
         alive = False
-        if isinstance(pid, int) and pid > 0:
+        known = True
+        if type(pid) is int and 0 < pid <= 2**31 - 1:
             try:
                 os.kill(pid, 0)
                 alive = True
-            except (ProcessLookupError, PermissionError):
+            except ProcessLookupError:
                 pass
+            except PermissionError:
+                known = False
+        elif state["running"]:
+            known = False
         checked = state.get("lastCheckedAt")
         age = max(0, (now - parse_time(checked)).total_seconds()) if checked else None
-        return {"running": bool(state.get("running") and alive),
+        return {"stateKnown": known, "processAlive": alive,
+                "running": bool(state.get("running") and alive),
                 "waitingForMouseRelease": bool(state.get("waitingForMouseRelease")),
                 "lastCheckedAt": checked, "frameAgeSeconds": age,
                 "pendingClaimID": state.get("pendingClaimID")}
     except (OSError, ValueError, TypeError, AttributeError):
-        return {"running": False, "waitingForMouseRelease": False, "lastCheckedAt": None,
+        return {"stateKnown": False, "processAlive": False,
+                "running": False, "waitingForMouseRelease": False, "lastCheckedAt": None,
                 "frameAgeSeconds": None, "pendingClaimID": None}
 
 
@@ -302,9 +311,9 @@ def make_server(root: Path, port: int):
                         payload = aggregate(events, malformed, exists, parse_qs(url.query), now)
                     payload["watcher"] = watcher_state(root / "data/free-rewards/state.json", now)
                     self.send_json(200, payload)
-                elif url.path in ("/", "/app.js", "/format.js", "/style.css"):
-                    name = {"/": "index.html", "/app.js": "app.js", "/format.js": "format.js", "/style.css": "style.css"}[url.path]
-                    mime = {"index.html": "text/html", "app.js": "text/javascript", "format.js": "text/javascript", "style.css": "text/css"}[name]
+                elif url.path in ("/", "/app.js", "/format.js", "/status.js", "/style.css"):
+                    name = {"/": "index.html", "/app.js": "app.js", "/format.js": "format.js", "/status.js": "status.js", "/style.css": "style.css"}[url.path]
+                    mime = {"index.html": "text/html", "app.js": "text/javascript", "format.js": "text/javascript", "status.js": "text/javascript", "style.css": "text/css"}[name]
                     self.send_bytes(200, (static / name).read_bytes(), mime + "; charset=utf-8")
                 elif url.path.startswith("/icons/") and url.path[7:] in {kind + ".png" for kind in KINDS}:
                     self.send_bytes(200, (icons / url.path[7:]).read_bytes(), "image/png", "private, max-age=3600")

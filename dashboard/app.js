@@ -6,11 +6,19 @@
   const clock = new Intl.DateTimeFormat("hu-HU", {timeZone:zone,hour:"2-digit",minute:"2-digit",second:"2-digit"});
   const short = new Intl.DateTimeFormat("hu-HU", {timeZone:zone,hour:"2-digit",minute:"2-digit"});
   let mode = "run", snapshot, sequence = 0, pollVersion = 0, timer, lastCount;
+  let statusConnected=false;
   let cards = new Map();
   const hiddenKinds=new Set();
   const frequencyButtons=new Map();
   const linePatterns=["","7 3","","2 3","","8 3 2 3","5 3","1 4"];
   const {formatExact:decimal,formatCompact:compact}=RewardFormat;
+  function renderCollector() {
+    const status=RewardStatus.collectorStatus(snapshot?.watcher,snapshot?.generatedAt,Date.now(),statusConnected);
+    $("collector-panel").dataset.state=status.state;
+    if($("collector").textContent!==status.label) $("collector").textContent=status.label;
+    $("collector-detail").textContent=status.detail;
+    $("collector-frame").textContent=`Utolsó sikeres képolvasás: ${status.checkedAt?clock.format(new Date(status.checkedAt)):"még nincs adat"}`;
+  }
   function field(tag, text, className) {
     const node = document.createElement(tag); node.textContent = text;
     if(className) node.className=className;
@@ -144,9 +152,9 @@
   }
   function render(data) {
     snapshot=data;
+    statusConnected=true;
     $("connection").textContent="ÉLŐ NAPLÓ"; $("connection").classList.remove("error");
-    const watcher=data.watcher;
-    $("collector").textContent=!watcher.running?"A gyűjtő leállítva":watcher.waitingForMouseRelease?"Mozgás közben várakozik":watcher.frameAgeSeconds>10?"Nincs friss játékkép":"A gyűjtő fut";
+    renderCollector();
     $("updated").textContent=`Frissítve ${clock.format(new Date(data.generatedAt))} · 2 mp`;
     $("confirmed").textContent=decimal(data.confirmedClaims);
     $("pending").textContent=decimal(data.pendingClaims);
@@ -208,6 +216,7 @@
     } catch(error) {
       if(version!==sequence) return;
       $("connection").textContent="NINCS KAPCSOLAT";$("connection").classList.add("error");
+      statusConnected=false;renderCollector();
       $("notice").hidden=false;$("notice").textContent=`${error.message} Az utolsó sikeres adatok maradtak láthatók.`;
     }
   }
@@ -228,6 +237,7 @@
   });
   layout.observe($("stats-grid"));layout.observe($("frequency-chart"));
   function poll() {const version=++pollVersion;clearTimeout(timer);refresh().finally(()=>{if(version===pollVersion) timer=setTimeout(poll,document.hidden?10000:2000);});}
-  document.addEventListener("visibilitychange",()=>{if(!document.hidden) poll();});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden) {renderCollector();poll();}});
+  setInterval(renderCollector,1000);
   poll();
 })();

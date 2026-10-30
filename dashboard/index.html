@@ -7,6 +7,7 @@
   <title>Butcher Hero · Élő jutalomnapló</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/format.js" defer></script>
+  <script src="/status.js" defer></script>
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -15,8 +16,16 @@
       <div><p class="eyebrow">BUTCHER HERO / JUTALOMNAPLÓ</p><h1>Amit összegyűjtöttünk<span>.</span></h1>
       <p class="intro">Naplózott átvételek. Nyolc stat. Minden gyűjtésnek nyoma van.</p></div>
       <div class="live-panel"><span id="connection" class="live-status">Kapcsolódás…</span>
-      <span id="collector" class="subtle">A gyűjtő ellenőrzése…</span><span id="updated" class="subtle">2 másodpercenként frissül</span></div>
+      <span id="updated" class="subtle">2 másodpercenként frissül</span></div>
     </header>
+    <section id="collector-panel" class="collector-panel" data-state="unknown" aria-label="Gyűjtőprogram állapota">
+      <div class="collector-heading"><span class="collector-dot" aria-hidden="true"></span><div>
+        <span class="metric-label">GYŰJTŐPROGRAM ÁLLAPOTA</span>
+        <strong id="collector" role="status" aria-live="polite" aria-atomic="true">Ellenőrzés…</strong>
+      </div></div>
+      <div class="collector-details"><span id="collector-detail">Kapcsolódás az állapotadatokhoz…</span>
+        <span id="collector-frame" class="subtle">Utolsó sikeres képolvasás: még nincs adat</span></div>
+    </section>
     <section class="filters" aria-label="Időszak kiválasztása">
       <div class="range-buttons" role="group" aria-label="Gyors időszakok">
         <button type="button" data-range="run" aria-pressed="true">Mostani futás</button>

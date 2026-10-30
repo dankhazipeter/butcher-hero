@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30 (282)
 
+304:watcher_state külön stateKnown/processAlive mezőket ad. Hiányzó/hibás
+adat vagy ellenőrizhetetlenPID nem bizonyítottleállás. dashboard/status.js
+tesztelhetőállapotgép; élőfolyamat+frissképidő=Fut, hiányzóelsőkép=indulás,
+10s-nálrégebbikép=figyelmeztetés, HTTPhiba/20selavulás=ismeretlen.1sUIóra
+a válaszok között is öregíti az állapotot; az APIpoll marad2s/10sháttérben.
+
 303FELÜLÍRÁS:az aktív core nemimportálVisiont/CoreMLt. Strukturáltbadge
 jelenlét után csak aFREEszó kapTesseract7-es sorfelismerést, angolmodell,
 egyetlenCPUthread,3shatáridő. Számmező: fehérglyphok összefüggő komponensei,

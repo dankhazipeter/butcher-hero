@@ -1,5 +1,14 @@
 # Butcher Hero — aktív projektutasítások
 
+304: a statisztika tetején külön GYŰJTŐPROGRAM ÁLLAPOTA sáv jelzi a Fut,
+Leállítva, Indul/újraindul, Mozgás miatt várakozik, Nincs friss képolvasás
+és Nem ellenőrizhető állapotot. Ez független az oldal adatkapcsolat-jelzésétől.
+Zöldhöz élő PID és legfeljebb10s sikeres képidő kell; hiányzó első kép nem Fut.
+Kapcsolathiba vagy20s-nál régebbi APIválasz nem maradhat zöld. KülönJSlogika,
+7újNode/2újPython teszt; összesen23Swift+15statisztika+3kapu+9felügyelet+
+12NodehelybenPASS. Gyűjtő66095 végig futott; csak a read-only statisztikaszerver
+indult újra,PID77612/session3504. Böngészőben láthatóFut+frissképidő igazolt.
+
 ## Állandó munkarend és a tesztek célja — felhasználói megerősítés, 2026-10-30
 
 Minden lezárt kód-, teszt-, konfiguráció- és dokumentációmódosítás után

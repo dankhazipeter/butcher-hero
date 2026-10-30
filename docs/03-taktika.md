@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+304:az élő statisztikai kapcsolatot nem keverjük a gyűjtő működésével.
+Külön szöveges/színes állapotsáv és utolsó sikeres képidő. A leállási,
+elakadási és kapcsolathibás UIágakat tesztadatokkal vizsgáljuk, nem az élő
+gyűjtő szándékos leállításával. A felület továbbra sem vezérli a játékot.
+
 303:újraindítással tünetet kezelő natívOCRhelyett a hibázó függőséget
 kiváltottuk aFree-körből. Előszörpixelbadge, utána célzottFREEellenőrzés;
 számot nem találunk ki típusból vagy korábbiösszegből. Új bizonytalan fontot

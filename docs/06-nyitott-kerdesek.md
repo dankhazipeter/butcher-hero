@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+304:a gyűjtő állapota külön jól látható sávban megjelent; hiányzó/elavult
+állapotadat nem marad zöld. Ez a folyamat és a képfeldolgozás működését
+jelzi, nem önálló számlastat-növekedési bizonyíték. A szándékos leállást és
+kapcsolathibát szimulált tesztek fedik, az éles gyűjtőt ezért nem állítottuk le.
+
 303lezárás:4490c33kód távoliGitHubCI41119975619SUCCESS. Nem maradt
 nyitott a régebbiSwift/VisionmiattiCI-piros ennél a kódnál.20:05:33Z
 36igazoltátvétel/0OCRhiba/0közbensőújraindítás; hosszútávú stabilitást

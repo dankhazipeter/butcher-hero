@@ -2,6 +2,12 @@
 
 ## 2026-10-30
 
+304:felhasználó kéri, hogy az oldal mutassa, fut-e a program. A korábbi
+aprófejléc helyett külön, feltűnő állapotsáv készült, élőPID+képidő alapján.
+9újregresszió; teljes23Swift/15Python/3Gitkapu/9felügyelet/12NodePASS.
+Read-onlyszerver32872→77612/session3504, worker66095megszakítás nélkül futott.
+Meglévőböngészőlapon,590pxszélesnézetbenFut és frissülőképidő vizuálisanigazolt.
+
 303:CPUbeállítással is visszatért aVisionhiba; a tárolt pushnapló konkrétan
 CLIreconcileCRImageReaderError1-et és hárommiatta elbukóassertet mutatott.
 Újbackend:TesseractFREE+pixelglyphszámok. ElsőTesseractszámpróbák5→3és

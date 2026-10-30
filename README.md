@@ -22,6 +22,9 @@ Minden push és PR ugyanazt a tesztet futtatja GitHubon is.
 [Közreműködői útmutató](CONTRIBUTING.md).
 
 Élő statisztika: [helyi jutalomnézet](http://127.0.0.1:8765/).
+A tetején külön színes állapotsáv mutatja, hogy a gyűjtő fut, leállt vagy
+várakozik, az utolsó sikeres képolvasás idejével. Elavult adat vagy kapcsolat-
+hiba nem jelenhet meg működő gyűjtésként. [Állapotjelzés részletei](docs/304-lathato-gyujtoallapot.md).
 Indítása: `./scripts/start-reward-dashboard.sh` (Python3.10+, külön csomag nélkül).
 Látható lapon2s-onként frissül a helyi naplóból. Alapból csak a mostani
 gyűjtőfutást mutatja; kézi oldalfrissítés nem kell. Részletek: [292](docs/292-elo-jutalomstatisztika.md).
