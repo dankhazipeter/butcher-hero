@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+298:közreműködőknél is helyi make test és PR-on látható GitHubellenőrzés.
+A helyi siker nem helyettesíti a szerveroldali futást; jóváhagyásra váró
+fork-ellenőrzés nemPASS. Merge-tilalmat nem ígérünk külön repószabály nélkül.
+
 297:felismerési javítás csak rögzített képi elvárásokkal és a teljes
 tesztkapu sikerével zárható. Nem módosítjuk az elvárt címkét azért, hogy
 a hibás felismerő átmenjen. Új esethez külön kalibrációs/ellenőrző kép;

@@ -10,13 +10,15 @@ dokumentáció követve vannak. [Bekötési jegyzet](docs/290-github-main-elso-f
 
 ## Free-jutalom figyelő — 2026-10-30
 
-Fejlesztési ellenőrzés: `./scripts/check-rewards.sh` (macOS14+, Swift5.9+,
-Python3.10+, Node18+). Új klón után egyszer: `./scripts/install-git-hooks.sh`.
+Fejlesztési ellenőrzés: `make test` (macOS14+, Swift5.9+,
+Python3.10+, Node18+). Új klón után egyszer: `make setup`.
 Ezután commit ÉS push előtt automatikus tesztkapu fut; bármely hiba megállítja
 a műveletet. A kapu az index/feltöltendő commit külön másolatát ellenőrzi,
 nem a futó játékot. A27valódi mintakép elvárt eredménye:
 [`tests/reward-reading-corpus.json`](tests/reward-reading-corpus.json).
 [Mintabővítés és működés](docs/297-kepi-regresszios-korpusz-es-tesztkapu.md).
+Minden push és PR ugyanazt a tesztet futtatja GitHubon is.
+[Közreműködői útmutató](CONTRIBUTING.md).
 
 Élő statisztika: [helyi jutalomnézet](http://127.0.0.1:8765/).
 Indítása: `./scripts/start-reward-dashboard.sh` (Python3.10+, külön csomag nélkül).

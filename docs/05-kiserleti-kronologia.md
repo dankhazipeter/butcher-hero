@@ -2,6 +2,11 @@
 
 ## 2026-10-30
 
+298:új kiegészítő kérés a klónozók/PR-beküldők ellenőrzésére. Makefile,
+CONTRIBUTING, PR-sablon és macOSGitHubActions készült ugyanarra a tesztre.
+A helyi hook klónozáskor nem magától aktiválódik; make test telepíti is.
+Required-check repóbeállítást nem változtattunk; közvetlenmainmunkarend marad.
+
 297:felhasználói kérés: rögzített mintaképek, commit/push előtti automata
 regresszió.27valódi kép,20pozitív/7negatív, mind a8típusból több példa.
 Első futás FAIL: a külön555CutDamage-kép unknown. Új current sablon másik,

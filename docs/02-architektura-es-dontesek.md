@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30 (282)
 
+298:Makefileegységes setup/test/test-vision belépési pont. A teljes make test
+beköti a helyi hookokat, majd a meglévő check-rewards.sh futtatót használja.
+GitHubActions ugyanazt a parancsot futtatja macos-15gépen push/PR eseményre;
+read-only jogosultság, nincs titok vagy pull_request_target. Minden action
+ellenőrzött v7commitSHA-ra rögzítve, nem mozgó verziócímkére.
+
 297:verziózott27képes, kézzel ellenőrzött ground-truth jegyzék a
 tests/reward-reading-corpus.json-ban. RewardCorpusTests ugyanazt a
 RewardVision láncot futtatja, mint az élő gyűjtő; típust, normalizált összeget,

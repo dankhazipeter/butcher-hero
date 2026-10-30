@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+298:közreműködői make setup/test és push/PRCI bekötve; helyi teljes teszt
+PASS. A távoli GitHubfutás eredményét külön kell ellenőrizni a feltöltés után.
+Merge-tiltó required-check szabályt nem módosítottunk, nem állítjuk aktívnak.
+
 297:a jelenlegi27képes korpusz mind a8jutalomtípust több példával fedi,
 de nem bizonyít minden jövőbeli UI-/méret-/háttérváltozatot. K-s valós
 Healthképek vannak; M/B/T-s FREEkártyához még nincs címkézett valódi kép

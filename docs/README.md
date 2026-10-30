@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Egyszerű tesztparancs, klónozói hook és PR-ellenőrzés](298-klonozoi-tesztparancs-es-pr-ci.md)
+
 - [Valódi mintaképek és kötelező commit/push előtti tesztkapu](297-kepi-regresszios-korpusz-es-tesztkapu.md)
 
 - [Hiányzó smash jutalmak: felismerés és az aktuális statisztika javítása](296-smash-jutalmak-felismerese.md)

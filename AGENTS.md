@@ -1,5 +1,19 @@
 # Butcher Hero — aktív projektutasítások
 
+## Klónozók és PR-ok kötelező ellenőrzése — 2026-10-30 (298)
+
+Új klón után `make setup`; minden érdemi körben `make test` kötelező.
+Ez egyben a helyi commit/push kaput is bekapcsolja. `make test-vision`
+csak gyors részellenőrzés, nem helyettesíti a teljes csomagot.
+A CONTRIBUTING.md és a PR-sablon ugyanezt kéri minden közreműködőtől.
+A `.github/workflows/reward-tests.yml` minden pushra és PR-ra ugyanazt a
+teljes tesztet futtatja macOSon, helyi hook nélküli beküldőknél is.
+Stabil checknév: `Reward tests (macOS)`. A workflow sikerét ne állítsuk
+csak a helyi PASS alapján; a GitHub-futás külön ellenőrzendő.
+Fork-futás jóváhagyásra várhat. Automatikus merge-tilalomhoz külön repó-
+required-check szabály kell, ezt nem állítottuk be és nem állítjuk aktívnak.
+Ez érinthetné a közvetlenmain-push munkarendet, nem módosítjuk hallgatólagosan.
+
 ## Kötelező képi regresszió commit ÉS push előtt — 2026-10-30 (297)
 
 Minden lezárt változtatási körben a `scripts/check-rewards.sh` összes
