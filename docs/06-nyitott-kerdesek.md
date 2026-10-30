@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+296: az aktuális futás hiányzó smash-típusai valódi képek alapján javítva,
+az új minták14képi/alap- és1CLI-integrációs tesztben ellenőrizve.
+A régi teljes történetet nem javítjuk; az új jövőbeli körökben továbbra
+is külön jelezzük az esetleges bizonytalan típust, sosem találjuk ki az összegből.
+
 294:kért kijelzési szabály megvalósítva és tesztelve, de a játék pontos,
 minden egységváltásra érvényes formázási algoritmusa nem bizonyított.
 Új felhasználói játékpéldák alapján később szűken módosítható. A pontos

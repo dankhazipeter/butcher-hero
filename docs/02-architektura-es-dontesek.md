@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30 (282)
 
+296: a típusonként összevont sablonillesztés aktuális HUD-mintákat is
+használ, változatlan küszöbökkel. Technikai --resume-run különválasztja
+a folyamat újraindítását a gyűjtési időszak kezdetétől. A --current-run
+képi típuskorrekció nem módosít igazolást, nem írja át a régi naplósorokat.
+
 295:érték- és darabsorozat külön APIcsatornán. A collectionSeries ismert
 típusú, igazolt claimenként1-et számol akkor is, ha az összeg hiányzik.
 Az ismeretlen típus unclassifiedClaims, az arányok nevezője az azonosított

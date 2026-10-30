@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+296: smash-statisztika hiányánál a bizonytalan típusú, már igazolt tételek
+képeit nézzük, nem könyvelünk új átvételt. Technikai javítás után --resume-run
+őrzi meg az aktuális kör statisztikáját. Nincs összegből kitalált típus.
+
 295:gyűjtési gyakoriságot a közös DARABvonalakon hasonlítunk össze,
 nem aHealthésmás statok eltérő nagyságú összegeiből. Az ismeretlen típusok
 külön maradnak, nem torzítunk kitalált besorolással. A gyűjtő nem változott.

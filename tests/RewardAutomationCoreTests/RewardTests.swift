@@ -51,6 +51,51 @@ final class RewardTests:XCTestCase {
         XCTAssertEqual(observed.reward?.kind,"hp")
         XCTAssertEqual(observed.reward?.amount,"18300","Not8.3,8300 or a cropped token")
     }
+    func testGreenTerrainMustNotHideSmashDamageOrDefense()throws {
+        for suffix in ["a","b","c"] {
+            let observation=try RewardVision().observe(image("docs/references/2026-10-30/free-smash-688-green-\(suffix).png"))
+            XCTAssertEqual(observation.reward?.kind,"smash_damage","Same hammer, no shield; green terrain is not part of its silhouette")
+            XCTAssertEqual(observation.reward?.amount,"688")
+        }
+        let defense=try RewardVision().observe(image("docs/references/2026-10-30/free-smash-defense-809-green.png"))
+        XCTAssertEqual(defense.reward?.kind,"smash_defense","Shield must remain distinguishable")
+        XCTAssertEqual(defense.reward?.amount,"809")
+    }
+    func testCurrentRunReconcilePreservesHistoryAndExistingCorrections()throws {
+        let dir=FileManager.default.temporaryDirectory.appendingPathComponent("butcher-current-reconcile-\(UUID().uuidString)")
+        let root=dir.appendingPathComponent("data/free-rewards")
+        try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true)
+        defer{try? FileManager.default.removeItem(at:dir)}
+        try FileManager.default.copyItem(at:project.appendingPathComponent("docs/references/2026-10-30/free-smash-688-green-a.png"),to:root.appendingPathComponent("before.png"))
+        let unknown=FreeReward(kind:"unknown",amount:"688",rawAmount:"688",classification:"fixture",texts:[],tapX:0.07,tapY:0.64,badgeX:0.02,badgeY:0.58,iconFeatures:[:])
+        let fixed=FreeReward(kind:"smash_damage",amount:"688",rawAmount:"688",classification:"fixture",texts:[],tapX:0.07,tapY:0.64,badgeX:0.02,badgeY:0.58,iconFeatures:[:])
+        func row(_ event:String,_ time:String,_ id:String?,_ reward:FreeReward?)throws->[String:Any] {
+            var result:[String:Any]=["schemaVersion":1,"event":event,"timestamp":"2026-10-30T\(time).000Z","runID":"fixture"]
+            if let id {result["claimID"]=id;result["evidence"]="before.png"}
+            if let reward {result["reward"]=try JSONSerialization.jsonObject(with:JSONEncoder().encode(reward))}
+            return result
+        }
+        let records=try [row("click_sent","10:00:00","old",unknown),row("watcher_started","10:01:00",nil,nil),
+            row("click_sent","10:02:00","current",unknown),row("claim_confirmed_ui","10:02:02","current",unknown),
+            row("click_sent","10:03:00","done",unknown),row("claim_confirmed_ui","10:03:02","done",unknown),
+            row("reward_corrected","10:03:03","done",fixed)]
+        var bytes=Data()
+        for record in records {bytes.append(try JSONSerialization.data(withJSONObject:record));bytes.append(10)}
+        let log=root.appendingPathComponent("events.jsonl");try bytes.write(to:log)
+        let process=Process(),pipe=Pipe()
+        process.executableURL=project.appendingPathComponent(".build/debug/ButcherHeroAutomation")
+        process.currentDirectoryURL=dir;process.arguments=["reconcile","--current-run"];process.standardOutput=pipe
+        try process.run();_=pipe.fileHandleForReading.readDataToEndOfFile();process.waitUntilExit()
+        XCTAssertEqual(process.terminationStatus,0)
+        let final=try Data(contentsOf:log)
+        XCTAssertEqual(final.prefix(bytes.count),bytes,"Original events must be byte-for-byte preserved")
+        let rows=try String(decoding:final,as:UTF8.self).split(separator:"\n").map{try JSONSerialization.jsonObject(with:Data($0.utf8)) as! [String:Any]}
+        XCTAssertEqual(rows.count,8)
+        XCTAssertEqual(rows.last?["event"] as? String,"reward_corrected")
+        XCTAssertEqual(rows.last?["claimID"] as? String,"current")
+        XCTAssertEqual((rows.last?["reward"] as? [String:Any])?["kind"] as? String,"smash_damage")
+        XCTAssertEqual(rows.filter{($0["event"] as? String)=="claim_confirmed_ui"}.count,2,"No invented confirmations")
+    }
     func testGreenGrassIsNotAFreeBadgeButActualBadgesAre()throws {
         let absent=try image("docs/references/2026-10-30/free-absent-grass-false-positive.jpg")
         let observed=try RewardVision().observe(absent)

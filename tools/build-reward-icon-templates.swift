@@ -1,6 +1,27 @@
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
+import Darwin
+
+// Targeted current-HUD calibration. Coordinates are the recorded FREE badge
+// bottom plus0.001, exactly as used by RewardVision. Other templates stay intact.
+if CommandLine.arguments.contains("--current-smash-only") {
+    let current:[(String,String,Double)]=[
+        ("smash_damage","docs/references/2026-10-30/free-smash-688-green-a.png",0.6005699232803566),
+        ("smash_defense","docs/references/2026-10-30/free-smash-defense-809-green.png",0.6008839419575099)
+    ]
+    for (kind,path,y) in current {
+        let target="Sources/RewardAutomationCore/Resources/RewardIcons/\(kind)_current.png"
+        guard let source=CGImageSourceCreateWithURL(URL(fileURLWithPath:path) as CFURL,nil),
+              let image=CGImageSourceCreateImageAtIndex(source,0,nil),
+              let crop=image.cropping(to:CGRect(x:Double(image.width)*0.025,y:Double(image.height)*y,width:Double(image.width)*0.100,height:Double(image.height)*0.052).integral),
+              let out=CGImageDestinationCreateWithURL(URL(fileURLWithPath:target) as CFURL,UTType.png.identifier as CFString,1,nil) else{fatalError(kind)}
+        CGImageDestinationAddImage(out,crop,nil)
+        guard CGImageDestinationFinalize(out) else{fatalError(kind)}
+    }
+    print("Two current-HUD smash references calibrated from visually verified real cards.")
+    exit(0)
+}
 
 // Calibrated from the two user-supplied 1246x1726 stats screenshots.
 let sources=["docs/references/2026-10-30/reward-stats-top.png","docs/references/2026-10-30/reward-stats-bottom.png"]

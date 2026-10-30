@@ -2,6 +2,11 @@
 
 ## 2026-10-30
 
+296: felhasználói smash-hibajelzés.4kalapácsos és3pajzsos korábbiunknown
+az aktuális futásban képből pontosítva; új valódi HUD-sablonok.15Swift,
+13Python,5NodePASS. Gyűjtő29305 --resume-run, eredeti futáskezdés megmarad.
+API:4smash/2752,4smashdef/3236,0ismeretlen,0függő a pillanatképben.
+
 295:közös halmozott8vonalas darabszámgrafikon, jelmagyarázatban arányok,
 kapcsolható vonalak és időponti részletek.12Python/5NodePASS. Böngészőben
 8→7→8vonal,8tooltip-sor,mobil túlcsordulás nélkül. Gyűjtő2444végig futott.

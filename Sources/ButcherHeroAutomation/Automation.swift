@@ -171,22 +171,23 @@ private final class Journal {
         }
         let root=URL(fileURLWithPath:FileManager.default.currentDirectoryPath).appendingPathComponent("data/free-rewards")
         if command=="stats" {try stats(root:root,args:Array(args.dropFirst()));return}
-        if command=="reconcile" {try reconcile(root:root);return}
+        if command=="reconcile" {try reconcile(root:root,args:Array(args.dropFirst()));return}
         guard command=="watch-free" else{throw AutomationError(usage)}
-        var interval=1.0,seconds=Double.infinity,dryRun=false
+        var interval=1.0,seconds=Double.infinity,dryRun=false,resumeRun=false
         var i=1
         while i<args.count {
             switch args[i] {
             case "--dry-run":dryRun=true
+            case "--resume-run":resumeRun=true
             case "--interval","--seconds":
                 guard i+1<args.count,let n=Double(args[i+1]),n.isFinite,n>0 else{throw AutomationError("Hiányzó/hibás időérték.")}
                 if args[i]=="--interval" {guard n>=1 else{throw AutomationError("Legalább1másodperces mintavétel kell.")};interval=n}else{seconds=n};i+=1
             default:throw AutomationError("Ismeretlen kapcsoló: \(args[i])")
             };i+=1
         }
-        try await watch(root:root,interval:interval,seconds:seconds,dryRun:dryRun)
+        try await watch(root:root,interval:interval,seconds:seconds,dryRun:dryRun,resumeRun:resumeRun)
     }
-    @MainActor static func watch(root:URL,interval:Double,seconds:Double,dryRun:Bool)async throws {
+    @MainActor static func watch(root:URL,interval:Double,seconds:Double,dryRun:Bool,resumeRun:Bool=false)async throws {
         try FileManager.default.createDirectory(atPath:"docs/runs",withIntermediateDirectories:true)
         let lockFD=open("docs/runs/.live-capture.lock",O_CREAT|O_RDWR,mode_t(0o600))
         guard lockFD>=0 else{throw AutomationError("Képrögzítési zár nem hozható létre.")}
@@ -199,7 +200,13 @@ private final class Journal {
         var dryGate=RewardGate()
         var state=WatchState(blockedFingerprint:nil,pid:getpid(),running:true,intervalSeconds:interval)
         state.verificationMode="vision3: structured badge; complete magnitude; two HUD frames without card; 1s retry"
-        try journal.state(state);try journal.append("watcher_started",message:dryRun ? "dry run; no clicks":"left event Free only; vision3")
+        let oldLines=(try? String(contentsOf:root.appendingPathComponent("events.jsonl"),encoding:.utf8)) ?? ""
+        let hasPriorRun=oldLines.split(separator:"\n").contains {line in
+            (try? JSONDecoder().decode(JournalEvent.self,from:Data(line.utf8)))?.event=="watcher_started"
+        }
+        try journal.state(state)
+        try journal.append(resumeRun && hasPriorRun ? "watcher_resumed":"watcher_started",
+            message:dryRun ? "dry run; no clicks":"left event Free only; vision3; current-HUD smash references")
         defer {state.running=false;try? journal.state(state);try? journal.append("watcher_stopped")}
         print("Free-figyelő: \(interval)s; napló: \(root.appendingPathComponent("events.jsonl").path); PID \(getpid())\(dryRun ? " (csak megfigyelés)":"")")
         fflush(stdout)
@@ -343,27 +350,41 @@ private final class Journal {
             "note":"One reward per UI-confirmed claim, attributed to its final click attempt; attempts are counted separately. No independent account-stat verification."]
         print(String(decoding:try JSONSerialization.data(withJSONObject:result,options:[.prettyPrinted,.sortedKeys]),as:UTF8.self))
     }
-    static func reconcile(root:URL)throws {
+    static func reconcile(root:URL,args:[String]=[])throws {
+        guard args.isEmpty || args==["--current-run"] else{throw AutomationError("reconcile [--current-run]")}
         let path=root.appendingPathComponent("events.jsonl")
         let events=try String(contentsOf:path,encoding:.utf8).split(separator:"\n").compactMap{try? JSONDecoder().decode(JournalEvent.self,from:Data($0.utf8))}
         let already=Set(events.filter{$0.event=="reward_corrected"}.compactMap(\.claimID))
+        let formatter=ISO8601DateFormatter();formatter.formatOptions=[.withInternetDateTime,.withFractionalSeconds]
+        func date(_ text:String)->Date? {formatter.date(from:text) ?? ISO8601DateFormatter().date(from:text)}
+        var since:Date?
+        if args==["--current-run"] {
+            guard let start=events.last(where:{$0.event=="watcher_started"}),let parsed=date(start.timestamp) else{throw AutomationError("Nincs azonosítható aktuális gyűjtési futás.")}
+            since=parsed
+        }
+        var latest:[String:JournalEvent]=[:]
+        for event in events where event.event=="click_sent" {
+            if let id=event.claimID {latest[id]=event}
+        }
         let journal=try Journal(root:root),vision=RewardVision()
         var count=0
-        for event in events where event.event=="click_sent" {
+        for event in latest.values.sorted(by:{$0.timestamp<$1.timestamp}) {
+            if let since {guard let at=date(event.timestamp),at>=since else{continue}}
             guard let id=event.claimID,!already.contains(id),let old=event.reward,
                   old.kind=="unknown" || old.amount==nil,let evidence=event.evidence,
                   let source=CGImageSourceCreateWithURL(root.appendingPathComponent(evidence) as CFURL,nil),let image=CGImageSourceCreateImageAtIndex(source,0,nil),
                   let reward=try vision.observe(image).reward,reward.kind != "unknown",reward.amount != nil else{continue}
-            try journal.append("reward_corrected",claimID:id,reward:reward,evidence:evidence,message:"Offline reinspection of original pre-click image with labelled icon references; original event preserved")
+            try journal.append("reward_corrected",claimID:id,reward:reward,evidence:evidence,message:"Offline reinspection of original pre-click image with labelled icon references; original event and confirmation status preserved")
+            print("\(id): \(old.kind)→\(reward.kind), \(reward.amount ?? "?")")
             count+=1
         }
         print("Bizonyítékkép alapján pontosítva: \(count). Eredeti kattintási sorok megőrizve.")
     }
     static let usage="""
-    ButcherHeroAutomation watch-free [--interval 1] [--seconds 60] [--dry-run]
+    ButcherHeroAutomation watch-free [--interval 1] [--seconds 60] [--dry-run] [--resume-run]
     ButcherHeroAutomation inspect <frame.png>
     ButcherHeroAutomation stats [--from 2026-10-29T22:00:00+02:00] [--to 2026-10-30T08:00:00+02:00]
-    ButcherHeroAutomation reconcile  # offline re-read of uncertain saved rewards
+    ButcherHeroAutomation reconcile [--current-run]  # offline re-read of uncertain saved rewards
     Local append-only journal: data/free-rewards/events.jsonl. Ctrl+C stops.
     """
 }

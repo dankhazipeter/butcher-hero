@@ -30,6 +30,15 @@ a program újraindítását is, az alábbi szűkFree-körben.
 
 ## ELSŐBBSÉG — FREE-GYŰJTÉS ÚJRA ENGEDÉLYEZVE, 2026-10-30 (291)
 
+Legújabb296: a hiányzó4smash damage (688) és3smash defense (809)
+valójában igazolt, deunknown típusú átvétel volt. Valódi aktuális HUD-
+sablonok hozzáadva; a küszöbök nem lazultak. Aktuális futás7típusát
+képből pontosítottuk, csakreward_corrected sorokkal, régi futásokhoz nem nyúltunk.
+MostSmashDamage4db/2752,SmashDefense4db/3236,0ismeretlen az ellenőrzött körben.
+15Swift+13Python+5NodePASS. Újfigyelő29305/session9371, --resume-run:
+watcher_resumed nem nullázza a Mostani futást (kezdés16:50:44.381Z).
+Típusjavítás csakreconcile --current-run. Statisztikaszerver-session72899.
+
 Legújabb295:közös8vonalas grafikonnal az IGAZOLT ÁTVÉTELEK DARABSZÁMA
 hasonlítható, nem a jutalmak összege.1átvétel=1db, újrapróbák nem külön;
 ismert típus hiányzó összeggel is darab, ismeretlen típus külön megjegyzés.

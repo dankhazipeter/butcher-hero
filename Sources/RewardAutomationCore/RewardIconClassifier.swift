@@ -14,7 +14,7 @@ public final class RewardIconClassifier {
     public static let kinds=["hp","regeneration","piercing_damage","cutting_damage","smash_damage","piercing_defense","cutting_defense","smash_defense"]
     private let templates:[(String,[UInt8])]
     public init(){
-        templates=Self.kinds.flatMap {kind in [kind,kind+"_live"].compactMap {name -> (String,[UInt8])? in
+        templates=Self.kinds.flatMap {kind in [kind,kind+"_live",kind+"_current"].compactMap {name -> (String,[UInt8])? in
             guard let url=Bundle.module.url(forResource:name,withExtension:"png",subdirectory:"RewardIcons"),
                   let source=CGImageSourceCreateWithURL(url as CFURL,nil),let image=CGImageSourceCreateImageAtIndex(source,0,nil),let signature=Self.signature(image) else{return nil}
             return (kind,signature)

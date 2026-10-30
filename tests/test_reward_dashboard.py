@@ -160,6 +160,23 @@ class DashboardTests(unittest.TestCase):
         for series in result["collectionSeries"].values():
             self.assertTrue(all(point["count"] == 0 and isinstance(point["count"], int) for point in series))
 
+    def test_technical_resume_clears_stale_capture_error_not_collection_range(self):
+        start = event("watcher_started", 0)
+        start["message"] = "left event Free only; vision3"
+        old_error = event("observation_error", 5)
+        old_error["message"] = "old process error"
+        resume = event("watcher_resumed", 10)
+        rows = [start,event("click_sent", 2),event("claim_confirmed_ui", 4),old_error,resume]
+        self.write(rows)
+        result = self.result({"range": ["run"]})
+        self.assertIsNone(result["observationError"])
+        self.assertEqual(result["confirmedClaims"], 1)
+        self.assertEqual(result["range"]["from"], "2026-10-30T10:00:00.000Z")
+        new_error = event("observation_error", 12)
+        new_error["message"] = "new process error"
+        self.write(rows + [new_error])
+        self.assertEqual(self.result()["observationError"], "new process error")
+
     def test_http_read_only_restricted_paths_host_and_live_append(self):
         self.write([event("click_sent", 0)])
         server = make_server(self.root, 0)

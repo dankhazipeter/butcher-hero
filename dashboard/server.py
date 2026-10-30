@@ -207,7 +207,10 @@ def aggregate(events, malformed, log_exists, query, now):
             samples.append({"at": stamp(at), "count": running})
         samples.append({"at": stamp(end), "count": running})
         collection_series[kind] = samples
-    errors = [event for event in events if event["event"] in ("observation_error", "capture_recovered")]
+    # Capture health belongs to the physical watcher, not the logical collection
+    # session. A technical resume must not keep the old process's stale error.
+    errors = [event for event in events if event["event"] in
+              ("observation_error", "capture_recovered", "watcher_started", "watcher_resumed")]
     latest_error = errors[-1] if errors and errors[-1]["event"] == "observation_error" else None
     runs = [event for event in events if event["event"] == "watcher_started"]
     current_quality = bool(runs and "vision3" in (runs[-1]["message"] or "") and start >= runs[-1]["at"])
