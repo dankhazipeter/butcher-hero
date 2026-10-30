@@ -61,15 +61,15 @@ test("reward icons remain transparent on cards, ledger and frequency legend",()=
   }
 });
 
-async function renderDashboard(data) {
+async function renderDashboard(data,frequencyWidth=0) {
   const vm=require("node:vm");
   class Element {
-    constructor(tagName="") {this.tagName=tagName;this.children=[];this.dataset={};this.attributes={};this.classList={add(){},remove(){}};}
+    constructor(tagName="") {this.tagName=tagName;this.children=[];this.dataset={};this.attributes={};this.listeners={};this.style={};this.classList={add(){},remove(){}};}
     append(...children) {this.children.push(...children);}
     replaceChildren(...children) {this.children=children;}
-    setAttribute(key,value) {this.attributes[key]=value;}
-    addEventListener() {}
-    getBoundingClientRect() {return {width:0};}
+    setAttribute(key,value) {this.attributes[key]=value;if(key==="class") this.className=value;}
+    addEventListener(name,callback) {this.listeners[name]=callback;}
+    getBoundingClientRect() {return {width:this.width||0,left:0,top:0};}
     querySelector(selector) {
       for(const child of this.children) {
         if(selector.startsWith(".")?(child.className||"").split(" ").includes(selector.slice(1)):child.tagName===selector) return child;
@@ -80,7 +80,10 @@ async function renderDashboard(data) {
   }
   const elements=new Map();
   const document={
-    getElementById(id) {if(!elements.has(id)) elements.set(id,new Element());return elements.get(id);},
+    getElementById(id) {
+      if(!elements.has(id)) {const element=new Element();if(id==="frequency-chart") element.width=frequencyWidth;elements.set(id,element);}
+      return elements.get(id);
+    },
     createElement(tag) {return new Element(tag);},createElementNS(ns,tag) {return new Element(tag);},
     createTextNode(text) {return {textContent:text};},
     querySelectorAll() {return [];}, addEventListener() {},
@@ -111,20 +114,32 @@ test("actual ledger rendering uses compact amounts and retains exact tooltips",a
   assert.deepEqual(data.recent.map(row=>row.amount),amounts,"rendering must not change source amounts");
 });
 
-test("stat cards render in the requested pairs without reordering source data or legend",async()=>{
+test("cards, legend and chart share the requested order without reordering source data or changing line identities",async()=>{
   const original=["hp","regeneration","piercing_damage","cutting_damage","smash_damage","piercing_defense","cutting_defense","smash_defense"];
   const at="2026-10-30T20:00:00Z";
   const data={generatedAt:at,range:{from:at,to:at,bucketSeconds:60},
     kinds:original.map(kind=>({kind,label:kind,total:"100"})),
-    collectionCounts:Object.fromEntries(original.map(kind=>[kind,1])),collectionSeries:{},series:{},
+    collectionCounts:Object.fromEntries(original.map(kind=>[kind,1])),
+    collectionSeries:Object.fromEntries(original.map(kind=>[kind,[{at,count:0},{at,count:1}]])),series:{},
     confirmedClaims:8,pendingClaims:0,clickAttempts:8,logExists:true,recent:[]};
-  const elements=await renderDashboard(data);
-  assert.deepEqual(elements.get("stats-grid").children.map(card=>card.dataset.kind),
-    ["hp","regeneration","piercing_damage","cutting_defense","cutting_damage","smash_defense","smash_damage","piercing_defense"]);
+  const elements=await renderDashboard(data,600);
+  const expected=["hp","regeneration","piercing_damage","cutting_defense","cutting_damage","smash_defense","smash_damage","piercing_defense"];
+  assert.deepEqual(elements.get("stats-grid").children.map(card=>card.dataset.kind),expected);
   assert.deepEqual(data.kinds.map(row=>row.kind),original);
-  assert.deepEqual(elements.get("frequency-legend").children.map(button=>button.querySelector(".frequency-name").textContent),original);
+  const buttons=elements.get("frequency-legend").children;
+  assert.deepEqual(buttons.map(button=>button.querySelector(".frequency-name").textContent),expected);
+  const lines=elements.get("frequency-svg").children.filter(group=>(group.className||"").startsWith("frequency-series "));
+  assert.deepEqual(lines.map(group=>group.attributes["data-kind"]),expected);
+  const patterns={hp:"",regeneration:"7 3",piercing_damage:"",cutting_damage:"2 3",smash_damage:"",piercing_defense:"8 3 2 3",cutting_defense:"5 3",smash_defense:"1 4"};
+  expected.forEach((kind,index)=>{
+    assert.equal(lines[index].querySelector(".frequency-line").attributes["stroke-dasharray"],patterns[kind]);
+    assert.equal(buttons[index].querySelector("path").attributes["stroke-dasharray"],patterns[kind]);
+  });
+  const hit=elements.get("frequency-svg").querySelector(".frequency-hit");
+  hit.listeners.pointermove({clientX:300,clientY:100});
+  assert.deepEqual(elements.get("frequency-tooltip").children.slice(1).map(row=>row.children[0].textContent),expected);
   const css=fs.readFileSync(path.join(__dirname,"../dashboard/style.css"),"utf8");
-  for(const [,body] of css.matchAll(/\.stats-grid\{([^}]+)\}/g)) {
+  for(const [,body] of css.matchAll(/\.(?:stats-grid|frequency-legend)\{([^}]+)\}/g)) {
     const columns=/grid-template-columns:([^;]+)/.exec(body);
     if(columns) assert.equal(columns[1],"repeat(2,minmax(0,1fr))","four rows of two cards at every breakpoint");
   }

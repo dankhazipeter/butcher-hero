@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+309: minden stat-összehasonlító nézet azonos párosítást használjon.
+Új sorrend nem cserélhet fel vonalszínt, mintát vagy jutalomadatot;
+a rámutatásos listában is ugyanaz a típusazonosság és sorrend érvényes.
+
 308: a kártyák a felhasználó konkrét párosítását követik, nem feltételezett
 azonos típusú sebzés/védelem sorrendet. A párosítás csak összehasonlítási
 nézet, nem játékmechanikai vagy könyvelési változás.

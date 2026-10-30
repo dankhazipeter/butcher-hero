@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Egységes sorrend a grafikon jelmagyarázatában is](309-egyseges-jelmagyarazat.md)
+
 - [A statkártyák kért támadás/védelem párosítása](308-statkartya-sorrend.md)
 
 - [Animált statértékek helyi CountUp.js könyvtárral](307-animalt-statosszegek.md)

@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30
 
+309különincidens: Health18300 felismerve, kattintás előtti újraellenőrzés
+többször elutasította, nincs elküldött input/igazolás. Worker66095ésképidő
+friss,SmashDefense83321:32:03Zátvéve. Az összevont guardüzenetből nem
+ismert a konkrét ág; friss elutasítási kép/részletes napló kell, nem vak
+védelem-lazítás. A felhasználó kéziHealthátvétele nem botjutalom.
+
 307: statösszeg-animáció kész, valódi CountUp-könyvtáras képkockatesztekkel.
 Pontosság csak kijelzési rétegben interpolált; napló/tooltip változatlan.
 Böngészőkapcsolat továbbra elérhetetlen, ezért élő vizuális finomhangolás

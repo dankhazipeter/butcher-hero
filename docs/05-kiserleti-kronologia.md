@@ -2,6 +2,15 @@
 
 ## 2026-10-30
 
+309: új kérésre a308-as sorrend a jelmagyarázatba és a közös grafikon
+rámutatásos listájába is átkerült. Közös rendező, típushoz rögzített
+vonalminták; kéthasábos legenda. Tényleges SVG/DOM- és pointermove-teszt
+ellenőrzi a sorrendet. A gyűjtő és szerver nem igényel újraindítást.
+Közben felhasználói Healthkimaradás: napló szerint nem folyamatleállás,
+hanem többszöri preclickguard-elutasítás; ugyanakkor833SmashDefenseigazolt.
+Mentett Health-előkép offlineinspectje18300/hp,HUDtrue/cardtrue. Friss
+elutasítási kép nincs, konkrét guardág ismeretlen; külön javítási irányt kérünk.
+
 308: a kért négy kártyapár bekötve, alapgrid4→2oszlop széles nézetben is.
 Új tényleges appkirajzolási teszt a sorrendre, az APIlista/jelmagyarázat
 változatlanságára és minden gridtörés kéthasábosságára. Gyűjtő/szerver nem

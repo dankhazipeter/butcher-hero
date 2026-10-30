@@ -10,9 +10,13 @@
   let cards = new Map();
   const hiddenKinds=new Set();
   const frequencyButtons=new Map();
-  const linePatterns=["","7 3","","2 3","","8 3 2 3","5 3","1 4"];
+  const linePatterns=new Map([
+    ["hp",""],["regeneration","7 3"],["piercing_damage",""],["cutting_damage","2 3"],
+    ["smash_damage",""],["piercing_defense","8 3 2 3"],["cutting_defense","5 3"],["smash_defense","1 4"],
+  ]);
   const statOrder=new Map(["hp","regeneration","piercing_damage","cutting_defense",
     "cutting_damage","smash_defense","smash_damage","piercing_defense"].map((kind,index)=>[kind,index]));
+  const orderedKinds=kinds=>[...kinds].sort((a,b)=>(statOrder.get(a.kind)??statOrder.size)-(statOrder.get(b.kind)??statOrder.size));
   const {formatExact:decimal,formatCompact:compact}=RewardFormat;
   const animateValue=RewardAnimation.createAnimator({
     CountUp:globalThis.countUp?.CountUp,formatCompact:compact,formatExact:decimal,
@@ -100,13 +104,13 @@
       svg.append(svgNode("text",{x:x(time),y:height-18,"text-anchor":i===0?"start":i===tickCount-1?"end":"middle"},timeFormat.format(new Date(time))));
     }
     svg.append(svgNode("text",{x:width-right,y:height-1,"text-anchor":"end",class:"frequency-axis-label"},"Idő · Europe/Bucharest"));
-    snapshot.kinds.forEach((row,index)=>{
+    orderedKinds(snapshot.kinds).forEach(row=>{
       if(hiddenKinds.has(row.kind)) return;
       const points=snapshot.collectionSeries[row.kind];
       let path=`M${x(Date.parse(points[0].at))},${y(points[0].count)}`;
       for(let i=1;i<points.length;i++) path+=`H${x(Date.parse(points[i].at))}V${y(points[i].count)}`;
       const group=svgNode("g",{class:`frequency-series frequency-${row.kind}`,"data-kind":row.kind});
-      const line=svgNode("path",{d:path,class:"frequency-line","stroke-dasharray":linePatterns[index]});
+      const line=svgNode("path",{d:path,class:"frequency-line","stroke-dasharray":linePatterns.get(row.kind)||""});
       line.append(svgNode("title",{},`${row.label}: ${snapshot.collectionCounts[row.kind]} db`));
       group.append(line,svgNode("circle",{cx:x(end),cy:y(points[points.length-1].count),r:3,class:"frequency-endpoint"}));
       svg.append(group);
@@ -118,7 +122,7 @@
       const at=start+(localX-left)/(width-left-right)*(end-start);
       guide.setAttribute("x1",localX);guide.setAttribute("x2",localX);guide.setAttribute("visibility","visible");
       tooltip.replaceChildren(field("strong",date.format(new Date(at))));
-      for(const row of snapshot.kinds) {
+      for(const row of orderedKinds(snapshot.kinds)) {
         if(hiddenKinds.has(row.kind)) continue;
         let count=0;
         for(const point of snapshot.collectionSeries[row.kind]) {if(Date.parse(point.at)>at) break;count=point.count;}
@@ -134,13 +138,13 @@
   }
   function renderFrequency(data) {
     const classified=Object.values(data.collectionCounts).reduce((sum,value)=>sum+value,0);
-    data.kinds.forEach((row,index)=>{
+    orderedKinds(data.kinds).forEach(row=>{
       let button=frequencyButtons.get(row.kind);
       if(!button) {
         button=field("button","",`frequency-key frequency-${row.kind}`);button.type="button";
         button.setAttribute("aria-controls","frequency-svg");
         const swatch=svgNode("svg",{viewBox:"0 0 24 8","aria-hidden":"true",class:"frequency-swatch"});
-        swatch.append(svgNode("path",{d:"M1 4H23","stroke-dasharray":linePatterns[index]}));
+        swatch.append(svgNode("path",{d:"M1 4H23","stroke-dasharray":linePatterns.get(row.kind)||""}));
         const image=document.createElement("img");image.src=`/icons/${row.kind}.png`;image.alt="";
         button.append(swatch,image,field("span",row.label,"frequency-name"),field("span","","frequency-amount"));
         button.addEventListener("click",()=>{
@@ -175,7 +179,7 @@
     if(data.unknownConfirmed) warnings.push(`${data.unknownConfirmed} igazolt átvétel típusa vagy mennyisége még bizonytalan; nincs beleszámolva a statösszegekbe.`);
     if(data.observationError) warnings.push(`Gyűjtő: ${data.observationError}`);
     $("notice").hidden=!warnings.length; $("notice").textContent=warnings.join(" ");
-    for(const row of [...data.kinds].sort((a,b)=>(statOrder.get(a.kind)??statOrder.size)-(statOrder.get(b.kind)??statOrder.size))) {
+    for(const row of orderedKinds(data.kinds)) {
       let card=cards.get(row.kind);
       if(!card) {
         card=field("article","","stat"); card.dataset.kind=row.kind;

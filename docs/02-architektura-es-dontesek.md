@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30 (282)
 
+309: orderedKinds másolaton rendez, minden stat-megjelenítő ezt használja.
+A vonalminták típus→minta Mapben maradnak, nem a rendezett index alapján.
+A jelmagyarázat kétoszlopos. Kirajzolási teszt a kártya/legend/vonal/tooltip
+sorrendet és a nyolc változatlan vonalmintát is ellenőrzi, API mutálása nélkül.
+
 308: app.js statOrder külön kártyarangsor, másolt kinds listán rendezve.
 DOM-sorrend és vizuális sorrend egyezik, nem CSS order. A grid minden
 szélességen kéthasábos; a közös grafikon és az adatréteg sorrendje változatlan.

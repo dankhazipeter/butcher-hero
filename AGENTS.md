@@ -1,5 +1,14 @@
 # Butcher Hero — aktív projektutasítások
 
+309: közös orderedKinds rendezi a statkártyákat, darabgrafikont,
+jelmagyarázatot és rámutatásos listát a308-as párok szerint. Jelmagyarázat
+is két oszlop. A vonalminta immár típushoz kötött, nem tömbindexhez;
+átrendezéstől nem változhat az azonosítása. API/napló változatlan.
+Ez felülírja308 jelmagyarázat-változatlanságát; a kártyapárok megmaradnak.
+Külön309incidens: worker66095friss,SmashDefense83321:32:03Zigazolt,
+deHealth18300kattintás előtti guardon elutasítva, többször nincs input.
+A konkrét guardág még nem ismert; a frissképidő nem jelent hibátlan gyűjtést.
+
 308: statkártyák két oszlopban, négy sorban: Health/HealthRegen;
 PierceDamage/CutDefense; CutDamage/SmashDefense; SmashDamage/PierceDefense.
 Kizárólag a kártyák másolt listája rendezett; API/napló/jelmagyarázat nem.
