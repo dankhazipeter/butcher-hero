@@ -4,7 +4,9 @@ const {collectorStatus}=require("../dashboard/status.js");
 const now=Date.parse("2026-10-30T20:00:10Z");
 const fresh="2026-10-30T20:00:09Z";
 const active={stateKnown:true,running:true,lastCheckedAt:fresh,waitingForMouseRelease:false};
-const status=(watcher,generatedAt=fresh,at=now,connected=true)=>collectorStatus(watcher,generatedAt,at,connected);
+const {createI18n}=require("../dashboard/i18n.js");
+const t=createI18n({catalogs:{hu:require("../dashboard/locales/hu.js")}}).t;
+const status=(watcher,generatedAt=fresh,at=now,connected=true)=>collectorStatus(watcher,generatedAt,at,connected,t);
 
 test("only a live worker with fresh successful frames is green",()=>{
   assert.equal(status(active).state,"running");

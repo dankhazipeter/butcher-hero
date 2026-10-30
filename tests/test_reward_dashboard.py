@@ -215,6 +215,10 @@ class DashboardTests(unittest.TestCase):
         static.mkdir()
         (static / "status.js").write_text("/* collector status fixture */")
         (static / "animation.js").write_text("/* animation fixture */")
+        (static / "i18n.js").write_text("/* i18n fixture */")
+        (static / "locales").mkdir()
+        for language in ("hu", "en"):
+            (static / "locales" / (language + ".js")).write_text("/* locale fixture */")
         (static / "vendor").mkdir()
         (static / "vendor/countUp.umd.js").write_text("/* countup fixture */")
         server = make_server(self.root, 0)
@@ -225,7 +229,7 @@ class DashboardTests(unittest.TestCase):
             with urlopen(base + "/status.js") as response:
                 self.assertTrue(response.headers["Content-Type"].startswith("text/javascript"))
                 self.assertEqual(response.read(),b"/* collector status fixture */")
-            for name in ("animation.js", "vendor/countUp.umd.js"):
+            for name in ("animation.js", "i18n.js", "locales/hu.js", "locales/en.js", "vendor/countUp.umd.js"):
                 with urlopen(base + "/" + name) as response:
                     self.assertTrue(response.headers["Content-Type"].startswith("text/javascript"))
                     self.assertIn(b"fixture", response.read())
@@ -235,7 +239,7 @@ class DashboardTests(unittest.TestCase):
                 output.write(json.dumps(event("claim_confirmed_ui", 2)) + "\n")
             with urlopen(base + "/api/rewards?range=all") as response:
                 self.assertEqual(json.load(response)["confirmedClaims"], 1)
-            for path in ("/../AGENTS.md", "/data/free-rewards/events.jsonl"):
+            for path in ("/../AGENTS.md", "/data/free-rewards/events.jsonl", "/locales/../../AGENTS.md", "/locales/en.js/..", "/locales/README.md", "/locales/zz.js"):
                 with self.assertRaises(HTTPError) as error:
                     urlopen(base + path)
                 self.assertEqual(error.exception.code, 404)

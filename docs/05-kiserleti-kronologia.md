@@ -2,6 +2,13 @@
 
 ## 2026-10-30
 
+310: felhasználói kérésre HU/EN fejlécválasztó és külön nyelvi fájlok.
+Élő váltás, megjegyzett választás, dátum/szám/ARIA/állapot/tooltip is fordítva.
+Fordítási kulcsok/helyőrzők, böngészős scriptregisztráció, élő kirajzolás,
+szűrő/elrejtésmegőrzés és kapcsolathiba melletti nyelvváltás regresszióval.
+Read-only szerver89001→2459/session3264, gyűjtő66095 megszakítás nélkül.
+21:47:58Zfriss képidő. A309-es Healthhiba nem része ennek a UI-javításnak.
+
 309: új kérésre a308-as sorrend a jelmagyarázatba és a közös grafikon
 rámutatásos listájába is átkerült. Közös rendező, típushoz rögzített
 vonalminták; kéthasábos legenda. Tényleges SVG/DOM- és pointermove-teszt

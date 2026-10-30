@@ -61,7 +61,7 @@ test("reward icons remain transparent on cards, ledger and frequency legend",()=
   }
 });
 
-async function renderDashboard(data,frequencyWidth=0) {
+async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFetch=false}={}) {
   const vm=require("node:vm");
   class Element {
     constructor(tagName="") {this.tagName=tagName;this.children=[];this.dataset={};this.attributes={};this.listeners={};this.style={};this.classList={add(){},remove(){}};}
@@ -80,6 +80,7 @@ async function renderDashboard(data,frequencyWidth=0) {
   }
   const elements=new Map();
   const document={
+    documentElement:{},
     getElementById(id) {
       if(!elements.has(id)) {const element=new Element();if(id==="frequency-chart") element.width=frequencyWidth;elements.set(id,element);}
       return elements.get(id);
@@ -88,14 +89,20 @@ async function renderDashboard(data,frequencyWidth=0) {
     createTextNode(text) {return {textContent:text};},
     querySelectorAll() {return [];}, addEventListener() {},
   };
+  let requests=0,scheduled;
+  const storage={getItem(){return savedLanguage;},setItem(key,value){savedLanguage=value;}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../dashboard/app.js"),"utf8"),{
     document,Intl,Date,URLSearchParams,AbortSignal,
+    localStorage:storage,RewardI18n:require("../dashboard/i18n.js"),
+    RewardLocales:{hu:require("../dashboard/locales/hu.js"),en:require("../dashboard/locales/en.js")},
     RewardFormat:require("../dashboard/format.js"),RewardStatus:require("../dashboard/status.js"),
     RewardAnimation:require("../dashboard/animation.js"),
-    ResizeObserver:class {observe() {}},setInterval(){},setTimeout(){},clearTimeout(){},
-    fetch:async()=>({ok:true,json:async()=>data}),
+    ResizeObserver:class {observe() {}},setInterval(){},setTimeout(fn){scheduled=fn;},clearTimeout(){},
+    fetch:async()=>{requests++;if(typeof failFetch==="function"?failFetch(requests):failFetch) throw new Error("offline");return {ok:true,json:async()=>data};},
   });
   await new Promise(resolve=>setImmediate(resolve));
+  elements.document=document;elements.storage=storage;elements.requests=()=>requests;
+  elements.poll=()=>scheduled();
   return elements;
 }
 
@@ -109,7 +116,7 @@ test("actual ledger rendering uses compact amounts and retains exact tooltips",a
   const cells=elements.get("entries").children.map(row=>row.children[2]);
   assert.deepEqual(cells.map(cell=>cell.textContent),["+18,3K","+540","+2,3M","+99,8M","+100M","?"]);
   assert.equal(cells[0].title,"Pontos naplóérték: +18\u202f300");
-  assert.equal(cells[2].attributes["aria-label"],"Health: +2\u202f360\u202f000");
+  assert.equal(cells[2].attributes["aria-label"],"Életerő: +2\u202f360\u202f000");
   assert.equal(cells[5].title,undefined,"missing amounts must not fabricate a zero");
   assert.deepEqual(data.recent.map(row=>row.amount),amounts,"rendering must not change source amounts");
 });
@@ -127,7 +134,8 @@ test("cards, legend and chart share the requested order without reordering sourc
   assert.deepEqual(elements.get("stats-grid").children.map(card=>card.dataset.kind),expected);
   assert.deepEqual(data.kinds.map(row=>row.kind),original);
   const buttons=elements.get("frequency-legend").children;
-  assert.deepEqual(buttons.map(button=>button.querySelector(".frequency-name").textContent),expected);
+  const messages=require("../dashboard/locales/hu.js").messages;
+  assert.deepEqual(buttons.map(button=>button.querySelector(".frequency-name").textContent),expected.map(kind=>messages[`kind.${kind}`]));
   const lines=elements.get("frequency-svg").children.filter(group=>(group.className||"").startsWith("frequency-series "));
   assert.deepEqual(lines.map(group=>group.attributes["data-kind"]),expected);
   const patterns={hp:"",regeneration:"7 3",piercing_damage:"",cutting_damage:"2 3",smash_damage:"",piercing_defense:"8 3 2 3",cutting_defense:"5 3",smash_defense:"1 4"};
@@ -137,10 +145,66 @@ test("cards, legend and chart share the requested order without reordering sourc
   });
   const hit=elements.get("frequency-svg").querySelector(".frequency-hit");
   hit.listeners.pointermove({clientX:300,clientY:100});
-  assert.deepEqual(elements.get("frequency-tooltip").children.slice(1).map(row=>row.children[0].textContent),expected);
+  assert.deepEqual(elements.get("frequency-tooltip").children.slice(1).map(row=>row.children[0].textContent),expected.map(kind=>messages[`kind.${kind}`]));
   const css=fs.readFileSync(path.join(__dirname,"../dashboard/style.css"),"utf8");
   for(const [,body] of css.matchAll(/\.(?:stats-grid|frequency-legend)\{([^}]+)\}/g)) {
     const columns=/grid-template-columns:([^;]+)/.exec(body);
     if(columns) assert.equal(columns[1],"repeat(2,minmax(0,1fr))","four rows of two cards at every breakpoint");
   }
+});
+
+test("live language switch updates existing cards, legend, amounts and ledger without another request or filter reset",async()=>{
+  const at=new Date().toISOString();
+  const data={generatedAt:at,range:{from:at,to:at,bucketSeconds:60},
+    watcher:{stateKnown:true,running:true,lastCheckedAt:at},
+    kinds:[{kind:"hp",label:"Health",total:"18300",count:1}],collectionCounts:{hp:1},collectionSeries:{},series:{},
+    confirmedClaims:1,pendingClaims:0,clickAttempts:1,logExists:true,
+    recent:[{at,amount:"18300",label:"Health",kind:"hp",confirmed:true}]};
+  const elements=await renderDashboard(data);
+  const card=elements.get("stats-grid").children[0];
+  assert.equal(card.querySelector(".stat-value").textContent,"+18,3K");
+  const from=elements.get("from").value,to=elements.get("to").value;
+  const legendButton=elements.get("frequency-legend").children[0];legendButton.listeners.click();
+  const picker=elements.get("language");picker.value="en";picker.listeners.change();
+  assert.equal(elements.document.documentElement.lang,"en");
+  assert.equal(elements.storage.getItem(),"en");
+  assert.equal(elements.get("collector").textContent,"Running");
+  assert.equal(elements.get("stats-grid").children[0],card,"language switch must preserve the card and its state");
+  assert.equal(card.querySelector("h3").textContent,"Health");
+  assert.equal(card.querySelector(".stat-value").textContent,"+18.3K");
+  assert.equal(card.querySelector(".stat-value").title,"Exact logged value: +18,300");
+  assert.equal(elements.get("entries").children[0].children[2].textContent,"+18.3K");
+  assert.equal(elements.get("entries").children[0].children[3].textContent,"Claimed");
+  assert.equal(elements.get("frequency-legend").children[0].querySelector(".frequency-name").textContent,"Health");
+  assert.equal(elements.get("from").value,from);assert.equal(elements.get("to").value,to);
+  assert.equal(legendButton.attributes["aria-pressed"],"false","hidden chart lines must stay hidden");
+  assert.equal(elements.requests(),1);
+  picker.value="hu";picker.listeners.change();
+  assert.equal(elements.get("collector").textContent,"Fut");
+  assert.equal(card.querySelector("h3").textContent,"Életerő");
+  assert.equal(card.querySelector(".stat-value").textContent,"+18,3K");
+});
+
+test("saved English selection is used at startup",async()=>{
+  const at=new Date().toISOString();
+  const elements=await renderDashboard({generatedAt:at,range:{from:at,to:at,bucketSeconds:60},kinds:[],
+    collectionCounts:{},collectionSeries:{},confirmedClaims:0,pendingClaims:0,clickAttempts:0,logExists:true,recent:[]},0,{savedLanguage:"en"});
+  assert.equal(elements.document.documentElement.lang,"en");
+  assert.equal(elements.get("language").value,"en");
+  assert.equal(elements.get("last-claim").textContent,"None yet");
+});
+
+test("switching language after a connection failure cannot mark the collector healthy",async()=>{
+  const at=new Date().toISOString();
+  const elements=await renderDashboard({generatedAt:at,range:{from:at,to:at,bucketSeconds:60},kinds:[],
+    watcher:{stateKnown:true,running:true,lastCheckedAt:at},collectionCounts:{},collectionSeries:{},
+    confirmedClaims:1,pendingClaims:0,clickAttempts:1,logExists:true,recent:[]},0,{failFetch:request=>request>1});
+  assert.equal(elements.get("collector").textContent,"Fut");
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  const picker=elements.get("language");picker.value="en";picker.listeners.change();
+  assert.equal(elements.get("collector-panel").dataset.state,"unknown");
+  assert.equal(elements.get("collector").textContent,"Cannot verify");
+  assert.equal(elements.get("connection").textContent,"DISCONNECTED");
+  assert.ok(elements.get("notice").textContent.includes("last successfully loaded data"));
+  assert.equal(elements.requests(),2);
 });

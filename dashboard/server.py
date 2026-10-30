@@ -311,8 +311,14 @@ def make_server(root: Path, port: int):
                         payload = aggregate(events, malformed, exists, parse_qs(url.query), now)
                     payload["watcher"] = watcher_state(root / "data/free-rewards/state.json", now)
                     self.send_json(200, payload)
-                elif url.path in ("/", "/app.js", "/format.js", "/status.js", "/animation.js", "/vendor/countUp.umd.js", "/style.css"):
-                    name = {"/": "index.html", "/app.js": "app.js", "/format.js": "format.js", "/status.js": "status.js", "/animation.js": "animation.js", "/vendor/countUp.umd.js": "vendor/countUp.umd.js", "/style.css": "style.css"}[url.path]
+                elif re.fullmatch(r"/locales/[a-z]{2}(?:-[A-Z]{2})?\.js", url.path):
+                    path = static / url.path.lstrip("/")
+                    if path.is_file():
+                        self.send_bytes(200, path.read_bytes(), "text/javascript; charset=utf-8")
+                    else:
+                        self.send_json(404, {"error": "Unknown language"})
+                elif url.path in ("/", "/app.js", "/format.js", "/status.js", "/animation.js", "/i18n.js", "/vendor/countUp.umd.js", "/style.css"):
+                    name = {"/": "index.html", "/app.js": "app.js", "/format.js": "format.js", "/status.js": "status.js", "/animation.js": "animation.js", "/i18n.js": "i18n.js", "/vendor/countUp.umd.js": "vendor/countUp.umd.js", "/style.css": "style.css"}[url.path]
                     mime = "text/html" if name=="index.html" else "text/css" if name=="style.css" else "text/javascript"
                     self.send_bytes(200, (static / name).read_bytes(), mime + "; charset=utf-8")
                 elif url.path.startswith("/icons/") and url.path[7:] in {kind + ".png" for kind in KINDS}:

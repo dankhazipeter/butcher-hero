@@ -1,22 +1,23 @@
 "use strict";
 (function(root) {
-  function collectorStatus(watcher, generatedAt, now=Date.now(), connected=true) {
+  function collectorStatus(watcher, generatedAt, now=Date.now(), connected=true,t=key=>key) {
     const parsed=Date.parse(watcher?.lastCheckedAt);
     const checkedAt=Number.isFinite(parsed)?watcher.lastCheckedAt:null;
-    const unknown=detail=>({state:"unknown",label:"Nem ellenőrizhető",detail,checkedAt});
+    const result=(state,detail,values={})=>({state,label:t(`status.${state}`),detail:t(detail,values),checkedAt});
+    const unknown=detail=>result("unknown",detail);
     const generated=Date.parse(generatedAt);
     if(!connected || !Number.isFinite(generated) || now-generated>20000) {
-      return unknown("Nincs friss kapcsolat a statisztikával. A gyűjtő közben tovább is futhat.");
+      return unknown("status.connection");
     }
     if(!watcher || watcher.stateKnown!==true || typeof watcher.running!=="boolean") {
-      return unknown("A gyűjtő állapotadata még nem érhető el.");
+      return unknown("status.unavailable");
     }
-    if(!watcher.running) return {state:"stopped",label:"Leállítva",detail:"A gyűjtőprogram nem fut. Nincs automatikus jutalomátvétel.",checkedAt};
-    if(!checkedAt) return {state:"starting",label:"Indul / újraindul",detail:"A folyamat fut, de még várunk az első sikeres képolvasásra.",checkedAt:null};
+    if(!watcher.running) return result("stopped","status.stoppedDetail");
+    if(!checkedAt) return result("starting","status.startingDetail");
     const age=Math.max(0,(now-parsed)/1000);
-    if(age>10) return {state:"stale",label:"Nincs friss képolvasás",detail:`A folyamat él, de ${Math.floor(age)} mp óta nincs sikeres képolvasás.`,checkedAt};
-    if(watcher.waitingForMouseRelease) return {state:"waiting",label:"Mozgás miatt várakozik",detail:"Az egérgomb elengedése után folytatja a jutalomgyűjtést.",checkedAt};
-    return {state:"running",label:"Fut",detail:"Figyeli és átveszi az ingyenes jutalmakat.",checkedAt};
+    if(age>10) return result("stale","status.staleDetail",{seconds:Math.floor(age)});
+    if(watcher.waitingForMouseRelease) return result("waiting","status.waitingDetail");
+    return result("running","status.runningDetail");
   }
   if(typeof module!=="undefined" && module.exports) module.exports={collectorStatus};
   else root.RewardStatus=Object.freeze({collectorStatus});

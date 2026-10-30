@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-30 (282)
 
+310: két helyi, előre betöltött nyelvi katalógus + createI18n fordító.
+data-i18n jelöli a statikus szövegeket/ARIA-t, dinamikus UI t(kulcs,értékek).
+Az állapotgép fordítófüggvényt kap; a döntési logika nem nyelvfüggő.
+A Decimal-szövegformázó locale-paraméteres, nincs új float-könyvelés.
+localStorage hiba/érvénytelen kód magyar fallback; böngészőfrissítés nélkül
+átfordul minden meglévő kártya/legenda/táblázat, szűrő és elrejtés megmarad.
+A nyelvváltás nem minősíthet régi/hibás kapcsolatot egészséges gyűjtőnek.
+
 309: orderedKinds másolaton rendez, minden stat-megjelenítő ezt használja.
 A vonalminták típus→minta Mapben maradnak, nem a rendezett index alapján.
 A jelmagyarázat kétoszlopos. Kirajzolási teszt a kártya/legend/vonal/tooltip

@@ -6,6 +6,9 @@
   <meta name="color-scheme" content="dark light">
   <title>Butcher Hero · Élő jutalomnapló</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/locales/hu.js" defer></script>
+  <script src="/locales/en.js" defer></script>
+  <script src="/i18n.js" defer></script>
   <script src="/format.js" defer></script>
   <script src="/status.js" defer></script>
   <script src="/vendor/countUp.umd.js" defer></script>
@@ -15,56 +18,56 @@
 <body>
   <main>
     <header class="masthead">
-      <div><p class="eyebrow">BUTCHER HERO / JUTALOMNAPLÓ</p><h1>Amit összegyűjtöttünk<span>.</span></h1>
-      <p class="intro">Naplózott átvételek. Nyolc stat. Minden gyűjtésnek nyoma van.</p></div>
-      <div class="live-panel"><span id="connection" class="live-status">Kapcsolódás…</span>
-      <span id="updated" class="subtle">2 másodpercenként frissül</span></div>
+      <div><p class="eyebrow" data-i18n="eyebrow">BUTCHER HERO / JUTALOMNAPLÓ</p><h1><span class="heading-text" data-i18n="heading">Amit összegyűjtöttünk</span><span>.</span></h1>
+      <p class="intro" data-i18n="intro">Naplózott átvételek. Nyolc stat. Minden gyűjtésnek nyoma van.</p></div>
+      <div class="live-panel"><label class="language-picker"><span data-i18n="language">Nyelv</span><select id="language"></select></label><span id="connection" class="live-status" data-i18n="connecting">Kapcsolódás…</span>
+      <span id="updated" class="subtle" data-i18n="refreshInterval">2 másodpercenként frissül</span></div>
     </header>
-    <section id="collector-panel" class="collector-panel" data-state="unknown" aria-label="Gyűjtőprogram állapota">
+    <section id="collector-panel" class="collector-panel" data-state="unknown" aria-label="Gyűjtőprogram állapota" data-i18n-aria-label="collectorLabel">
       <div class="collector-heading"><span class="collector-dot" aria-hidden="true"></span><div>
-        <span class="metric-label">GYŰJTŐPROGRAM ÁLLAPOTA</span>
-        <strong id="collector" role="status" aria-live="polite" aria-atomic="true">Ellenőrzés…</strong>
+        <span class="metric-label" data-i18n="collectorEyebrow">GYŰJTŐPROGRAM ÁLLAPOTA</span>
+        <strong id="collector" role="status" aria-live="polite" aria-atomic="true" data-i18n="checking">Ellenőrzés…</strong>
       </div></div>
-      <div class="collector-details"><span id="collector-detail">Kapcsolódás az állapotadatokhoz…</span>
+      <div class="collector-details"><span id="collector-detail" data-i18n="connectingStatus">Kapcsolódás az állapotadatokhoz…</span>
         <span id="collector-frame" class="subtle">Utolsó sikeres képolvasás: még nincs adat</span></div>
     </section>
-    <section class="filters" aria-label="Időszak kiválasztása">
-      <div class="range-buttons" role="group" aria-label="Gyors időszakok">
-        <button type="button" data-range="run" aria-pressed="true">Mostani futás</button>
-        <button type="button" data-range="today" aria-pressed="false">Ma</button>
-        <button type="button" data-range="hour" aria-pressed="false">Utolsó óra</button>
-        <button type="button" data-range="day" aria-pressed="false">24 óra</button>
-        <button type="button" data-range="all" aria-pressed="false">Minden</button>
+    <section class="filters" aria-label="Időszak kiválasztása" data-i18n-aria-label="rangeLabel">
+      <div class="range-buttons" role="group" aria-label="Gyors időszakok" data-i18n-aria-label="quickRanges">
+        <button type="button" data-range="run" aria-pressed="true" data-i18n="run">Mostani futás</button>
+        <button type="button" data-range="today" aria-pressed="false" data-i18n="today">Ma</button>
+        <button type="button" data-range="hour" aria-pressed="false" data-i18n="hour">Utolsó óra</button>
+        <button type="button" data-range="day" aria-pressed="false" data-i18n="day">24 óra</button>
+        <button type="button" data-range="all" aria-pressed="false" data-i18n="all">Minden</button>
       </div>
-      <form id="custom-range"><label>Kezdet<input type="datetime-local" id="from" required></label>
-      <label>Vége<input type="datetime-local" id="to" required></label><button type="submit">Szűrés</button></form>
+      <form id="custom-range"><label><span data-i18n="from">Kezdet</span><input type="datetime-local" id="from" required></label>
+      <label><span data-i18n="to">Vége</span><input type="datetime-local" id="to" required></label><button type="submit" data-i18n="filter">Szűrés</button></form>
     </section>
     <p id="range-description" class="range-description">Időzóna: Europe/Bucharest</p>
-    <div class="notice" id="data-quality-note" role="status" hidden>Korábbi futások naplóadatai is szerepelnek: régi Health-félreolvasások és hiányzó átvételi igazolások maradhattak bennük. A javított gyűjtő adataihoz válaszd a Mostani futást.</div>
+    <div class="notice" id="data-quality-note" role="status" hidden data-i18n="historicalWarning">Korábbi futások naplóadatai is szerepelnek: régi Health-félreolvasások és hiányzó átvételi igazolások maradhattak bennük. A javított gyűjtő adataihoz válaszd a Mostani futást.</div>
     <div id="notice" class="notice" role="status" hidden></div>
-    <section class="overview" aria-label="Összesítés">
-      <div><span class="metric-label">IGAZOLT ÁTVÉTEL</span><strong id="confirmed">—</strong><span class="metric-note">Kártyaeltűnéssel visszaigazolva</span></div>
-      <div><span class="metric-label">NEM IGAZOLT / FÜGGŐ</span><strong id="pending">—</strong><span class="metric-note">Nem része a jutalomösszegeknek</span></div>
-      <div><span class="metric-label">LEGUTÓBBI ÁTVÉTEL</span><strong id="last-claim" class="time-value">—</strong><span id="attempts" class="metric-note">— kattintási próbálkozás</span></div>
+    <section class="overview" aria-label="Összesítés" data-i18n-aria-label="overview">
+      <div><span class="metric-label" data-i18n="confirmedLabel">IGAZOLT ÁTVÉTEL</span><strong id="confirmed">—</strong><span class="metric-note" data-i18n="confirmedNote">Kártyaeltűnéssel visszaigazolva</span></div>
+      <div><span class="metric-label" data-i18n="pendingLabel">NEM IGAZOLT / FÜGGŐ</span><strong id="pending">—</strong><span class="metric-note" data-i18n="pendingNote">Nem része a jutalomösszegeknek</span></div>
+      <div><span class="metric-label" data-i18n="lastClaimLabel">LEGUTÓBBI ÁTVÉTEL</span><strong id="last-claim" class="time-value">—</strong><span id="attempts" class="metric-note">—</span></div>
     </section>
     <section class="frequency" aria-labelledby="frequency-title">
-      <div class="section-heading"><h2 id="frequency-title">Mit kaptunk gyakrabban?</h2><span class="subtle">Halmozott, igazolt gyűjtések · darab</span></div>
+      <div class="section-heading"><h2 id="frequency-title" data-i18n="frequencyTitle">Mit kaptunk gyakrabban?</h2><span class="subtle" data-i18n="frequencySubtitle">Halmozott, igazolt gyűjtések · darab</span></div>
       <div id="frequency-chart" class="frequency-chart">
-        <svg id="frequency-svg" role="img" aria-label="A nyolc jutalomtípus igazolt gyűjtéseinek darabszáma közös idődiagramon" aria-describedby="frequency-summary"></svg>
+        <svg id="frequency-svg" role="img" aria-label="A nyolc jutalomtípus igazolt gyűjtéseinek darabszáma közös idődiagramon" data-i18n-aria-label="frequencyAria" aria-describedby="frequency-summary"></svg>
         <div id="frequency-tooltip" class="frequency-tooltip" role="tooltip" hidden></div>
       </div>
-      <div id="frequency-legend" class="frequency-legend" role="group" aria-label="Jutalomtípusok: vonal megjelenítése vagy elrejtése"></div>
+      <div id="frequency-legend" class="frequency-legend" role="group" aria-label="Jutalomtípusok: vonal megjelenítése vagy elrejtése" data-i18n-aria-label="legendAria"></div>
       <p id="frequency-summary" class="frequency-summary"></p>
     </section>
-    <section aria-labelledby="growth-title"><div class="section-heading"><h2 id="growth-title">Növekedés, statonként</h2><span class="subtle">Halmozott érték a kiválasztott időszakban</span></div>
+    <section aria-labelledby="growth-title"><div class="section-heading"><h2 id="growth-title" data-i18n="growthTitle">Növekedés, statonként</h2><span class="subtle" data-i18n="growthSubtitle">Halmozott érték a kiválasztott időszakban</span></div>
       <div id="stats-grid" class="stats-grid"></div>
     </section>
     <section class="ledger" aria-labelledby="ledger-title">
-      <div class="section-heading"><h2 id="ledger-title">Mikor, mit, mennyit?</h2><span id="recent-count" class="subtle">Legutóbbi átvételek</span></div>
-      <div class="table-wrap"><table><thead><tr><th>Kattintás ideje</th><th>Jutalom</th><th class="numeric">Mennyiség</th><th>Állapot</th></tr></thead><tbody id="entries"></tbody></table></div>
-      <p id="empty" class="empty" hidden>Ebben az időszakban még nincs elküldött kattintás. A következő automatikusan megjelenik itt.</p>
+      <div class="section-heading"><h2 id="ledger-title" data-i18n="ledgerTitle">Mikor, mit, mennyit?</h2><span id="recent-count" class="subtle" data-i18n="recentInitial">Legutóbbi átvételek</span></div>
+      <div class="table-wrap"><table><thead><tr><th data-i18n="clickTime">Kattintás ideje</th><th data-i18n="reward">Jutalom</th><th class="numeric" data-i18n="amount">Mennyiség</th><th data-i18n="state">Állapot</th></tr></thead><tbody id="entries"></tbody></table></div>
+      <p id="empty" class="empty" hidden data-i18n="empty">Ebben az időszakban még nincs elküldött kattintás. A következő automatikusan megjelenik itt.</p>
     </section>
-    <footer><span>Csak a helyi naplót olvassa. Nem vezérli a játékot.</span><span>A napló rögzített értékeit mutatjuk, nem a karakter szorzózott statváltozását.</span></footer>
+    <footer><span data-i18n="footerReadOnly">Csak a helyi naplót olvassa. Nem vezérli a játékot.</span><span data-i18n="footerValues">A napló rögzített értékeit mutatjuk, nem a karakter szorzózott statváltozását.</span></footer>
     <p id="announcer" class="sr-only" aria-live="polite"></p>
   </main>
 </body>

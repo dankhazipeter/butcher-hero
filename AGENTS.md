@@ -1,5 +1,14 @@
 # Butcher Hero — aktív projektutasítások
 
+310: fejlécbeli HU/EN nyelvválasztó, külön dashboard/locales/hu.js és en.js,
+közös i18n.js. Magyar alapértelmezés, helyi választás megjegyezve; élő váltás
+megtartja az időszakot és elrejtett görbéket. Dátum/szám/tooltipek/állapotok
+is fordulnak, nem csak statikus fejlécek. Új UI-szöveghez mindkét nyelvi kulcs
+kötelező; automatikus kulcs-/helyőrző-/scriptellenőrzés. Új nyelv útmutatója:
+dashboard/locales/README.md. Nyers gyűjtőnapló üzenete nem írható át fordításra.
+Worker66095 végig fut; csak read-only szerver2459/session3264 indult újra.
+A309-es Healthpreclickhiba ettől NEM javult meg, továbbra külön nyitott ügy.
+
 309: közös orderedKinds rendezi a statkártyákat, darabgrafikont,
 jelmagyarázatot és rámutatásos listát a308-as párok szerint. Jelmagyarázat
 is két oszlop. A vonalminta immár típushoz kötött, nem tömbindexhez;

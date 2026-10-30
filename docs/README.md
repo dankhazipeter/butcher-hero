@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Magyar–angol felület és bővíthető nyelvi fájlok](310-magyar-angol-felulet.md)
+
 - [Egységes sorrend a grafikon jelmagyarázatában is](309-egyseges-jelmagyarazat.md)
 
 - [A statkártyák kért támadás/védelem párosítása](308-statkartya-sorrend.md)

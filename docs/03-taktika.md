@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+310: fordítás csak megjelenítési réteg; sem a napló, sem a játék nyelve,
+sem a jutalomtípus belső neve nem változik. HU18,3K / EN18.3K ugyanaz a
+18300adat. Új nyelv kulcsait és helyőrzőit automata teszt védi; a forrásból
+származó nyers diagnosztikai üzenet marad eredeti, lokalizált keretszöveggel.
+
 309: minden stat-összehasonlító nézet azonos párosítást használjon.
 Új sorrend nem cserélhet fel vonalszínt, mintát vagy jutalomadatot;
 a rámutatásos listában is ugyanaz a típusazonosság és sorrend érvényes.

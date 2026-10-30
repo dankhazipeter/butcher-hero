@@ -2,11 +2,21 @@
 (() => {
   const $ = id => document.getElementById(id);
   const zone = "Europe/Bucharest";
-  const date = new Intl.DateTimeFormat("hu-HU", {timeZone:zone,month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  const clock = new Intl.DateTimeFormat("hu-HU", {timeZone:zone,hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  const short = new Intl.DateTimeFormat("hu-HU", {timeZone:zone,hour:"2-digit",minute:"2-digit"});
+  let storage;try {storage=globalThis.localStorage;} catch {}
+  const i18n=RewardI18n.createI18n({catalogs:RewardLocales,storage});
+  const t=i18n.t;
+  const labelOf=row=>i18n.has(`kind.${row.kind}`)?t(`kind.${row.kind}`):row.label;
+  let date,clock,short;
+  function applyLanguage() {
+    i18n.apply(document);
+    $("range-description").textContent=t("timezone",{zone});
+    date=new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    clock=new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    short=new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,hour:"2-digit",minute:"2-digit"});
+  }
+  applyLanguage();
   let mode = "run", snapshot, sequence = 0, pollVersion = 0, timer, lastCount;
-  let statusConnected=false;
+  let statusConnected=false,connectionError=null;
   let cards = new Map();
   const hiddenKinds=new Set();
   const frequencyButtons=new Map();
@@ -17,18 +27,20 @@
   const statOrder=new Map(["hp","regeneration","piercing_damage","cutting_defense",
     "cutting_damage","smash_defense","smash_damage","piercing_defense"].map((kind,index)=>[kind,index]));
   const orderedKinds=kinds=>[...kinds].sort((a,b)=>(statOrder.get(a.kind)??statOrder.size)-(statOrder.get(b.kind)??statOrder.size));
-  const {formatExact:decimal,formatCompact:compact}=RewardFormat;
+  const decimal=value=>RewardFormat.formatExact(value,i18n.locale);
+  const compact=value=>RewardFormat.formatCompact(value,i18n.locale);
+  const connectionMessage=()=>t("connectionError",{message:connectionError?.status?t("httpError",{status:connectionError.status}):connectionError?.message||""});
   const animateValue=RewardAnimation.createAnimator({
     CountUp:globalThis.countUp?.CountUp,formatCompact:compact,formatExact:decimal,
     reducedMotion:()=>typeof matchMedia==="function" && matchMedia("(prefers-reduced-motion: reduce)").matches,
     hidden:()=>document.hidden,
   });
   function renderCollector() {
-    const status=RewardStatus.collectorStatus(snapshot?.watcher,snapshot?.generatedAt,Date.now(),statusConnected);
+    const status=RewardStatus.collectorStatus(snapshot?.watcher,snapshot?.generatedAt,Date.now(),statusConnected,t);
     $("collector-panel").dataset.state=status.state;
     if($("collector").textContent!==status.label) $("collector").textContent=status.label;
     $("collector-detail").textContent=status.detail;
-    $("collector-frame").textContent=`Utolsó sikeres képolvasás: ${status.checkedAt?clock.format(new Date(status.checkedAt)):"még nincs adat"}`;
+    $("collector-frame").textContent=t("lastFrame",{time:status.checkedAt?clock.format(new Date(status.checkedAt)):t("noData")});
   }
   function field(tag, text, className) {
     const node = document.createElement(tag); node.textContent = text;
@@ -47,7 +59,7 @@
     if(width<=0) return;
     const height=110, left=33, right=7, top=12, bottom=85;
     svg.setAttribute("viewBox",`0 0 ${width} ${height}`); svg.replaceChildren();
-    svg.append(svgNode("title",{},`${row.label}: ${decimal(row.total)}, ${row.count} átvétel; halmozott érték az idő függvényében.`));
+    svg.append(svgNode("title",{},t("statChartTitle",{label:labelOf(row),amount:decimal(row.total),count:decimal(row.count)})));
     const start=Date.parse(snapshot.range.from),end=Date.parse(snapshot.range.to);
     const max=Math.max(1,...points.map(p=>Number(p.value)));
     const x=t=>left+(Date.parse(t)-start)/Math.max(1,end-start)*(width-left-right);
@@ -62,17 +74,17 @@
     const last=points[points.length-1];
     svg.append(svgNode("circle",{cx:x(last.at),cy:y(last.value),r:2.5,class:"endpoint"}));
     const longRange=end-start>24*3600e3;
-    const tick=t=>longRange?new Intl.DateTimeFormat("hu-HU",{timeZone:zone,month:"2-digit",day:"2-digit"}).format(new Date(t)):short.format(new Date(t));
+    const tick=t=>longRange?new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,month:"2-digit",day:"2-digit"}).format(new Date(t)):short.format(new Date(t));
     svg.append(svgNode("text",{x:left,y:104,"text-anchor":"start"},tick(start)));
     svg.append(svgNode("text",{x:width-right,y:104,"text-anchor":"end"},tick(end)));
     const hit=svgNode("rect",{x:left,y:top,width:Math.max(1,width-left-right),height:bottom-top,class:"hit"});
-    const title=svgNode("title",{},"Idő és gyűjtött mennyiség"); hit.append(title);
+    const title=svgNode("title",{},t("chartHit")); hit.append(title);
     hit.addEventListener("pointermove",event=>{
       const box=svg.getBoundingClientRect();
       const cursor=start+Math.max(0,Math.min(1,(event.clientX-box.left-left)/(width-left-right)))*(end-start);
       let nearest=points[0];
       for(const point of points) {if(Date.parse(point.at)>cursor) break;nearest=point;}
-      title.textContent=`${date.format(new Date(cursor))} · ${decimal(nearest.value)} ${row.label} (időszakon belül, összesen)`;
+      title.textContent=t("chartPoint",{time:date.format(new Date(cursor)),amount:decimal(nearest.value),label:labelOf(row)});
     });
     svg.append(hit);
   }
@@ -90,20 +102,20 @@
     const x=value=>left+(value-start)/Math.max(1,end-start)*(width-left-right);
     const y=value=>bottom-value/ceiling*(bottom-top);
     svg.setAttribute("viewBox",`0 0 ${width} ${height}`);svg.replaceChildren();tooltip.hidden=true;
-    svg.append(svgNode("title",{},"Igazolt gyűjtések jutalomtípusonként; a jutalom nagysága nem számít, egy átvétel egy darab."));
-    svg.append(svgNode("text",{x:left,y:13,class:"frequency-axis-label"},"Átvétel (db)"));
+    svg.append(svgNode("title",{},t("frequencyDescription")));
+    svg.append(svgNode("text",{x:left,y:13,class:"frequency-axis-label"},t("countAxis")));
     for(let count=0;count<=ceiling;count+=step) {
       svg.append(svgNode("line",{x1:left,y1:y(count),x2:width-right,y2:y(count),class:"frequency-grid"}));
       svg.append(svgNode("text",{x:left-9,y:y(count)+4,"text-anchor":"end"},decimal(count)));
     }
     const tickCount=width<600?3:5;
     const timeFormat=end-start>24*3600e3
-      ? new Intl.DateTimeFormat("hu-HU",{timeZone:zone,month:"2-digit",day:"2-digit"}):short;
+      ? new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,month:"2-digit",day:"2-digit"}):short;
     for(let i=0;i<tickCount;i++) {
       const time=start+(end-start)*i/(tickCount-1);
       svg.append(svgNode("text",{x:x(time),y:height-18,"text-anchor":i===0?"start":i===tickCount-1?"end":"middle"},timeFormat.format(new Date(time))));
     }
-    svg.append(svgNode("text",{x:width-right,y:height-1,"text-anchor":"end",class:"frequency-axis-label"},"Idő · Europe/Bucharest"));
+    svg.append(svgNode("text",{x:width-right,y:height-1,"text-anchor":"end",class:"frequency-axis-label"},t("timeAxis",{zone})));
     orderedKinds(snapshot.kinds).forEach(row=>{
       if(hiddenKinds.has(row.kind)) return;
       const points=snapshot.collectionSeries[row.kind];
@@ -111,7 +123,7 @@
       for(let i=1;i<points.length;i++) path+=`H${x(Date.parse(points[i].at))}V${y(points[i].count)}`;
       const group=svgNode("g",{class:`frequency-series frequency-${row.kind}`,"data-kind":row.kind});
       const line=svgNode("path",{d:path,class:"frequency-line","stroke-dasharray":linePatterns.get(row.kind)||""});
-      line.append(svgNode("title",{},`${row.label}: ${snapshot.collectionCounts[row.kind]} db`));
+      line.append(svgNode("title",{},`${labelOf(row)}: ${t("count",{count:decimal(snapshot.collectionCounts[row.kind])})}`));
       group.append(line,svgNode("circle",{cx:x(end),cy:y(points[points.length-1].count),r:3,class:"frequency-endpoint"}));
       svg.append(group);
     });
@@ -126,7 +138,7 @@
         if(hiddenKinds.has(row.kind)) continue;
         let count=0;
         for(const point of snapshot.collectionSeries[row.kind]) {if(Date.parse(point.at)>at) break;count=point.count;}
-        const detail=field("div","","frequency-tooltip-row");detail.append(field("span",row.label),field("span",`${count} db`));tooltip.append(detail);
+        const detail=field("div","","frequency-tooltip-row");detail.append(field("span",labelOf(row)),field("span",t("count",{count:decimal(count)})));tooltip.append(detail);
       }
       tooltip.hidden=false;
       const tw=tooltip.offsetWidth,th=tooltip.offsetHeight;
@@ -146,38 +158,41 @@
         const swatch=svgNode("svg",{viewBox:"0 0 24 8","aria-hidden":"true",class:"frequency-swatch"});
         swatch.append(svgNode("path",{d:"M1 4H23","stroke-dasharray":linePatterns.get(row.kind)||""}));
         const image=document.createElement("img");image.src=`/icons/${row.kind}.png`;image.alt="";
-        button.append(swatch,image,field("span",row.label,"frequency-name"),field("span","","frequency-amount"));
+        button.append(swatch,image,field("span",labelOf(row),"frequency-name"),field("span","","frequency-amount"));
         button.addEventListener("click",()=>{
           if(hiddenKinds.has(row.kind)) hiddenKinds.delete(row.kind);else hiddenKinds.add(row.kind);
           button.setAttribute("aria-pressed",String(!hiddenKinds.has(row.kind)));drawFrequency();
         });
         $("frequency-legend").append(button);frequencyButtons.set(row.kind,button);
       }
+      button.querySelector(".frequency-name").textContent=labelOf(row);
       const count=data.collectionCounts[row.kind],share=classified?count/classified*100:0;
       button.setAttribute("aria-pressed",String(!hiddenKinds.has(row.kind)));
-      button.querySelector(".frequency-amount").textContent=`${count} db · ${share.toLocaleString("hu-HU",{maximumFractionDigits:1})}%`;
+      button.querySelector(".frequency-amount").textContent=t("legendCount",{count:decimal(count),share:share.toLocaleString(i18n.locale,{maximumFractionDigits:1})});
     });
-    $("frequency-summary").textContent=`${classified} azonosított, igazolt átvétel. Az arányok ezekre vonatkoznak; egy átvétel egy darab, a statértékétől függetlenül.`+
-      (data.unclassifiedClaims?` További ${data.unclassifiedClaims} igazolt átvétel típusa még ismeretlen, ezért nincs a vonalakon.`:"");
+    $("frequency-summary").textContent=t("frequencySummary",{count:decimal(classified)})+
+      (data.unclassifiedClaims?" "+t("unclassifiedSummary",{count:decimal(data.unclassifiedClaims)}):"");
     drawFrequency();
   }
-  function render(data) {
+  function render(data,fresh=true) {
     snapshot=data;
-    statusConnected=true;
-    $("connection").textContent="ÉLŐ NAPLÓ"; $("connection").classList.remove("error");
+    if(fresh) {statusConnected=true;connectionError=null;}
+    $("connection").textContent=t(statusConnected?"live":"disconnected");
+    if(statusConnected) $("connection").classList.remove("error");
     renderCollector();
-    $("updated").textContent=`Frissítve ${clock.format(new Date(data.generatedAt))} · 2 mp`;
+    $("updated").textContent=t("updated",{time:clock.format(new Date(data.generatedAt))});
     $("confirmed").textContent=decimal(data.confirmedClaims);
     $("pending").textContent=decimal(data.pendingClaims);
-    $("last-claim").textContent=data.lastConfirmedAt?clock.format(new Date(data.lastConfirmedAt)):"Még nincs";
-    $("attempts").textContent=`${decimal(data.clickAttempts)} kattintási próbálkozás`;
-    $("range-description").textContent=`${date.format(new Date(data.range.from))} → ${date.format(new Date(data.range.to))} · Europe/Bucharest · ${Math.round(data.range.bucketSeconds/60)} perces diagrambontás`;
+    $("last-claim").textContent=data.lastConfirmedAt?clock.format(new Date(data.lastConfirmedAt)):t("noClaims");
+    $("attempts").textContent=t("attempts",{count:decimal(data.clickAttempts)});
+    $("range-description").textContent=t("rangeDescription",{from:date.format(new Date(data.range.from)),to:date.format(new Date(data.range.to)),zone,minutes:decimal(Math.round(data.range.bucketSeconds/60))});
     const warnings=[];
     $("data-quality-note").hidden=!data.historicalDataWarning;
-    if(!data.logExists) warnings.push("A jutalomnapló még nem létezik. A következő átvételeknél megjelennek az adatok.");
-    if(data.malformedLines) warnings.push(`${data.malformedLines} hibás naplósor kimaradt.`);
-    if(data.unknownConfirmed) warnings.push(`${data.unknownConfirmed} igazolt átvétel típusa vagy mennyisége még bizonytalan; nincs beleszámolva a statösszegekbe.`);
-    if(data.observationError) warnings.push(`Gyűjtő: ${data.observationError}`);
+    if(!data.logExists) warnings.push(t("noLog"));
+    if(data.malformedLines) warnings.push(t("malformed",{count:decimal(data.malformedLines)}));
+    if(data.unknownConfirmed) warnings.push(t("uncertain",{count:decimal(data.unknownConfirmed)}));
+    if(data.observationError) warnings.push(t("observationError",{message:data.observationError}));
+    if(connectionError) warnings.push(connectionMessage());
     $("notice").hidden=!warnings.length; $("notice").textContent=warnings.join(" ");
     for(const row of orderedKinds(data.kinds)) {
       let card=cards.get(row.kind);
@@ -185,16 +200,18 @@
         card=field("article","","stat"); card.dataset.kind=row.kind;
         const heading=field("div","","stat-head"),icon=document.createElement("img");
         icon.src=`/icons/${row.kind}.png`;icon.alt="";
-        heading.append(icon,field("h3",row.label));
+        heading.append(icon,field("h3",labelOf(row)));
         card.append(heading,field("div","","stat-value"),field("div","","stat-count"));
-        card.append(svgNode("svg",{class:"spark",role:"img","aria-label":`${row.label} halmozott gyűjtése` }));
+        card.append(svgNode("svg",{class:"spark",role:"img","aria-label":t("statChartAria",{label:labelOf(row)}) }));
         $("stats-grid").append(card);cards.set(row.kind,card);
       }
+      card.querySelector("h3").textContent=labelOf(row);
+      card.querySelector("svg").setAttribute("aria-label",t("statChartAria",{label:labelOf(row)}));
       const value=card.querySelector(".stat-value");
-      animateValue(value,row.total,mode==="custom"?`${mode}:${$("from").value}:${$("to").value}`:mode);
-      value.title=`Pontos naplóérték: +${decimal(row.total)}`;
-      value.setAttribute("aria-label",`${row.label}: +${decimal(row.total)}`);
-      card.querySelector(".stat-count").textContent=`${data.collectionCounts[row.kind]} igazolt átvétel`;
+      animateValue(value,row.total,`${i18n.language}:${mode==="custom"?`${mode}:${$("from").value}:${$("to").value}`:mode}`);
+      value.title=t("exact",{amount:decimal(row.total)});
+      value.setAttribute("aria-label",`${labelOf(row)}: +${decimal(row.total)}`);
+      card.querySelector(".stat-count").textContent=t("confirmedCount",{count:decimal(data.collectionCounts[row.kind])});
       draw(card,row,data.series[row.kind]);
     }
     renderFrequency(data);
@@ -203,20 +220,20 @@
       const tr=document.createElement("tr");
       const type=field("td",""),label=field("span","","entry-kind");
       if(cards.has(row.kind)) {const image=document.createElement("img");image.src=`/icons/${row.kind}.png`;image.alt="";label.append(image);}
-      label.append(document.createTextNode(row.label));type.append(label);
+      label.append(document.createTextNode(labelOf(row)));type.append(label);
       const amount=field("td",row.amount==null?"?":`+${compact(row.amount)}`,"numeric");
       if(row.amount!=null) {
-        amount.title=`Pontos naplóérték: +${decimal(row.amount)}`;
-        amount.setAttribute("aria-label",`${row.label}: +${decimal(row.amount)}`);
+        amount.title=t("exact",{amount:decimal(row.amount)});
+        amount.setAttribute("aria-label",`${labelOf(row)}: +${decimal(row.amount)}`);
       }
       tr.append(field("td",date.format(new Date(row.at))),type,
         amount,
-        field("td",row.confirmed?"Átvéve":"Nem igazolt",`claim-state${row.confirmed?"":" pending"}`));
+        field("td",t(row.confirmed?"claimed":"unconfirmed"),`claim-state${row.confirmed?"":" pending"}`));
       $("entries").append(tr);
     }
     $("empty").hidden=!!data.recent.length;
-    $("recent-count").textContent=`${data.recent.length} legutóbbi tétel · a kattintás időpontja szerint`;
-    if(lastCount!==data.confirmedClaims) $("announcer").textContent=`${data.confirmedClaims} igazolt átvétel a kiválasztott időszakban.`;
+    $("recent-count").textContent=t("recentCount",{count:decimal(data.recent.length)});
+    if(lastCount!==data.confirmedClaims) $("announcer").textContent=t("announcement",{count:decimal(data.confirmedClaims)});
     lastCount=data.confirmedClaims;
   }
   async function refresh() {
@@ -227,13 +244,13 @@
       const response=await fetch(`/api/rewards?${query}`,{cache:"no-store",signal:AbortSignal.timeout(6000)});
       const data=await response.json();
       if(version!==sequence) return;
-      if(!response.ok) throw new Error(data.error||"A nézet most nem érhető el.");
+      if(!response.ok) throw Object.assign(new Error("HTTP"),{status:response.status});
       render(data);
     } catch(error) {
       if(version!==sequence) return;
-      $("connection").textContent="NINCS KAPCSOLAT";$("connection").classList.add("error");
-      statusConnected=false;renderCollector();
-      $("notice").hidden=false;$("notice").textContent=`${error.message} Az utolsó sikeres adatok maradtak láthatók.`;
+      $("connection").textContent=t("disconnected");$("connection").classList.add("error");
+      statusConnected=false;connectionError=error;renderCollector();
+      $("notice").hidden=false;$("notice").textContent=connectionMessage();
     }
   }
   function choose(value) {
@@ -247,6 +264,19 @@
     const parts=new Intl.DateTimeFormat("sv-SE",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(now);
     const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
   }
+  const languagePicker=$("language");
+  for(const catalog of Object.values(i18n.catalogs)) {
+    const option=field("option",catalog.name);option.value=catalog.language;languagePicker.append(option);
+  }
+  languagePicker.value=i18n.language;
+  languagePicker.addEventListener("change",()=>{
+    if(!i18n.setLanguage(languagePicker.value)) return;
+    applyLanguage();lastCount=undefined;
+    if(snapshot) render(snapshot,false);else {
+      renderCollector();$("connection").textContent=t(connectionError?"disconnected":"connecting");
+      if(connectionError) {$("notice").hidden=false;$("notice").textContent=connectionMessage();}
+    }
+  });
   $("to").value=localInput(new Date());$("from").value=localInput(new Date(Date.now()-3600e3));
   const layout=new ResizeObserver(()=>{
     if(snapshot) {for(const row of snapshot.kinds) draw(cards.get(row.kind),row,snapshot.series[row.kind]);drawFrequency();}
@@ -255,5 +285,6 @@
   function poll() {const version=++pollVersion;clearTimeout(timer);refresh().finally(()=>{if(version===pollVersion) timer=setTimeout(poll,document.hidden?10000:2000);});}
   document.addEventListener("visibilitychange",()=>{if(!document.hidden) {renderCollector();poll();}});
   setInterval(renderCollector,1000);
+  renderCollector();
   poll();
 })();

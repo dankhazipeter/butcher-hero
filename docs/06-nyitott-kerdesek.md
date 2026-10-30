@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+310: a magyar/angol UI készen, a nyers napló-/rendszerhiba szövege szándékosan
+eredeti marad. Több nyelv fájlból bővíthető, regisztrációját/kulcsait teszt
+ellenőrzi. Az élő böngészős vizuális ellenőrzés továbbra korlátozott; a
+309-es Healthguard-elutasítás ettől függetlenül nyitott, nem tekinthető javítottnak.
+
 309különincidens: Health18300 felismerve, kattintás előtti újraellenőrzés
 többször elutasította, nincs elküldött input/igazolás. Worker66095ésképidő
 friss,SmashDefense83321:32:03Zátvéve. Az összevont guardüzenetből nem
