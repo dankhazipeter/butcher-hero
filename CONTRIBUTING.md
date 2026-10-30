@@ -1,5 +1,10 @@
 # Közreműködés és kötelező tesztek
 
+A regressziós tesztek a már igazolt működést védik a nyilvános repóban:
+a beküldött PR-ból látszódjon, ha egy korábbi helyes felismerés, átvételi
+szabály vagy statisztikai eredmény elromlik. A PR saját, friss ellenőrzését
+kell sikeresen teljesíteni, nem elegendő a main egy korábbi zöld futása.
+
 macOS14+, Swift5.9+, Python3.10+, Node18+ szükséges. A felismerés Apple
 képi keretrendszereit használja, ezért ez a csomag nem Linuxon fut. Nem kell hozzá elindítani
 a játékot, és a tesztek soha nem kattintanak vagy írnak éles jutalomnaplóba.

@@ -1,5 +1,20 @@
 # Butcher Hero — aktív projektutasítások
 
+## Állandó munkarend és a tesztek célja — felhasználói megerősítés, 2026-10-30
+
+Minden lezárt kód-, teszt-, konfiguráció- és dokumentációmódosítás után
+kötelező a sikeres tesztellenőrzés, commit és automatikus push az origin/mainre.
+Ehhez nem várunk újabb felhasználói kérésre; a feltöltés eredményét ellenőrizzük.
+Pusztán olvasási körhöz nem készítünk üres commitot.
+
+A tesztek elsődleges célja a nyilvános repó regresszióvédelme: külső
+közreműködő PR-ján is látszódjon, ha a korábban igazolt helyes képolvasást,
+jutalomkönyvelést vagy statisztikát elrontja. PR-felülvizsgálatkor az adott
+PR friss GitHub-ellenőrzését nézzük, nem egy korábbi main-futás zöld jelét.
+Hibás ellenőrzésű PR nem tekinthető elfogadásra késznek. A rögzített képi
+elvárásokat nem írjuk át pusztán azért, hogy egy hibás módosítás átmenjen.
+A helyi hook mellett ezért kötelező a push/PR GitHub-ellenőrzés is.
+
 ## AKTUÁLIS — APPLE VISION OCR KIVEZETVE A FREE-KÖRBŐL (303)
 
 Az újraindítás és aCPU-kísérlet nem oldotta meg a visszatérő

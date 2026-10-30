@@ -1,5 +1,11 @@
 # Egyszerű tesztparancs, klónozói hook és PR-CI — 2026-10-30
 
+Felhasználói megerősítés: minden lezárt módosítás után továbbra is
+automatikus commit ÉS push szükséges. A tesztkészlet a nyilvános repóba
+beküldött változtatások ellenőrzésére szolgál: a tulajdonos az adott PR
+saját, friss teszteredményéből lássa, hogy a korábban jó működés megmaradt-e.
+Ez regresszióvédelem, nem az elvárt értékek automatikus újratanítása.
+
 A felhasználó kiegészítése: a tesztek könnyen futtathatók és AGENTS-ben
 kötelezőek legyenek; a klónozók és PR-beküldők is még saját gépükön lássák
 a hibát. A297-es valódi képi regresszió változatlanul megmaradt.
