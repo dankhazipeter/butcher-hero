@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [Apple Vision kiváltása, számjegyminták és folyamatos gyűjtés](303-vision-kivaltasa-es-szamjegymintak.md)
+
 - [CPU-s OCR és valóban blokkoló tesztkapu](302-cpu-ocr-es-blokkolo-tesztkapu.md)
 
 - [A gyűjtés kiesései, helyreállítása és automatikus felügyelete](300-gyujtes-helyreallitasa-es-felugyelete.md)

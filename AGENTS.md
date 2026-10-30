@@ -1,5 +1,26 @@
 # Butcher Hero — aktív projektutasítások
 
+## AKTUÁLIS — APPLE VISION OCR KIVEZETVE A FREE-KÖRBŐL (303)
+
+Az újraindítás és aCPU-kísérlet nem oldotta meg a visszatérő
+TextRecognition.CRImageReaderError1hibát. Az aktívFreefelismerés többé
+NEM hív AppleVisiont/CoreMLt: strukturált zöld badge → különTesseractfolyamat
+csak aFREEszóra → játékbeli számjegyek saját pixelmintái → meglévő ikonillesztés.
+Üres jutalomhelyen nincsOCRhívás. Tesseractkérés3shatáridős; kell az angol
+modell (`brew install tesseract`). CIugyanezt telepíti, ugyanazt teszteli.
+
+Most29rögzített korpuszkép,22pozitív/7negatív.36→38kalibrált glyph,
+13vizuálisan ellenőrzött kalibrációs kép,9további pozitív ellenőrzőkép.
+Elvárt teszteredményt nem írtunk át; két élőnilösszeges esetből új regresszió.
+FREEfeliratot nem tekintünk pusztán zöldfűnek; bizonytalan glyphből nem lesz
+kitalált szám. K/M/B/Tparser megmaradt, képiM/B/Tglyph még nincs igazolva.
+
+Élő54705felügyelet utódja66038/worker66095/session91624.19:43:25indulás;
+19:52:11ig16igazolt átvétel,0OCRhiba,0közbensőújraindítás, frissképidő.
+A karaktermodell pontosítása atomiJSONcserével, leállítás nélkül történt;
+legújabbRegen83már helyes. Friss valós állapot mindigdata/free-rewards/state.json.
+A régiCPU/névlegesrunning=truejegyzet nem aktuális működési bizonyíték.
+
 302:a push előtti tesztkör különOCRellenőrzése is hibával állt meg; a live-
 hibával való azonosság nem igazolt. A kapu BLOKKOLTA a feltöltést, nem került
 megkerülésre. Most támogatott

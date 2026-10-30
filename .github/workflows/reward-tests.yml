@@ -36,5 +36,11 @@ jobs:
           swift --version
           python3 --version
           node --version
+      - name: Install independent OCR engine
+        run: |
+          if ! command -v tesseract >/dev/null; then
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install tesseract
+          fi
+          tesseract --version
       - name: Test reward recognition, statistics and Git gates
         run: make test

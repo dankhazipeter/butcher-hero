@@ -28,6 +28,8 @@
     {"id":"absent-idle","image":"docs/runs/20261029-223657-10037739-observe/frame-00000.png","hud":true,"card":false,"kind":null,"amount":null,"note":"Üres jutalomhely normál HUD-on."},
     {"id":"modal-stats-top","image":"docs/references/2026-10-30/reward-stats-top.png","hud":false,"card":false,"kind":null,"amount":null,"note":"Statpanel: sem kattintás, sem eltűnésből átvétel-igazolás."},
     {"id":"modal-stats-bottom","image":"docs/references/2026-10-30/reward-stats-bottom.png","hud":false,"card":false,"kind":null,"amount":null,"note":"Görgetett statpanel: nincs játék-HUD vagy FREE jutalom."},
-    {"id":"modal-inventory","image":"docs/references/2026-10-30/corpus-inventory-modal.png","hud":false,"card":false,"kind":null,"amount":null,"note":"Aktuális hátizsákpanel: takart játék-HUD, nem szabad átvételt igazolni vagy jutalmat kattintani."}
+    {"id":"modal-inventory","image":"docs/references/2026-10-30/corpus-inventory-modal.png","hud":false,"card":false,"kind":null,"amount":null,"note":"Aktuális hátizsákpanel: takart játék-HUD, nem szabad átvételt igazolni vagy jutalmat kattintani."},
+    {"id":"regen-83-current-font","image":"docs/references/2026-10-30/corpus-regen83-current.png","hud":true,"card":true,"kind":"regeneration","amount":"83","note":"Élő ellenőrzéskor vizuálisan83, az első karaktermodellel összegnil; javítandó új regresszió."},
+    {"id":"cut-defense-593-current-font","image":"docs/references/2026-10-30/corpus-cutdef593-current.png","hud":true,"card":true,"kind":"cutting_defense","amount":"593","note":"Élő ellenőrzéskor vizuálisan593, az első karaktermodellel összegnil; új regresszió, nem módosított elvárás."}
   ]
 }

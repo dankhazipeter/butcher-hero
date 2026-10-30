@@ -1,5 +1,9 @@
 # CPU-s OCR és valóban blokkoló tesztkapu — 2026-10-30
 
+303FELÜLÍRÁS:az explicitCPUbeállítással is visszatért a hiba. Az aktív
+Free-körből aVisionOCRt kiváltottuk; ez a fejezet a sikertelen hipotézis
+és a kezdeti indulási eredmény történeti dokumentuma, nem a mai backend.
+
 Ad6f6404helyi commit után a push előtti külön tesztfutás háromSwift-
 ellenőrzésen megállt; a push1-gyel kilépett. A remote ekkor még af2cbf2.
 A kaput nem kerültük meg és nem állítottunk sikeres feltöltést. A helyi

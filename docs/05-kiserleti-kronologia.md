@@ -2,6 +2,14 @@
 
 ## 2026-10-30
 
+303:CPUbeállítással is visszatért aVisionhiba; a tárolt pushnapló konkrétan
+CLIreconcileCRImageReaderError1-et és hárommiatta elbukóassertet mutatott.
+Újbackend:TesseractFREE+pixelglyphszámok. ElsőTesseractszámpróbák5→3és
+688→68shibáztak, ezeknemlettekélesítve; sajátglyphmodell29képenPASS.
+66038/66095/session91624indult19:43:25;19:52:11ig16igazolás/0OCRhiba,
+frissképidő.83/593élőnilből kétúj regresszió;38glyphos modell atomiadatcserével,
+újraindítás nélkül betöltve, következőRegen83márhelyes. Részletek303.
+
 302:d6f6404commit elkészült, de a push előtti izoláltSwiftkör háromhibán
 megállt, feltöltés nem történt. Nem kerülte meg az asszisztens a kaput.
 ExplicitCPUeszközválasztás után27képes korpusz és különCPUtesztPASS.

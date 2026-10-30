@@ -12,9 +12,10 @@ dokumentáció követve vannak. [Bekötési jegyzet](docs/290-github-main-elso-f
 
 Fejlesztési ellenőrzés: `make test` (macOS14+, Swift5.9+,
 Python3.10+, Node18+). Új klón után egyszer: `make setup`.
+Szükséges OCR-függőség: Tesseract5 + angol modell (`brew install tesseract`).
 Ezután commit ÉS push előtt automatikus tesztkapu fut; bármely hiba megállítja
 a műveletet. A kapu az index/feltöltendő commit külön másolatát ellenőrzi,
-nem a futó játékot. A27valódi mintakép elvárt eredménye:
+nem a futó játékot. A29valódi mintakép elvárt eredménye:
 [`tests/reward-reading-corpus.json`](tests/reward-reading-corpus.json).
 [Mintabővítés és működés](docs/297-kepi-regresszios-korpusz-es-tesztkapu.md).
 Minden push és PR ugyanazt a tesztet futtatja GitHubon is.
@@ -41,6 +42,9 @@ Az indítót tartós terminálmunkamenetben hagyjuk futni: felügyeli és elakad
 újraindítja a saját gyűjtőjét. Technikai folytatás: `--resume-run`.
 A tesztek közben nem állítjuk le; a kéziSTOPa felügyelőt is leállítja.
 [Felügyelet és kiesések tanulságai](docs/300-gyujtes-helyreallitasa-es-felugyelete.md).
+Az aktív képolvasó Tesseracttal ellenőrzi aFREEszót, a számokat saját
+játékbeli glyphmintákból olvassa; nincs AppleVisionOCRhívás ebben a körben.
+[A fagyó képolvasó kiváltása](docs/303-vision-kivaltasa-es-szamjegymintak.md).
 Terminálban közvetlenül: `.build/release/ButcherHeroAutomation watch-free --interval 1`.
 Összesítés: `.build/release/ButcherHeroAutomation stats --from <ISO8601> --to <ISO8601>`.
 Napló: `data/free-rewards/events.jsonl`, státusz: `data/free-rewards/state.json`.

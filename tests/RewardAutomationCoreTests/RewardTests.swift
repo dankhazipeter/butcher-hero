@@ -1,21 +1,34 @@
 import XCTest
 import ImageIO
-import Vision
 @testable import RewardAutomationCore
 
 final class RewardTests:XCTestCase {
-    func testOCRUsesSupportedCPUDevices()throws {
-        let request=VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        try RewardVision.useCPUForSupportedStages(request)
-        var checked=0
-        for (stage,devices) in try request.supportedComputeStageDevices {
-            guard devices.contains(where:{if case .cpu = $0 {return true};return false}) else{continue}
-            let chosen=try XCTUnwrap(request.computeDevice(for:stage))
-            guard case .cpu = chosen else{return XCTFail("CPU must be selected for \(stage)")}
-            checked+=1
-        }
-        XCTAssertGreaterThan(checked,0)
+    func testTesseractTSVParsingPreservesWordGeometryAndConfidence()throws {
+        let words=TesseractOCR.parseTSV("5\t1\t1\t1\t1\t1\t12\t30\t60\t20\t95.5\t18.3K\n")
+        let word=try XCTUnwrap(words.first)
+        XCTAssertEqual(word.text,"18.3K");XCTAssertEqual(word.confidence,0.955,accuracy:0.0001)
+        XCTAssertEqual(word.rect,.init(x:12,y:30,width:60,height:20))
+    }
+    func testTesseractRejectsMalformedRows(){
+        XCTAssertTrue(TesseractOCR.parseTSV("header\n4\t1\t1\t1\t1\t1\t12\t30\t60\t20\t95\tFREE\n5\t1\t1\t1\t1\t1\t12\t30\t60\t20\t-1\tFREE").isEmpty)
+    }
+    func testTesseractIsAvailable()throws {
+        XCTAssertNotNil(TesseractOCR.executable,"Install tesseract before running collection or tests")
+    }
+    func testTesseractTimeoutDoesNotBlockTheCollectorForever()throws {
+        let dir=FileManager.default.temporaryDirectory.appendingPathComponent("reward-ocr-timeout-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at:dir,withIntermediateDirectories:true)
+        defer{try? FileManager.default.removeItem(at:dir)}
+        let fake=dir.appendingPathComponent("tesseract")
+        try "#!/bin/sh\nexec /bin/sleep 10\n".write(to:fake,atomically:true,encoding:.utf8)
+        try FileManager.default.setAttributes([.posixPermissions:0o755],ofItemAtPath:fake.path)
+        let prior=ProcessInfo.processInfo.environment["PATH"] ?? ""
+        setenv("PATH",dir.path+":"+prior,1);defer{setenv("PATH",prior,1)}
+        let context=try XCTUnwrap(CGContext(data:nil,width:10,height:10,bitsPerComponent:8,bytesPerRow:0,space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue))
+        let image=try XCTUnwrap(context.makeImage())
+        let started=Date()
+        XCTAssertThrowsError(try TesseractOCR.recognize(image))
+        XCTAssertLessThan(Date().timeIntervalSince(started),5)
     }
     private var project:URL {URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()}
     private func image(_ path:String)throws->CGImage {
@@ -65,13 +78,10 @@ final class RewardTests:XCTestCase {
         XCTAssertEqual(observed.reward?.kind,"hp")
         XCTAssertEqual(observed.reward?.amount,"18300","Not8.3,8300 or a cropped token")
     }
-    func testHighContrastNumberFallbackReadsOccluded18K()throws {
+    func testPixelNumberReaderReadsOccluded18K()throws {
         let full=try image("docs/references/2026-10-30/free-hp-18k-occluded.png")
-        let vision=RewardVision()
-        let observation=try vision.observe(full)
-        let reward=try XCTUnwrap(observation.reward)
-        let texts=try vision.recognize(full,roi:.init(x:0.065,y:reward.badgeY+0.046,width:0.085,height:0.043),highContrast:true)
-        XCTAssertTrue(texts.contains{RewardAmount.parse($0.text)=="18000"},"White-number fallback: \(texts)")
+        let number=try XCTUnwrap(RewardNumberReader().read(full))
+        XCTAssertEqual(RewardAmount.parse(number.text),"18000")
     }
     func testDefenseIconSurvivesSmallOCRBadgeAlignmentDifferences()throws {
         let full=try image("docs/references/2026-10-30/corpus-cutdef593.png")

@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-30 (282)
 
+303FELÜLÍRÁS:az aktív core nemimportálVisiont/CoreMLt. Strukturáltbadge
+jelenlét után csak aFREEszó kapTesseract7-es sorfelismerést, angolmodell,
+egyetlenCPUthread,3shatáridő. Számmező: fehérglyphok összefüggő komponensei,
+domináns számsor,24×32bináris alak+oldalarány, típusonként legjobb referencia,
+0.30maxhiba/0.035margin.38glyph13kalibráltképből,29teljes regresszió.
+Modelladat különResourceDigits; minden kártyaolvasáskor betöltődik, atomi
+adatcsere leállítás nélkül lehetséges. Nem az aktuális OCRválasz címkézi a tesztet.
+
 302:VNRequest.supportedComputeStageDevices alapján mindenCPUtámogatású
 szakaszra explicitCPUeszköz, setComputeDeviceAPIval. Nem használunk
 deprecatedusesCPUOnlyt, nem választunk nem támogatott eszközt. Különunit

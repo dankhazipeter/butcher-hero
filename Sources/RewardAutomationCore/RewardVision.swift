@@ -1,7 +1,5 @@
 import Foundation
 import CoreGraphics
-import Vision
-import CoreML
 
 public struct RewardObservation: Codable {
     public let reward: FreeReward?
@@ -13,25 +11,16 @@ public struct RewardObservation: Codable {
 public final class RewardVision {
     private let icons=RewardIconClassifier()
     public init(){}
-    static func useCPUForSupportedStages(_ request:VNRequest)throws {
-        // Avoid long-lived accelerator sessions shared with the game's renderer
-        // and concurrent offline OCR tests. Never select an unsupported device.
-        for (stage,devices) in try request.supportedComputeStageDevices {
-            if let cpu=devices.first(where:{if case .cpu = $0 {return true};return false}) {
-                request.setComputeDevice(cpu,for:stage)
-            }
-        }
-    }
     public func observe(_ image:CGImage)throws->RewardObservation {
         // Only the left reward panel below the event. Never inspect shop buttons.
-        let roi=CGRect(x:0,y:0.43,width:0.17,height:0.30)
         let pixels=try Pixels(image)
         let hud=hudVisible(pixels)
         guard hud else{return .init(reward:nil,texts:[],gameHUDVisible:false,freeCardVisible:false)}
         // Independent, conservative presence check: OCR missing the word FREE
         // must not by itself turn a still-visible card into a successful claim.
-        let cardVisible=pixels.hasFreeBadge()
-        var texts=try recognize(image,roi:roi)
+        guard let badgeRegion=pixels.freeBadgeRect() else{return .init(reward:nil,texts:[],gameHUDVisible:true,freeCardVisible:false)}
+        let cardVisible=true
+        var texts=try recognize(image,roi:badgeRegion.insetBy(dx:-0.003,dy:-0.003),highContrast:true)
         guard hud,let badge=texts.first(where:{
             $0.text.trimmingCharacters(in:.whitespacesAndNewlines).uppercased()=="FREE" &&
             $0.confidence>=0.45 && $0.x<0.12 && $0.y>=0.46 && $0.y<0.68 &&
@@ -51,17 +40,7 @@ public final class RewardVision {
             if a != b {return a}
             return $0.width>$1.width
         } }
-        if amountCandidates().isEmpty {
-            texts += try recognize(image,roi:.init(x:0.035,y:badge.y+0.046,width:0.13,height:0.039))
-        }
-        if amountCandidates().isEmpty {
-            texts += try recognize(image,roi:.init(x:0.065,y:badge.y+0.046,width:0.085,height:0.039))
-        }
-        if amountCandidates().isEmpty {
-            // Cartoon white digits can merge with world timers on older Vision
-            // models. Retry the number-only region on a white/black mask.
-            texts += try recognize(image,roi:.init(x:0.065,y:badge.y+0.046,width:0.085,height:0.043),highContrast:true)
-        }
+        if let number=try RewardNumberReader().read(image) {texts.append(number)}
         let amount=amountCandidates().first
         let icon=CGRect(x:0.025,y:badge.y+badge.height+0.001,width:0.100,height:0.052)
         let match=icons.match(image,rect:icon),kind=match.kind
@@ -88,33 +67,16 @@ public final class RewardVision {
                 let i=y*c.bytesPerRow+x*4
                 let r=Int(bytes[i]),g=Int(bytes[i+1]),b=Int(bytes[i+2])
                 let white=min(r,min(g,b))>=175 && max(r,max(g,b))-min(r,min(g,b))<=65
-                let value:UInt8=white ? 255:0
+                let value:UInt8=white ? 0:255
                 bytes[i]=value;bytes[i+1]=value;bytes[i+2]=value;bytes[i+3]=255
             }}
         }
         guard let scaled=c.makeImage() else{return []}
-        let request=VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate; request.usesLanguageCorrection=false
-        request.recognitionLanguages=["en-US"]; request.minimumTextHeight=0.018
-        try Self.useCPUForSupportedStages(request)
-        try VNImageRequestHandler(cgImage:scaled).perform([request])
-        let numbers=try NSRegularExpression(pattern:#"(?<![\p{L}0-9.,])\d+(?:[.,]\d+)?[KMBTКМВТ]?(?![\p{L}0-9%])"#)
-        func token(_ text:String,_ confidence:Float,_ b:CGRect)->RewardText {
-            RewardText(text,confidence:confidence,rect:.init(
-                x:(rect.minX+b.minX*rect.width)/Double(image.width),
-                y:(rect.minY+(1-b.maxY)*rect.height)/Double(image.height),
-                width:b.width*rect.width/Double(image.width),height:b.height*rect.height/Double(image.height)))
-        }
-        return (request.results ?? []).flatMap { observation -> [RewardText] in
-            guard let t=observation.topCandidates(1).first else{return []}
-            var result=[token(t.string,t.confidence,observation.boundingBox)]
-            // Obtain the number's own geometric box when a world timer touches the label.
-            for match in numbers.matches(in:t.string,range:NSRange(t.string.startIndex...,in:t.string)) {
-                guard let range=Range(match.range,in:t.string),String(t.string[range]) != t.string,
-                      let box=try? t.boundingBox(for:range) else{continue}
-                result.append(token(String(t.string[range]),t.confidence,box.boundingBox))
-            }
-            return result
+        return try TesseractOCR.recognize(scaled).map {word in
+            RewardText(word.text,confidence:word.confidence,rect:.init(
+                x:(rect.minX+word.rect.minX/3)/Double(image.width),
+                y:(rect.minY+word.rect.minY/3)/Double(image.height),
+                width:word.rect.width/3/Double(image.width),height:word.rect.height/3/Double(image.height)))
         }
     }
 }
@@ -138,13 +100,14 @@ struct Pixels {
         for y in y0..<max(y0,y1) {for x in x0..<max(x0,x1) {let i=(y*w+x)*4;if matching(Int(data[i]),Int(data[i+1]),Int(data[i+2])){count+=1}}}
         return count
     }
-    func hasFreeBadge()->Bool {
+    func hasFreeBadge()->Bool {freeBadgeRect() != nil}
+    func freeBadgeRect()->CGRect? {
         // A compact green component must contain white text and a dark outline.
         // Green terrain alone is never evidence of a remaining reward card.
         let x0=max(0,Int(Double(w)*0.002)),x1=min(w,Int(Double(w)*0.115))
         let y0=max(0,Int(Double(h)*0.56)),y1=min(h,Int(Double(h)*0.635))
         let rw=x1-x0,rh=y1-y0
-        guard rw>0,rh>0 else{return false}
+        guard rw>0,rh>0 else{return nil}
         var mask=[Bool](repeating:false,count:rw*rh)
         for y in 0..<rh {for x in 0..<rw {
             let i=((y+y0)*w+x+x0)*4,r=Int(data[i]),g=Int(data[i+1]),b=Int(data[i+2])
@@ -169,8 +132,8 @@ struct Pixels {
                 width:Double(bw+2)/Double(w),height:Double(bh+2)/Double(h))
             let white=count(in:rect){r,g,b in min(r,min(g,b))>190 && max(r,max(g,b))-min(r,min(g,b))<65}
             let dark=count(in:rect){r,g,b in max(r,max(g,b))<90}
-            if Double(white)>=Double(w*h)*0.000020 && Double(dark)>=Double(w*h)*0.000025 {return true}
+            if Double(white)>=Double(w*h)*0.000020 && Double(dark)>=Double(w*h)*0.000025 {return rect}
         }
-        return false
+        return nil
     }
 }

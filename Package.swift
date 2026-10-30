@@ -11,7 +11,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(name: "ButcherHeroBot"),
-        .target(name: "RewardAutomationCore", resources: [.copy("Resources/RewardIcons")]),
+        .target(name: "RewardAutomationCore", resources: [.copy("Resources/RewardIcons"), .copy("Resources/RewardDigits")]),
         .executableTarget(name: "ButcherHeroAutomation", dependencies: ["RewardAutomationCore"]),
         .testTarget(name: "RewardAutomationCoreTests", dependencies: ["RewardAutomationCore"])
     ]

@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-30
 
+303:a CPUhipotézis nem volt véglegesjavítás; most a natívOCRkikerült aFree-
+útvonalból. Az újbackend29mintán és friss élőátvételekkel igazolt,9perces
+ellenőrzéskor0OCRhiba. Ez nem örökstabilitás-bizonyíték; felügyelet marad.
+M/B/T-sFREEkarakterekhez továbbra sincs valódi glyphminta, bizonytalan
+összeg nem kerül kitalálásra. A helyi és távoliCIeredményt külön kezeljük.
+
 300:a korábbi élőgyűjtés-kiesés valós, nem felhasználóiSTOP. Tartós felügyelet
 és újra igazolt átvételek vannak;9felügyeleti teszt. A leválasztott indítást
 nem használjuk.301:a két régebbiVisionhiba javítása helyben célzottanPASS;

@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-30
 
+303:újraindítással tünetet kezelő natívOCRhelyett a hibázó függőséget
+kiváltottuk aFree-körből. Előszörpixelbadge, utána célzottFREEellenőrzés;
+számot nem találunk ki típusból vagy korábbiösszegből. Új bizonytalan fontot
+képből címkézünk, regresszióval fedünk. Adatmodell frissíthető leállítás nélkül.
+
 302:átmenetiOCRinfrastruktúrahibánál sincs tesztkapu-megkerülés. CPU-
 feldolgozási kísérlet támogatott eszközökkel, képi elvárások változatlanok.
 A felügyelt gyűjtő közben külön marad, betöltéshez is előre fordított bináris kell.

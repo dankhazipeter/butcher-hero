@@ -119,6 +119,7 @@ private struct WatchState:Codable {
     var waitingForMouseRelease:Bool? = nil
     var pendingClaimID:String? = nil
     var verificationMode:String? = nil
+    var ocrBackend:String? = nil
 }
 
 private final class Journal {
@@ -200,13 +201,14 @@ private final class Journal {
         var dryGate=RewardGate()
         var state=WatchState(blockedFingerprint:nil,pid:getpid(),running:true,intervalSeconds:interval)
         state.verificationMode="vision3: structured badge; complete magnitude; two HUD frames without card; 1s retry"
+        state.ocrBackend="tesseract-free+pixel-digits-v1"
         let oldLines=(try? String(contentsOf:root.appendingPathComponent("events.jsonl"),encoding:.utf8)) ?? ""
         let hasPriorRun=oldLines.split(separator:"\n").contains {line in
             (try? JSONDecoder().decode(JournalEvent.self,from:Data(line.utf8)))?.event=="watcher_started"
         }
         try journal.state(state)
         try journal.append(resumeRun && hasPriorRun ? "watcher_resumed":"watcher_started",
-            message:dryRun ? "dry run; no clicks":"left event Free only; vision3; current-HUD smash references")
+            message:dryRun ? "dry run; no clicks":"left event Free only; vision3 verification; Tesseract FREE badge; labelled pixel digits")
         defer {state.running=false;try? journal.state(state);try? journal.append("watcher_stopped")}
         print("Free-figyelő: \(interval)s; napló: \(root.appendingPathComponent("events.jsonl").path); PID \(getpid())\(dryRun ? " (csak megfigyelés)":"")")
         fflush(stdout)
