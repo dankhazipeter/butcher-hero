@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30
 
+308: a kártyák a felhasználó konkrét párosítását követik, nem feltételezett
+azonos típusú sebzés/védelem sorrendet. A párosítás csak összehasonlítási
+nézet, nem játékmechanikai vagy könyvelési változás.
+
 307: az animáció jelzi az új statösszeget, nem jutalomigazolás. Változatlan
 adatpoll nem mozgathatja a számot; szűrőváltáskor nem sugallunk új bevételt.
 Csökkentett mozgásnál/háttérlapon nincs animálás. A könyvelés nem használ

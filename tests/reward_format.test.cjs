@@ -61,27 +61,30 @@ test("reward icons remain transparent on cards, ledger and frequency legend",()=
   }
 });
 
-test("actual ledger rendering uses compact amounts and retains exact tooltips",async()=>{
+async function renderDashboard(data) {
   const vm=require("node:vm");
   class Element {
-    constructor() {this.children=[];this.dataset={};this.attributes={};this.classList={add(){},remove(){}};}
+    constructor(tagName="") {this.tagName=tagName;this.children=[];this.dataset={};this.attributes={};this.classList={add(){},remove(){}};}
     append(...children) {this.children.push(...children);}
     replaceChildren(...children) {this.children=children;}
     setAttribute(key,value) {this.attributes[key]=value;}
     addEventListener() {}
     getBoundingClientRect() {return {width:0};}
+    querySelector(selector) {
+      for(const child of this.children) {
+        if(selector.startsWith(".")?(child.className||"").split(" ").includes(selector.slice(1)):child.tagName===selector) return child;
+        const found=child.querySelector?.(selector);if(found) return found;
+      }
+      return null;
+    }
   }
   const elements=new Map();
   const document={
     getElementById(id) {if(!elements.has(id)) elements.set(id,new Element());return elements.get(id);},
-    createElement() {return new Element();}, createTextNode(text) {return {textContent:text};},
+    createElement(tag) {return new Element(tag);},createElementNS(ns,tag) {return new Element(tag);},
+    createTextNode(text) {return {textContent:text};},
     querySelectorAll() {return [];}, addEventListener() {},
   };
-  const at="2026-10-30T20:00:00Z";
-  const amounts=["18300","540","2360000","99800000","100000000",null];
-  const data={generatedAt:at,range:{from:at,to:at,bucketSeconds:60},kinds:[],
-    collectionCounts:{},collectionSeries:{},confirmedClaims:6,pendingClaims:0,
-    clickAttempts:6,logExists:true,recent:amounts.map(amount=>({at,amount,label:"Health",kind:"hp",confirmed:true}))};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../dashboard/app.js"),"utf8"),{
     document,Intl,Date,URLSearchParams,AbortSignal,
     RewardFormat:require("../dashboard/format.js"),RewardStatus:require("../dashboard/status.js"),
@@ -90,10 +93,39 @@ test("actual ledger rendering uses compact amounts and retains exact tooltips",a
     fetch:async()=>({ok:true,json:async()=>data}),
   });
   await new Promise(resolve=>setImmediate(resolve));
+  return elements;
+}
+
+test("actual ledger rendering uses compact amounts and retains exact tooltips",async()=>{
+  const at="2026-10-30T20:00:00Z";
+  const amounts=["18300","540","2360000","99800000","100000000",null];
+  const data={generatedAt:at,range:{from:at,to:at,bucketSeconds:60},kinds:[],
+    collectionCounts:{},collectionSeries:{},confirmedClaims:6,pendingClaims:0,
+    clickAttempts:6,logExists:true,recent:amounts.map(amount=>({at,amount,label:"Health",kind:"hp",confirmed:true}))};
+  const elements=await renderDashboard(data);
   const cells=elements.get("entries").children.map(row=>row.children[2]);
   assert.deepEqual(cells.map(cell=>cell.textContent),["+18,3K","+540","+2,3M","+99,8M","+100M","?"]);
   assert.equal(cells[0].title,"Pontos naplóérték: +18\u202f300");
   assert.equal(cells[2].attributes["aria-label"],"Health: +2\u202f360\u202f000");
   assert.equal(cells[5].title,undefined,"missing amounts must not fabricate a zero");
   assert.deepEqual(data.recent.map(row=>row.amount),amounts,"rendering must not change source amounts");
+});
+
+test("stat cards render in the requested pairs without reordering source data or legend",async()=>{
+  const original=["hp","regeneration","piercing_damage","cutting_damage","smash_damage","piercing_defense","cutting_defense","smash_defense"];
+  const at="2026-10-30T20:00:00Z";
+  const data={generatedAt:at,range:{from:at,to:at,bucketSeconds:60},
+    kinds:original.map(kind=>({kind,label:kind,total:"100"})),
+    collectionCounts:Object.fromEntries(original.map(kind=>[kind,1])),collectionSeries:{},series:{},
+    confirmedClaims:8,pendingClaims:0,clickAttempts:8,logExists:true,recent:[]};
+  const elements=await renderDashboard(data);
+  assert.deepEqual(elements.get("stats-grid").children.map(card=>card.dataset.kind),
+    ["hp","regeneration","piercing_damage","cutting_defense","cutting_damage","smash_defense","smash_damage","piercing_defense"]);
+  assert.deepEqual(data.kinds.map(row=>row.kind),original);
+  assert.deepEqual(elements.get("frequency-legend").children.map(button=>button.querySelector(".frequency-name").textContent),original);
+  const css=fs.readFileSync(path.join(__dirname,"../dashboard/style.css"),"utf8");
+  for(const [,body] of css.matchAll(/\.stats-grid\{([^}]+)\}/g)) {
+    const columns=/grid-template-columns:([^;]+)/.exec(body);
+    if(columns) assert.equal(columns[1],"repeat(2,minmax(0,1fr))","four rows of two cards at every breakpoint");
+  }
 });

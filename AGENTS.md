@@ -1,5 +1,10 @@
 # Butcher Hero — aktív projektutasítások
 
+308: statkártyák két oszlopban, négy sorban: Health/HealthRegen;
+PierceDamage/CutDefense; CutDamage/SmashDefense; SmashDamage/PierceDefense.
+Kizárólag a kártyák másolt listája rendezett; API/napló/jelmagyarázat nem.
+Valódi appkirajzolási teszt védi a sorrendet és a kéthasábos töréspontokat.
+
 307: a statkártyák összértéke CountUp.js2.10.1 helyi, rögzített könyvtárral
 0,65s alatt animálódik. Első betöltés/időszakváltás/reduced-motion/háttérlap
 nem animál; azonos poll nem indítja újra, gyors új cél a jelenlegi képkockáról

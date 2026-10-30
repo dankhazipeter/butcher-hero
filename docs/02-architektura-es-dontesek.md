@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-30 (282)
 
+308: app.js statOrder külön kártyarangsor, másolt kinds listán rendezve.
+DOM-sorrend és vizuális sorrend egyezik, nem CSS order. A grid minden
+szélességen kéthasábos; a közös grafikon és az adatréteg sorrendje változatlan.
+
 307: helyi CountUp.js2.10.1 UMD + dashboard/animation.js adapter,
 WeakMapban elemenkénti aktuális cél és animáció.0,65s easing, közös compact
 formázás; csupán vizuális interpoláció. Scriptútvonalak explicit engedélyezve,

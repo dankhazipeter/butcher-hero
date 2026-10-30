@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
 
+- [A statkártyák kért támadás/védelem párosítása](308-statkartya-sorrend.md)
+
 - [Animált statértékek helyi CountUp.js könyvtárral](307-animalt-statosszegek.md)
 
 - [K/M számformátum a jutalomlistában is](306-kompakt-jutalomlista.md)

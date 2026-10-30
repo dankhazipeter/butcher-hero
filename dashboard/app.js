@@ -11,6 +11,8 @@
   const hiddenKinds=new Set();
   const frequencyButtons=new Map();
   const linePatterns=["","7 3","","2 3","","8 3 2 3","5 3","1 4"];
+  const statOrder=new Map(["hp","regeneration","piercing_damage","cutting_defense",
+    "cutting_damage","smash_defense","smash_damage","piercing_defense"].map((kind,index)=>[kind,index]));
   const {formatExact:decimal,formatCompact:compact}=RewardFormat;
   const animateValue=RewardAnimation.createAnimator({
     CountUp:globalThis.countUp?.CountUp,formatCompact:compact,formatExact:decimal,
@@ -173,7 +175,7 @@
     if(data.unknownConfirmed) warnings.push(`${data.unknownConfirmed} igazolt átvétel típusa vagy mennyisége még bizonytalan; nincs beleszámolva a statösszegekbe.`);
     if(data.observationError) warnings.push(`Gyűjtő: ${data.observationError}`);
     $("notice").hidden=!warnings.length; $("notice").textContent=warnings.join(" ");
-    for(const row of data.kinds) {
+    for(const row of [...data.kinds].sort((a,b)=>(statOrder.get(a.kind)??statOrder.size)-(statOrder.get(b.kind)??statOrder.size))) {
       let card=cards.get(row.kind);
       if(!card) {
         card=field("article","","stat"); card.dataset.kind=row.kind;

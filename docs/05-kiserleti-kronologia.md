@@ -2,6 +2,11 @@
 
 ## 2026-10-30
 
+308: a kért négy kártyapár bekötve, alapgrid4→2oszlop széles nézetben is.
+Új tényleges appkirajzolási teszt a sorrendre, az APIlista/jelmagyarázat
+változatlanságára és minden gridtörés kéthasábosságára. Gyűjtő/szerver nem
+igényel újraindítást; nincs új vizuális PASS a korábbi böngészőhiba miatt.
+
 307: felhasználó kéri animációs lib keresését. CountUp.js2.10.1 kiválasztva,
 npm-kiadás helyben ellenőrizve, rögzítve, MIT-szöveg megőrizve. Öt valós
 könyvtáras animációteszt, teljes23Swift/15statisztika/3kapu/9felügyelet/
