@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-31
 
+334,2026-11-01: külön kis-pixel AA-gyűrűág, maximum75 szűk illesztéssel és
+ugyanazon centrumon erős fehér/semleges/sötét körstruktúrával. Klasszikus
+ág nem lazult. Inventoryszöveg csak2új felfelé crop, resultheader csak1
+szűkebb crop: mindkét teljes szövegegyezés és button/context marad.
+Explicit wrapperrecovery az eddigi supervisornak továbbít egyszer, nem
+új jogosultság/automatikus modalátvétel vagy eredeti próbakeret-reset.
+TCC-hibánál nem próbáljuk képrögzítési jogosultságot megkerülni.
+
 331: a dashboardnak külön statisztikai kezdőpontja lehet. A jutalomnapló
 egyetlen írója továbbra a gyűjtő; a UI kizárólag stat-session.json-t ment.
 Run-kezdés=max(legutóbbi watcher_started, kézi határ), más időszak számítása

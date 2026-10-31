@@ -1,5 +1,46 @@
 # Butcher Hero — aktív projektutasítások
 
+## Geode kisablakos javítás; élő folytatás TCC miatt blokkolt — 2026-11-01 (334)
+
+A user jóváhagyta333javítását. Klasszikus fehérgyűrű ág változatlan:
+18/24 fehér205+ és16/24 sötét105-. Új kizárólag<=12px AA-ág: arány>=.85,
+kitöltés>=.70, piros3x3közép>=8/9, >=4 erős fehér irány legalább3negyedben,
+>=20/24 semleges150+ perem és>=20/24 sötét körvonal UGYANAZON illesztésen.
+Csak ±1px közép,±.5px sugár,75fix jelölt; kék ikon/HUD/2képes kapu megmarad.
+7valódi HUD-minta:4fejlesztési,3különvalidációs; a közben hibát feltáró
+eredeti heldoutok fejlesztési névre lettek átnevezve. Nem nevezzük őket
+utólag független tesztnek. Konfetti/nincs-pötty továbbra negatív, 5mesterséges
+gyűrű-/kontúr-/maghiányos ellenpélda és4átméretezett konfetti is tesztelt.
+Éles2DE3B93123:02:28Znyitás eljutott inventoryig, majd új crop-hiba miatt
+23:03:58Ztimeout. InventoryCRYSTALS két szűk felfelé cropban kereshető,
+de szöveg továbbra pontos; goldX1 és sajátX szükséges. Egyszeri operátori
+helyreállítás23:08:05Z, eredeti attempts megtartva: x1+5ütés, piros40/
+PierceDamage89Keredmény látható. Result header díszítőszél WE/=OCR-zaja
+szűkebb cropot kapott, továbbra pontos CRYSTALSTATS+CONTINUE kell.
+NINCS elküldöttContinue/X/HUDigazolás, tehát NEMcompleted_ui és nem
+megszakításmentes siker! 10új eredetiPNG,5újSwift+1Pythonunit;199teszt+
+7JSsyntax helybenPASS. Stagingreleasekész; véglegesbináris atomikusan
+betöltve LEÁLLÍTOTT worker mellett, modellek változatlanok.
+
+Külön környezeti blokk:23:10–23:11ZTCC képrögzítés-elutasítás, nincs új
+sikeres kép. Saját runner/supervisor/helper leállítva23:11:56Z; nem userSTOP,
+hanem engedély miatti biztonsági szünet. Ne induljon capture/input újra,
+amíg user nem rendezi a macOSScreenRecording-jogot és nem jelez. A játék
+natív metadata szerint fut; CUA két eltérő bundle-path miatt nem oldotta
+fel, egyszeri snapshot sem adott képet, megszakítva. Az okát nem bizonyítja,
+hogy a TCC-visszautasítást maga a user kattintotta. Read-only dashboard
+külön session4073,8765 él. SupervisorJSONfalse, worker26601halott, annak
+state.running=true maradt SIGKILL után: ezt nem tekintjük futásnak/nem
+hamisítjuk át. A dashboard PID-ellenőrzése helyesen leállást mutat.
+Régi2DEtranzakció10perces helyreállítási ablaka lejárt; NEM tágítjuk.
+Folytatásnál engedély és szükség esetén kéziContinue→inventoryX→HUD kell.
+
+Új wrapperflag `butcher-hero start --recover-crystal`: csak ugyanazt az
+eddigi operátori flaget adja át egyszer a supervisornak; natív600s/saját-
+napló/attemptkorlát megmarad, automatikus restart nem ismétli. `--new-run`-nal
+kizárják egymást, nincs implicit statreset. Mostani lejárt panelre nem
+használható! Részletek docs/334-kisablakos-geode-javitas-es-tcc-blokk.md.
+
 ## Nyitott: geode-jelzés elutasítása kis ablakban — 2026-10-31 (333)
 
 A felhasználó jelezte, hogy lenne nyitható geode. 22:42–22:44Z friss,
@@ -714,6 +755,11 @@ confirmed rewards, and manual collections are not attributed to the bot.
   buttons, ads or purchase confirmations. The bounded crystal flow can block;
   `--recover-crystal` is an **operator-only** recovery for a recent unfinished
   transaction in its own journal, not a normal startup flag. See docs/313.
+  The combined launcher also accepts `butcher-hero start --recover-crystal`
+  for that same explicit operator-only recovery. It preserves statistics,
+  rejects `--new-run`, and forwards the flag only once; native ownership,
+  10-minute freshness and input limits still apply. An expired/manual panel
+  must not be adopted or closed generically. See docs/334.
   The specifically authorised Diamond League expiry offer/summary in
   docs/317 is an exception: the watcher dismisses only those recognised
   screens before returning to normal collection. Other leagues/layouts

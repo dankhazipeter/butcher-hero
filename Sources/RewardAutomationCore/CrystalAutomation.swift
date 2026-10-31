@@ -43,7 +43,15 @@ public final class CrystalVision {
         // position changes with window aspect; do not mistake it for the HUD.
         if let layout=CrystalInventoryLayout.locate(p) {
             let title=try words(layout.rect(.init(x:0.38,y:0.353,width:0.25,height:0.033)),white:false)
-            let grid=try words(layout.rect(.init(x:0.37,y:0.616,width:0.26,height:0.029)))
+            var grid=try words(layout.rect(.init(x:0.37,y:0.616,width:0.26,height:0.029)))
+            // Shorter windows compress the header gap independently of the X
+            // anchor. Retry only two bounded upward crops; text stays exact.
+            if compact(title)=="CRYSTALSTATS",compact(grid) != "CRYSTALS" {
+                for dy in [-0.008,-0.016] {
+                    let candidate=try words(layout.rect(.init(x:0.37,y:0.616+dy,width:0.26,height:0.029)))
+                    if compact(candidate)=="CRYSTALS" {grid=candidate;break}
+                }
+            }
             diagnostics += ["inventory",title,grid,"layout=\(layout)"]
             if compact(title)=="CRYSTALSTATS",compact(grid)=="CRYSTALS" {
                 for box in layout.goldButtons(p) {
@@ -83,7 +91,11 @@ public final class CrystalVision {
         // Result is a different overlay, with a bottom yellow CONTINUE button.
         if fraction(.init(x:0.33,y:0.89,width:0.34,height:0.05),yellow)>0.28 {
             let button=try words(.init(x:0.335,y:0.898,width:0.33,height:0.030))
-            let header=try words(.init(x:0.34,y:0.562,width:0.33,height:0.037),white:false)
+            var header=try words(.init(x:0.34,y:0.562,width:0.33,height:0.037),white:false)
+            if compact(button)=="CONTINUE",compact(header) != "CRYSTALSTATS" {
+                // Exclude the bevel's decorative marks, not arbitrary words.
+                header=try words(.init(x:0.365,y:0.562,width:0.275,height:0.037),white:false)
+            }
             diagnostics += ["result",button,header]
             if compact(button)=="CONTINUE", compact(header)=="CRYSTALSTATS" {
                 return .init(screen:.result,texts:[header,button])
@@ -201,21 +213,43 @@ enum CrystalNotificationMatcher {
                   diameter<=Double(p.w)*0.029,Double(queue.count)/(bw*bh)>=0.55,
                   minX>0,maxX<w-1,minY>0,maxY<h-1 else{continue}
             let cx=Double(x0+minX)+((bw-1)/2),cy=Double(y0+minY)+((bh-1)/2),radius=diameter/2
-            var whiteAngles=0,darkAngles=0
-            for n in 0..<24 {
-                let a=Double(n)*2*Double.pi/24
-                func at(_ scales:[Double],_ predicate:(Int,Int,Int)->Bool)->Bool {
-                    scales.contains {scale in
-                        let (r,g,b)=rgb(Int((cx+cos(a)*radius*scale).rounded()),Int((cy+sin(a)*radius*scale).rounded()))
-                        return predicate(r,g,b)
+            func ring(_ x:Double,_ y:Double,_ rad:Double)->(white:Int,neutral:Int,dark:Int,sectors:Int) {
+                var white=0,neutral=0,dark=0,sectors=Set<Int>()
+                for n in 0..<24 {
+                    let a=Double(n)*2*Double.pi/24
+                    func at(_ scales:[Double],_ predicate:(Int,Int,Int)->Bool)->Bool {
+                        scales.contains {scale in
+                            let (r,g,b)=rgb(Int((x+cos(a)*rad*scale).rounded()),Int((y+sin(a)*rad*scale).rounded()))
+                            return predicate(r,g,b)
+                        }
                     }
+                    if at([1.10,1.30,1.50],{r,g,b in min(r,min(g,b))>205 && max(r,max(g,b))-min(r,min(g,b))<45}) {white+=1;sectors.insert(n/6)}
+                    if at([1.10,1.30,1.50],{r,g,b in min(r,min(g,b))>150 && max(r,max(g,b))-min(r,min(g,b))<45}) {neutral+=1}
+                    if at([1.65,1.90,2.15],{r,g,b in max(r,max(g,b))<105}) {dark+=1}
                 }
-                if at([1.10,1.30,1.50],{r,g,b in min(r,min(g,b))>205 && max(r,max(g,b))-min(r,min(g,b))<45}) {whiteAngles+=1}
-                if at([1.65,1.90,2.15],{r,g,b in max(r,max(g,b))<105}) {darkAngles+=1}
+                return (white,neutral,dark,sectors.count)
             }
-            if whiteAngles>=18 && darkAngles>=16 {
-                return "center=\(cx),\(cy);diameter=\(diameter);whiteAngles=\(whiteAngles)/24;darkAngles=\(darkAngles)/24"
+            let original=ring(cx,cy,radius)
+            if original.white>=18 && original.dark>=16 {
+                return "center=\(cx),\(cy);diameter=\(diameter);whiteAngles=\(original.white)/24;darkAngles=\(original.dark)/24;mode=white-ring"
             }
+            // At <=12px the thin white stroke is antialiased grey and the red
+            // bounding box does not give an exact subpixel circle centre.
+            // Require a solid circular red core, bright anchors in 3 quadrants,
+            // and more complete neutral/dark rings on the SAME bounded fit.
+            var coreRed=0
+            for dy in -1...1 {for dx in -1...1 {
+                let(r,g,b)=rgb(Int(cx.rounded())+dx,Int(cy.rounded())+dy)
+                if r>185 && g<100 && b>55 && b<180 {coreRed+=1}
+            }}
+            guard diameter<=12,min(bw,bh)/diameter>=0.85,
+                  Double(queue.count)/(bw*bh)>=0.70,coreRed>=8 else{continue}
+            for oy in [0.0,-0.5,0.5,-1,1] {for ox in [0.0,-0.5,0.5,-1,1] {for dr in [0.0,-0.5,0.5] {
+                let score=ring(cx+ox,cy+oy,radius+dr)
+                if score.white>=4,score.sectors>=3,score.neutral>=20,score.dark>=20 {
+                    return "center=\(cx),\(cy);diameter=\(diameter);whiteAngles=\(score.white)/24;whiteQuadrants=\(score.sectors)/4;neutralAngles=\(score.neutral)/24;darkAngles=\(score.dark)/24;offset=\(ox),\(oy);radiusShift=\(dr);coreRed=\(coreRed)/9;mode=antialiased-small-ring"
+                }
+            }}}
         }
         return nil
     }

@@ -1,5 +1,17 @@
 # Kísérleti kronológia — új verzió
 
+## 2026-11-01 — a napló UTC-ben még október31
+
+334: user333javítását engedélyezte. Új kisgyűrű-teszt először9hibával piros;
+első AA-prototípus pulse/heldoutokon még bukott, nem neveztük javítottnak.
+Végső illesztés7valós képre jó, régi/szintetikus negatívokra nem nyit.
+23:02Zéles ikonnyitás, inventoryCRYSTALS crop-hiba/timeout; új teszt+javítás.
+23:08Z saját operátori recovery, x1+5ütés, piros40/Pierce89Kresult;
+díszítőszél miatti új OCR-crophiba mentett képből reprodukálva és javítva.
+23:10–11ZTCCelutasítás+workerrestartok, sajátcapturefolyamatok leállítva,
+csak dashboard4073 fut. NincsContinue/X/complete. Full199teszt+7JS helyben
+PASS, véglegesbináris kész, engedélyre várunk; részletek334.
+
 ## 2026-10-31
 
 331: kérésre új munkamenet-gomb került az időszaksúgóba. Külön statkezdőpont,

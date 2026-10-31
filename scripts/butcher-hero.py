@@ -160,7 +160,9 @@ def collector_progress(root):
     return f"fresh screen ({age:.1f}s); crystal={state.get('crystalPhase', 'unknown')}"
 
 
-def start(root, port=8765, new_run=False):
+def start(root, port=8765, new_run=False, recover_crystal=False):
+    if new_run and recover_crystal:
+        raise RuntimeError("Crystal recovery must preserve the existing statistics run.")
     directory = root / "data/local-app"
     directory.mkdir(parents=True, exist_ok=True)
     stopping = False
@@ -195,6 +197,8 @@ def start(root, port=8765, new_run=False):
             command = [sys.executable, "-u", str(root / "scripts/supervise-free-rewards.py")]
             if not new_run:
                 command.append("--resume-run")
+            if recover_crystal:
+                command.append("--recover-crystal")  # Supervisor consumes this once, never on auto-restart.
             worker = subprocess.Popen(command, cwd=root, start_new_session=True)
             children.append(worker)
             state.update(dashboardPID=dashboard.pid, supervisorPID=worker.pid)
@@ -274,7 +278,9 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     begin = commands.add_parser("start", help="Run dashboard and collector in this foreground terminal")
     begin.add_argument("--port", type=int, default=8765)
-    begin.add_argument("--new-run", action="store_true", help="Explicitly start a new logical statistics run")
+    session_mode = begin.add_mutually_exclusive_group()
+    session_mode.add_argument("--new-run", action="store_true", help="Explicitly start a new logical statistics run")
+    session_mode.add_argument("--recover-crystal", action="store_true", help="Operator-only: recover a recent owned crystal transaction with its original input limits")
     commands.add_parser("stop", help="Stop only this checkout's combined launcher and its services")
     commands.add_parser("status", help="Report combined launcher and fresh collector progress")
     setup = commands.add_parser("install", help="Install an optional user-local command; never edits shell configuration")
@@ -284,7 +290,7 @@ def main():
         parser.error("port must be between 1 and 65535")
     try:
         if args.command == "start":
-            return start(ROOT, args.port, args.new_run)
+            return start(ROOT, args.port, args.new_run, args.recover_crystal)
         if args.command == "stop":
             return stop(ROOT)
         if args.command == "status":

@@ -29,6 +29,11 @@ Alternatively, without installation: `make -C /path/to/checkout start`
 port. A separately running collector or occupied port must be stopped by
 its owner first; the launcher does not take over unrelated processes.
 Details: [Terminal launcher](docs/326-kozos-terminal-indito.md).
+Operator-only recovery of a recent transaction opened by this collector is
+available as `butcher-hero start --recover-crystal`. This is not a normal
+startup flag: it retains the native ownership/10-minute/input-limit checks,
+preserves statistics and cannot be combined with `--new-run`.
+[Recovery and current limitations](docs/334-kisablakos-geode-javitas-es-tcc-blokk.md).
 
 FREE rewards require the game's **No Ads** purchase. According to the
 maintainer, those tasks do not appear without it, so the FREE branch stays

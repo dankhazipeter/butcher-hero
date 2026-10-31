@@ -10,6 +10,113 @@ final class CrystalTests:XCTestCase {
         let source=try XCTUnwrap(CGImageSourceCreateWithURL(root.appendingPathComponent("docs/references/2026-10-31/crystals/\(name).png") as CFURL,nil))
         return try XCTUnwrap(CGImageSourceCreateImageAtIndex(source,0,nil))
     }
+    func testReviewedSmallNotificationAndSeparateHeldOutClaims()throws {
+        for name in ["hud-notification-small-development","hud-notification-small-pulse-development",
+                     "hud-notification-small-phase-development-a","hud-notification-small-phase-development-b",
+                     "hud-notification-small-heldout-b","hud-notification-small-heldout-e","hud-notification-small-heldout-f"] {
+            let png=try image(name),hudVisible=try RewardVision().observe(png).gameHUDVisible
+            XCTAssertTrue(hudVisible,name)
+            let actual=try CrystalVision().observe(png,hudVisible:hudVisible)
+            XCTAssertTrue(actual.notification,"\(name): \(actual.texts)")
+            XCTAssertTrue(CrystalAction.openInventory.permits(actual),name)
+            var flow=CrystalFlow()
+            XCTAssertNil(flow.observe(actual,now:0,inputReady:true),"One frame is insufficient")
+            XCTAssertNil(flow.observe(actual,now:1,inputReady:false),"Held mouse still blocks")
+            XCTAssertNil(flow.observe(actual,now:2,inputReady:true,mayStart:false),"Pending Free still blocks")
+            XCTAssertEqual(flow.observe(actual,now:3,inputReady:true),.openInventory)
+        }
+    }
+    func testSmallAntialiasedRingStillRequiresBrightAnchorsDarkOutlineAndDenseRedCore()throws {
+        let png=try image("hud-notification-small-development"),p=try Pixels(png)
+        for mode in ["no-bright-anchors","one-sided-bright-anchors","broken-neutral-ring","no-dark-outline","hollow-red-core"] {
+            var data=p.data
+            for y in 417...439 {for x in 613...635 {
+                let i=(y*p.w+x)*4,r=Int(p.data[i]),g=Int(p.data[i+1]),b=Int(p.data[i+2])
+                let distance=hypot(Double(x)-624,Double(y)-428)
+                var replacement:[UInt8]?
+                if (mode=="no-bright-anchors" || (mode=="one-sided-bright-anchors" && (x>=624 || y>=428))),distance>=4,distance<=9,
+                   min(r,min(g,b))>205,max(r,max(g,b))-min(r,min(g,b))<45 {replacement=[180,180,180]}
+                if mode=="broken-neutral-ring",distance>=4,distance<=9,
+                   min(r,min(g,b))>150,min(r,min(g,b))<=205,max(r,max(g,b))-min(r,min(g,b))<45 {replacement=[50,150,70]}
+                if mode=="no-dark-outline",distance>=7,distance<=11,max(r,max(g,b))<105 {replacement=[50,150,70]}
+                if mode=="hollow-red-core",abs(x-624)<=1,abs(y-428)<=1 {replacement=[60,60,60]}
+                if let replacement {for n in 0..<3 {data[i+n]=replacement[n]}}
+            }}
+            let provider=try XCTUnwrap(CGDataProvider(data:Data(data) as CFData))
+            let altered=try XCTUnwrap(CGImage(width:p.w,height:p.h,bitsPerComponent:8,bitsPerPixel:32,
+                bytesPerRow:p.w*4,space:CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo:.init(rawValue:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider:provider,decode:nil,shouldInterpolate:false,intent:.defaultIntent))
+            XCTAssertNil(CrystalNotificationMatcher.match(try Pixels(altered)),mode)
+        }
+    }
+    func testSmallRingChangeKeepsAllReviewedNoNotificationScreensNegative()throws {
+        for name in ["hud-no-dot-confetti-user","hud-no-dot-external-after","hud-without-notification-live"] {
+            let png=try image(name)
+            XCTAssertNil(CrystalNotificationMatcher.match(try Pixels(png)),name)
+            let actual=try CrystalVision().observe(png,hudVisible:true)
+            XCTAssertFalse(actual.notification,name)
+        }
+        let confetti=try image("hud-no-dot-confetti-user")
+        for width in [637,788] {
+            let height=Int((Double(confetti.height)*Double(width)/Double(confetti.width)).rounded())
+            for quality in [CGInterpolationQuality.none,.high] {
+                let context=try XCTUnwrap(CGContext(data:nil,width:width,height:height,bitsPerComponent:8,bytesPerRow:0,
+                    space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue))
+                context.interpolationQuality=quality
+                context.draw(confetti,in:.init(x:0,y:0,width:width,height:height))
+                let scaled=try XCTUnwrap(context.makeImage())
+                XCTAssertNil(CrystalNotificationMatcher.match(try Pixels(scaled)),"Scaled confetti width=\(width), interpolation=\(quality)")
+            }
+        }
+    }
+    func testSmallInventoryHeaderRequiresExactTextWithBoundedVerticalAlignment()throws {
+        let png=try image("inventory-ready-small-live"),vision=CrystalVision()
+        let actual=try vision.observe(png,hudVisible:false)
+        XCTAssertEqual(actual.screen,.inventoryReady,actual.texts.joined(separator:";"))
+        XCTAssertTrue(actual.texts.contains("CRYSTALS"))
+        let point=CrystalAction.openOne.point(in:actual)
+        XCTAssertTrue(CGRect(x:249,y:498,width:129,height:41).contains(.init(x:point.x*637,y:point.y*882)))
+        let p=try Pixels(png);var data=p.data
+        for y in 539..<568 {for x in 230..<411 {let i=(y*p.w+x)*4
+            data[i]=100;data[i+1]=80;data[i+2]=70
+        }}
+        let provider=try XCTUnwrap(CGDataProvider(data:Data(data) as CFData))
+        let missing=try XCTUnwrap(CGImage(width:p.w,height:p.h,bitsPerComponent:8,bitsPerPixel:32,
+            bytesPerRow:p.w*4,space:CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo:.init(rawValue:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue),
+            provider:provider,decode:nil,shouldInterpolate:false,intent:.defaultIntent))
+        let rejected=try vision.observe(missing,hudVisible:false)
+        XCTAssertEqual(rejected.screen,.unknown,"Do not replace CRYSTALS with fuzzy OCR or a gold-button-only rule")
+        XCTAssertFalse(CrystalAction.openOne.permits(rejected))
+        XCTAssertFalse(CrystalAction.closeInventory.permits(rejected))
+    }
+    func testSmallResultRequiresExactTitleAndContinueWithoutDecorativeBorderOCR()throws {
+        let png=try image("result-small-live"),vision=CrystalVision()
+        let animation=try vision.observe(image("result-small-animation-live"),hudVisible:false)
+        XCTAssertEqual(animation.screen,.unknown,"Reward animation without the visible Continue is not a result action")
+        XCTAssertFalse(CrystalAction.proceed.permits(animation))
+        let actual=try vision.observe(png,hudVisible:false)
+        XCTAssertEqual(actual.screen,.result,actual.texts.joined(separator:";"))
+        let point=CrystalAction.proceed.point
+        XCTAssertTrue(CGRect(x:212,y:784,width:215,height:50).contains(.init(x:point.x*637,y:point.y*882)))
+        let p=try Pixels(png)
+        for mode in ["no-title","no-continue"] {
+            var data=p.data
+            let xs=mode=="no-title" ? 220..<415:270..<370
+            let ys=mode=="no-title" ? 498..<530:790..<822
+            let color:[UInt8]=mode=="no-title" ? [140,90,60]:[255,190,0]
+            for y in ys {for x in xs {let i=(y*p.w+x)*4;for n in 0..<3 {data[i+n]=color[n]}}}
+            let provider=try XCTUnwrap(CGDataProvider(data:Data(data) as CFData))
+            let missing=try XCTUnwrap(CGImage(width:p.w,height:p.h,bitsPerComponent:8,bitsPerPixel:32,
+                bytesPerRow:p.w*4,space:CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo:.init(rawValue:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider:provider,decode:nil,shouldInterpolate:false,intent:.defaultIntent))
+            let rejected=try vision.observe(missing,hudVisible:false)
+            XCTAssertEqual(rejected.screen,.unknown,mode)
+            XCTAssertFalse(CrystalAction.proceed.permits(rejected),mode)
+        }
+    }
     func testUserAndHeldOutLiveScreensAndBothNotificationStates()throws {
         let vision=CrystalVision(),free=RewardVision()
         let samples:[(String,CrystalScreen,Bool)]=[

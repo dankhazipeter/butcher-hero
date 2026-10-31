@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+334 új aktuális blokk (Budapest2026-11-01): a333jelzéshiba és a kisablakos
+inventory/result-crop hibák javítva,199helyiteszt PASS. Élő kör azonban
+nem teljes:2DE3B931x1+5ütés utánresult látszott, Continue nem ment el,
+TCCképrögzítés-elutasítás állította meg a folytatást. Capture/input áll,
+dashboard él. UsernekScreenRecording-jogot kell rendeznie; a régi saját
+10perces recoverykeret már lejárt, nem módosítjuk. Szükség esetén kézzel
+Continue+X→HUD, utána engedéllyel új normálrun/resume. Stale workerJSONtrue
+SIGKILLután külön állapotnaplózási kérdés, PIDellenőrzés szerint workerhalott.
+
 333 új nyitott: 637×882 képen a valódi kristályjelzés ringDot=absent,
 notification=false. A piros9×9komponens és a sötét körvonal megfelel,
 de fix sugármintán a fehér gyűrű8/24 a szükséges18/24 helyett. Aktív

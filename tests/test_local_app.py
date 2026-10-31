@@ -161,7 +161,7 @@ class LocalAppTests(unittest.TestCase):
         self.assertFalse(app.read_json(self.root / "data/local-app/state.json")["running"])
 
     def test_default_resumes_and_explicit_new_run_does_not(self):
-        for new_run in (False, True):
+        for new_run, recover_crystal in ((False, False), (True, False), (False, True)):
             dash, worker = Mock(pid=777), Mock(pid=778, returncode=1)
             dash.poll.return_value = None
             worker.poll.return_value = 1
@@ -170,10 +170,17 @@ class LocalAppTests(unittest.TestCase):
                     patch.object(app.subprocess, "Popen", side_effect=[dash, worker]) as spawn, \
                     patch.object(app, "stop_children") as cleanup:
                 with self.assertRaisesRegex(RuntimeError, "supervisor exited"):
-                    app.start(self.root, new_run=new_run)
+                    app.start(self.root, new_run=new_run, recover_crystal=recover_crystal)
             self.assertEqual("--resume-run" in spawn.call_args_list[1].args[0], not new_run)
+            self.assertEqual("--recover-crystal" in spawn.call_args_list[1].args[0], recover_crystal)
             self.assertTrue(all(call.kwargs["start_new_session"] for call in spawn.call_args_list))
             cleanup.assert_called_once_with([dash, worker])
+
+    def test_operator_recovery_cannot_reset_the_statistics_session(self):
+        with patch.object(app.subprocess, "Popen") as spawn, self.assertRaisesRegex(RuntimeError, "preserve"):
+            app.start(self.root, new_run=True, recover_crystal=True)
+        spawn.assert_not_called()
+        self.assertFalse((self.root / "data/local-app/state.json").exists())
 
 
 class LocalAppProcessTests(unittest.TestCase):
