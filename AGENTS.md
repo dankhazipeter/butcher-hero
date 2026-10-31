@@ -1,5 +1,19 @@
 # Butcher Hero — aktív projektutasítások
 
+## CI: korán elutasított HTTP-kérés tesztversenye — 2026-10-31 (332)
+
+A 331/c135ae3 távoli run41247735058 új session-suite-jában a tiltott
+Transfer-Encoding kérésnél urllib BrokenPipe történt a chunk-záró írásakor:
+a szerver a fejléc alapján már jogszerűen elutasította/bezárta a kapcsolatot.
+Nem lazítjuk a production guardot és nem fogadunk el hálózati hibát PASS-nak.
+Új közös tests/http_test_support.py a kis izolált POST teljes fejlécét és
+testét egy sendall-ba teszi, majd valódi HTTPResponse-ból továbbra pontos
+400/403/stb választ ellenőrzünk. A game-launch teszt ugyanilyen kliensét
+is erre cseréljük, elvárásmódosítás nélkül; tiltott chunked eset 10 ismétlés.
+Production/UI/gyűjtő nem változik, restart nincs. Teljes kapu193teszt+7JS
+marad, távoli eredmény a javított commit saját runjából ellenőrzendő.
+Részletek docs/332-ci-http-kliens-verseny.md. A 330 DNS-fix ettől külön ügy.
+
 ## Dashboard: új statisztikai munkamenet — 2026-10-31 (331)
 
 Új felhasználói engedély: az időszaksúgó modalban „Új munkamenet indítása”,

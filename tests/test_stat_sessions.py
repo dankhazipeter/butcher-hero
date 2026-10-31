@@ -6,8 +6,8 @@ import tempfile
 import threading
 import unittest
 from unittest.mock import Mock, patch
-from urllib.error import HTTPError
-from urllib.request import Request, build_opener, ProxyHandler
+from urllib.request import build_opener, ProxyHandler
+from http_test_support import post_once
 
 from dashboard.server import Journal, aggregate, make_server, parse_time
 from dashboard.stat_sessions import StatSessions, SessionError
@@ -150,12 +150,7 @@ class StatSessionHTTPTests(unittest.TestCase):
                 values.pop(key, None)
             else:
                 values[key] = value
-        try:
-            response = self.opener.open(Request(self.base + "/api/statistics/session", data=body, headers=values), timeout=3)
-        except HTTPError as error:
-            response = error
-        with response:
-            return response.code, json.load(response)
+        return post_once(self.base, "/api/statistics/session", values, body)
 
     def test_only_explicit_post_creates_session_persists_and_replays(self):
         path = self.root / "data/free-rewards/stat-session.json"
@@ -183,7 +178,8 @@ class StatSessionHTTPTests(unittest.TestCase):
             with self.subTest(body=body):
                 self.assertEqual(self.post(body=body)[0], 400)
         self.assertEqual(self.post(headers={"Content-Type": "text/plain"})[0], 400)
-        self.assertEqual(self.post(headers={"Transfer-Encoding": "chunked"})[0], 400)
+        for _ in range(10):
+            self.assertEqual(self.post(headers={"Transfer-Encoding": "chunked"})[0], 400)
         self.assertFalse((self.root / "data/free-rewards/stat-session.json").exists())
 
 

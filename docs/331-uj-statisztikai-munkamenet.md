@@ -81,3 +81,8 @@ Szerverkód betöltése rövid saját runnerstop/resume-val, új gyűjtőbuild n
 kezdet `2026-10-30T16:50:44.381Z`, előtte/utána 1462 igazolt tétel és nincs
 éles stat-session.json. Azóta új Cut Defense631 is igazolt, friss képidőkkel.
 Az inputbiztonság és a Free/kristály/event automatika nem változott.
+
+A c135ae3 első távoli CI-jében a tiltott chunked-kérés tesztkliense
+BrokenPipe-ba futott a túl korán visszaadott HTTP-elutasítás mellett.
+Ez a szerver védelmének lazítása helyett a tesztkliens külön javítását
+igényelte; a tényleges statkezelés változatlan. Részletek: [332](332-ci-http-kliens-verseny.md).

@@ -7,8 +7,8 @@ import threading
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
-from urllib.error import HTTPError
-from urllib.request import Request, urlopen
+from urllib.request import urlopen
+from http_test_support import post_once
 
 from dashboard.game_control import BUNDLE_ID, GameControl, GameControlError
 from dashboard.server import make_server
@@ -108,12 +108,7 @@ class GameLaunchHTTPTests(unittest.TestCase):
                 values.pop(key, None)
             else:
                 values[key] = value
-        try:
-            response = urlopen(Request(self.base + path, data=body, headers=values, method="POST"))
-        except HTTPError as error:
-            response = error
-        with response:
-            return response.code, json.load(response)
+        return post_once(self.base, path, values, body)
 
     def test_only_explicit_authenticated_post_launches_and_stats_stay_read_only(self):
         self.game.launch.assert_not_called()
