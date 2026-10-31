@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+322: CrystalNotificationMatcher összefüggőpiroskomponensből köralak,
+méret/teltség,24szögből18fehérgyűrű+16sötétperem ellenőrzése; alatta kékikon
+maradkötelező. InventoryCloseX komponenshorgony + két szövegcímke,
+szélességalapúY-transzformáció. CrystalObservation closePoint/openPoint,
+inventoryUnavailable konzervatívállapot; frissobservationből számoltinput.
+CrystalInputPolicy kéziismertpanel esetén nem engedFreeinputot/igazolást.
+Flow sajátüres/olvashatatlanOpen-panel cleanup, timeoutután egy max10ság,
+megőrzött kattintási limitekkel. HiányzóContinue nem completed.322.
+
 321: közös RewardInputGeometry tiszta ponttranszformáció+védelmek, natív
 WindowInputGeometry CGWindowID/PID szerinti aktuálisQuartzkeret és aktív
 CGDisplayBounds. AppKitframe/backingpixel nem bemenet. Free/kristály/event

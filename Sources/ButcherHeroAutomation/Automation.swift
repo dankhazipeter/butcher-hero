@@ -150,7 +150,8 @@ private enum HumanInput {
         let observation=try CrystalVision().observe(fresh.image,hudVisible:hud)
         guard action.permits(observation) else{throw AutomationError("Crystal preclick rejected: \(action.rawValue)/\(observation.screen.rawValue)")}
         try validated(fresh,observation)
-        let point=try WindowInputGeometry.target(normalized:action.point,image:fresh.image,
+        let inputPoint=action.point(in:observation)
+        let point=try WindowInputGeometry.target(normalized:inputPoint,image:fresh.image,
             capturedWindow:fresh.window.frame,windowID:fresh.window.windowID,pid:pid)
         guard !cancellation.requested,HumanInput.ready,
               let source=CGEventSource(stateID:.hidSystemState),
@@ -163,7 +164,7 @@ private enum HumanInput {
         CGEvent(mouseEventSource:source,mouseType:.mouseMoved,mouseCursorPosition:point,mouseButton:.left)?.post(tap:.cghidEventTap)
         try await Task.sleep(nanoseconds:25_000_000)
         try WindowInputGeometry.verifyCursor(point:point)
-        _=try WindowInputGeometry.target(normalized:action.point,image:fresh.image,
+        _=try WindowInputGeometry.target(normalized:inputPoint,image:fresh.image,
             capturedWindow:fresh.window.frame,windowID:fresh.window.windowID,pid:pid)
         try diagnostic(WindowInputGeometry.diagnostic(point:point,image:fresh.image,frame:fresh.window.frame,windowID:fresh.window.windowID))
         guard !cancellation.requested,HumanInput.ready else{throw HumanInputBusy()}
@@ -467,6 +468,21 @@ private final class Journal {
                 // candidates cannot survive across its overlays. A pending Free
                 // claim must finish verification before a new transaction starts.
                 let co=try crystalVision.observe(frame.image,hudVisible:observation.gameHUDVisible)
+                // A recognised manual panel is not ours to close, but must also
+                // suppress Free input if the colour-only HUD heuristic leaked.
+                if CrystalInputPolicy.isManualPanel(screen:co.screen,active:crystal.active) {
+                    if let p=pending {
+                        try journal.append("claim_unconfirmed",claimID:p.id,reward:p.reward,message:"Manual crystal panel interrupted verification; not counted")
+                        pending=nil
+                    }
+                    stableKey=nil;stableCount=0;candidateID=nil;lastCandidateReadableAt=nil
+                    state.crystalPhase=crystal.phase.rawValue;state.pendingClaimID=nil
+                    state.waitingForMouseRelease = !HumanInput.ready
+                    try journal.state(state)
+                    let delay=max(0,interval-(ProcessInfo.processInfo.systemUptime-tick))
+                    if delay>0 {try? await Task.sleep(nanoseconds:UInt64(delay*1_000_000_000))}
+                    continue
+                }
                 let wasActive=crystal.active,completed=crystal.completed
                 let action=crystal.observe(co,now:tick,inputReady:HumanInput.ready,mayStart:pending==nil)
                 state.crystalPhase=crystal.phase.rawValue

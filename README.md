@@ -54,6 +54,10 @@ alattiFree-jutalmat, átveszi és naplózza a8jutalomtípus egyikeként.
 Ugyanez a figyelő a piros ponttal jelzett kristályt is megnyitja az engedélyezett
 x1 → feltörés → Continue → bezárás sorrendben, friss képi ellenőrzésekkel.
 A korábbi teljes játékbot nem aktív. [Kristályfolyamat és korlátok](docs/313-kristalygyujtes-es-kozos-vezerles.md).
+A pöttyöt összefüggő piros körként, fehér gyűrűvel vizsgálja, nem külön
+piros/fehér konfettipixelekből. A saját megnyitású, ismert üres kristálypanelt
+bezárja jutalomkönyvelés nélkül; ismeretlen vagy kézi panelt nem vesz át.
+[Konfetti és beragadás javítása](docs/322-kristaly-konfetti-es-ures-panel.md).
 Az ismert DiamondLeague eseményzáráskor aNO,THANKS, majd az összesítő
 CONTINUEgombját kezeli; áras ajánlatokra nem kattint. Két frissHUD-kép
 után folytatja a gyűjtést. [Eseményzáró képernyők](docs/317-event-vege-kepernyok.md).

@@ -16,6 +16,7 @@ final class CrystalTests:XCTestCase {
             ("inventory-ready-user",.inventoryReady,false),("geode-user",.geode,false),
             ("result-user",.result,false),("inventory-empty-user",.inventoryEmpty,false),
             ("hud-notification-user",.hud,true),("hud-notification-live",.hud,true),
+            ("hud-notification-external-live",.hud,true),
             ("geode-cracked-live",.geode,false),("hud-without-notification-live",.hud,false),
             ("inventory-ready-live",.inventoryReady,false),("inventory-empty-live",.inventoryEmpty,false),
             ("geode-first-live",.geode,false),("result-blue-live",.result,false)]
@@ -26,6 +27,124 @@ final class CrystalTests:XCTestCase {
             XCTAssertEqual(actual.notification,dot,"\(name): \(actual.texts)")
             if screen != .hud {XCTAssertNil(reward.reward,"Crystal overlay must suppress Free clicks")}
         }
+    }
+    func testUserConfettiCannotBeAWhiteRingedNotification()throws {
+        let png=try image("hud-no-dot-confetti-user")
+        let reward=try RewardVision().observe(png)
+        XCTAssertTrue(reward.gameHUDVisible)
+        let actual=try CrystalVision().observe(png,hudVisible:reward.gameHUDVisible)
+        XCTAssertEqual(actual.screen,.hud)
+        XCTAssertFalse(actual.notification,"Separate red and white confetti are not a notification")
+        XCTAssertFalse(CrystalAction.openInventory.permits(actual))
+        var flow=CrystalFlow()
+        for n in 0..<10 {XCTAssertNil(flow.observe(actual,now:Double(n),inputReady:true))}
+        XCTAssertFalse(flow.active)
+    }
+    func testManualPanelsReserveInputEvenIfHUDColoursLeakButNeverTakeOwnership() {
+        for screen in [CrystalScreen.inventoryReady,.inventoryEmpty,.inventoryUnavailable,.geode,.result] {
+            XCTAssertTrue(CrystalInputPolicy.isManualPanel(screen:screen,active:false))
+            XCTAssertFalse(CrystalInputPolicy.isManualPanel(screen:screen,active:true))
+            var flow=CrystalFlow()
+            for t in 0..<4 {XCTAssertNil(flow.observe(observation(screen),now:Double(t),inputReady:true))}
+            XCTAssertFalse(flow.active)
+        }
+        XCTAssertFalse(CrystalInputPolicy.isManualPanel(screen:.hud,active:false))
+        XCTAssertFalse(CrystalInputPolicy.isManualPanel(screen:.unknown,active:false))
+    }
+    func testVanishedNotificationStopsOpeningAndReleasesInputWithoutInventingSuccess() {
+        for sent in [false,true] {
+            var flow=CrystalFlow()
+            _=flow.observe(hud,now:0,inputReady:true)
+            _=flow.observe(hud,now:1,inputReady:true)
+            if sent {flow.sent(.openInventory,now:1)}
+            XCTAssertNil(flow.observe(observation(.hud),now:2,inputReady:true))
+            XCTAssertNil(flow.observe(observation(.hud),now:3,inputReady:true))
+            XCTAssertFalse(flow.active);XCTAssertEqual(flow.completed,0)
+            for t in 4..<20 {XCTAssertNil(flow.observe(hud,now:Double(t),inputReady:true))}
+        }
+    }
+    func testKnownInventoryWithoutOpenClosesOnlyOurOwnTransaction() {
+        var idle=CrystalFlow()
+        for t in 0..<5 {XCTAssertNil(idle.observe(observation(.inventoryUnavailable),now:Double(t),inputReady:true))}
+        XCTAssertFalse(idle.active)
+        var flow=begin()
+        XCTAssertNil(flow.observe(observation(.inventoryUnavailable),now:3,inputReady:true))
+        XCTAssertNil(flow.observe(observation(.inventoryUnavailable),now:4,inputReady:false))
+        XCTAssertEqual(flow.observe(observation(.inventoryUnavailable),now:5,inputReady:true),.closeInventory)
+        flow.sent(.closeInventory,now:5)
+        _=flow.observe(observation(.hud),now:7,inputReady:true)
+        _=flow.observe(observation(.hud),now:8,inputReady:true)
+        XCTAssertFalse(flow.active);XCTAssertEqual(flow.completed,0)
+        var ready=begin()
+        _=ready.observe(observation(.inventoryReady),now:3,inputReady:true)
+        XCTAssertEqual(ready.observe(observation(.inventoryEmpty),now:4,inputReady:true),.closeInventory)
+    }
+    func testTimeoutCanOnlyCleanUpOwnedKnownInventoryOnceWithinOriginalClickBudget() {
+        var flow=begin()
+        XCTAssertNil(flow.observe(observation(.unknown),now:92,inputReady:true))
+        XCTAssertEqual(flow.phase,.blocked)
+        XCTAssertNil(flow.observe(observation(.inventoryEmpty),now:93,inputReady:true))
+        for t in [94.0,96.0,98.0] {
+            XCTAssertEqual(flow.observe(observation(.inventoryEmpty),now:t,inputReady:true),.closeInventory)
+            flow.sent(.closeInventory,now:t)
+        }
+        XCTAssertNil(flow.observe(observation(.inventoryEmpty),now:100,inputReady:true))
+        XCTAssertEqual(flow.phase,.blocked)
+        for t in 101..<115 {XCTAssertNil(flow.observe(observation(.inventoryEmpty),now:Double(t),inputReady:true))}
+        XCTAssertEqual(flow.completed,0)
+        var neverSent=CrystalFlow()
+        _=neverSent.observe(hud,now:0,inputReady:true);_=neverSent.observe(hud,now:1,inputReady:true)
+        _=neverSent.observe(observation(.unknown),now:92,inputReady:true)
+        for t in 93..<98 {XCTAssertNil(neverSent.observe(observation(.inventoryEmpty),now:Double(t),inputReady:true))}
+    }
+    func testCleanupCannotCountAResultWithoutOurContinueAndHasATimeLimit() {
+        var flow=begin()
+        _=flow.observe(observation(.inventoryReady),now:3,inputReady:true);flow.sent(.openOne,now:3)
+        _=flow.observe(observation(.geode),now:5,inputReady:true);flow.sent(.strike,now:5)
+        XCTAssertEqual(flow.observe(observation(.result),now:7,inputReady:true),.proceed)
+        // Continue was not sent; a human may subsequently close the result.
+        _=flow.observe(observation(.unknown),now:92,inputReady:true)
+        _=flow.observe(observation(.inventoryEmpty),now:93,inputReady:true)
+        XCTAssertEqual(flow.observe(observation(.inventoryEmpty),now:94,inputReady:true),.closeInventory)
+        flow.sent(.closeInventory,now:94)
+        _=flow.observe(observation(.hud),now:96,inputReady:true);_=flow.observe(observation(.hud),now:97,inputReady:true)
+        XCTAssertEqual(flow.completed,0);XCTAssertFalse(flow.active)
+        var stuck=begin()
+        _=stuck.observe(observation(.unknown),now:92,inputReady:true)
+        _=stuck.observe(observation(.inventoryUnavailable),now:93,inputReady:true)
+        XCTAssertEqual(stuck.observe(observation(.inventoryUnavailable),now:94,inputReady:true),.closeInventory)
+        XCTAssertNil(stuck.observe(observation(.inventoryUnavailable),now:105,inputReady:true))
+        XCTAssertEqual(stuck.failure,"empty_cleanup_timeout")
+        XCTAssertNil(stuck.observe(observation(.inventoryUnavailable),now:106,inputReady:true))
+    }
+    func testAspectShiftedInventoryUsesItsActualXAndMissingOpenStillCloses()throws {
+        let source=try image("inventory-empty-live")
+        func derived(height:Int,maskButton:Bool)throws->CGImage {
+            let c=try XCTUnwrap(CGContext(data:nil,width:642,height:height,bitsPerComponent:8,bytesPerRow:0,
+                space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue))
+            c.setFillColor(CGColor(gray:0.03,alpha:1));c.fill(.init(x:0,y:0,width:642,height:height))
+            // Synthetic aspect test only: preserve width, bottom anchor inventory.
+            c.draw(source,in:.init(x:0,y:0,width:642,height:951))
+            if maskButton {
+                c.setFillColor(CGColor(gray:0.65,alpha:1))
+                c.fill(.init(x:254,y:951-566,width:119,height:28))
+            }
+            return try XCTUnwrap(c.makeImage())
+        }
+        let vision=CrystalVision()
+        for height in [882,951,1010] {
+            let actual=try vision.observe(derived(height:height,maskButton:false),hudVisible:false)
+            XCTAssertEqual(actual.screen,.inventoryEmpty,"height=\(height):\(actual.texts)")
+            let point=try XCTUnwrap(actual.closePoint)
+            XCTAssertEqual(point.y*Double(height),137-Double(951-height),accuracy:3)
+            XCTAssertEqual(CrystalAction.closeInventory.point(in:actual),point)
+        }
+        let missing=try vision.observe(derived(height:882,maskButton:true),hudVisible:false)
+        XCTAssertEqual(missing.screen,.inventoryUnavailable,missing.texts.joined(separator:";"))
+        XCTAssertFalse(CrystalAction.openOne.permits(missing));XCTAssertTrue(CrystalAction.closeInventory.permits(missing))
+        XCTAssertNotNil(missing.closePoint)
+        let actual=try vision.observe(source,hudVisible:true)
+        XCTAssertEqual(actual.screen,.inventoryEmpty,"Known inventory outranks a false-positive HUD")
     }
     func testScreenshotReplayProducesOnlyTheAuthorizedSequence()throws {
         var flow=CrystalFlow(),actions:[CrystalAction]=[]

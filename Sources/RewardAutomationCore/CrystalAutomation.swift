@@ -2,15 +2,24 @@ import Foundation
 import CoreGraphics
 
 public enum CrystalScreen: String, Codable {
-    case hud, inventoryReady, inventoryEmpty, geode, result, unknown
+    case hud, inventoryReady, inventoryEmpty, inventoryUnavailable, geode, result, unknown
 }
 
 public struct CrystalObservation: Codable {
     public let screen: CrystalScreen
     public let notification: Bool
     public let texts: [String]
-    public init(screen: CrystalScreen, notification: Bool = false, texts: [String] = []) {
+    public let closePoint:CGPoint?
+    public let openPoint:CGPoint?
+    public init(screen: CrystalScreen, notification: Bool = false, texts: [String] = [],closePoint:CGPoint?=nil,openPoint:CGPoint?=nil) {
         self.screen=screen; self.notification=notification; self.texts=texts
+        self.closePoint=closePoint;self.openPoint=openPoint
+    }
+}
+
+public enum CrystalInputPolicy {
+    public static func isManualPanel(screen:CrystalScreen,active:Bool)->Bool {
+        !active && [.inventoryReady,.inventoryEmpty,.inventoryUnavailable,.geode,.result].contains(screen)
     }
 }
 
@@ -30,16 +39,32 @@ public final class CrystalVision {
             try reader.recognize(image,roi:r,highContrast:white).map(\.text).joined(separator:" ").uppercased()
         }
         func compact(_ s:String)->String {s.filter{$0.isLetter || $0.isNumber}}
+        // Anchor the known inventory to its actual close button. Its vertical
+        // position changes with window aspect; do not mistake it for the HUD.
+        if let layout=CrystalInventoryLayout.locate(p) {
+            let title=try words(layout.rect(.init(x:0.38,y:0.353,width:0.25,height:0.033)),white:false)
+            let grid=try words(layout.rect(.init(x:0.37,y:0.616,width:0.26,height:0.029)))
+            diagnostics += ["inventory",title,grid]
+            if compact(title)=="CRYSTALSTATS",compact(grid)=="CRYSTALS" {
+                let button=try words(layout.rect(.init(x:0.39,y:0.566,width:0.20,height:0.023)))
+                let emptyButton=try words(layout.rect(.init(x:0.39,y:0.571,width:0.20,height:0.030)))
+                let active=fraction(layout.rect(.init(x:0.39,y:0.565,width:0.20,height:0.043)),yellow)>0.35
+                let grey=fraction(layout.rect(.init(x:0.40,y:0.57,width:0.18,height:0.03)),{r,g,b in
+                    r>120 && r<210 && abs(r-g)<15 && abs(r-b)<15})>0.30
+                let screen:CrystalScreen = active && compact(button)=="X1" ? .inventoryReady:
+                    (!active && grey && compact(emptyButton)=="OPEN" ? .inventoryEmpty:.inventoryUnavailable)
+                return .init(screen:screen,texts:[title,grid,button,emptyButton,"close=\(layout.close)"],
+                    closePoint:layout.close,openPoint:layout.point(.init(x:0.49,y:0.585)))
+            }
+        }
         if hudVisible {
             // The red notification must have its white ring AND blue crystals
             // immediately below it. A red enemy/map marker alone is insufficient.
-            let badge=CGRect(x:0.955,y:0.455,width:0.041,height:0.045)
             let blue=CGRect(x:0.905,y:0.482,width:0.090,height:0.060)
-            let red=fraction(badge,pink)
-            let white=fraction(badge,{r,g,b in min(r,min(g,b))>210})
             let crystal=fraction(blue,{r,g,b in b>170 && b>r+35 && g>90})
-            return .init(screen:.hud,notification:red>0.035 && white>0.025 && crystal>0.12,
-                         texts:["dotRed=\(red);dotWhite=\(white);blue=\(crystal)"])
+            let dot=CrystalNotificationMatcher.match(p)
+            return .init(screen:.hud,notification:dot != nil && crystal>0.12,
+                         texts:["ringDot=\(dot ?? "absent");blue=\(crystal)"])
         }
         // After the first strike the brown card and its close button disappear.
         // Only the cracked purple stone and the explicit TAP hint remain.
@@ -67,29 +92,96 @@ public final class CrystalVision {
                 return .init(screen:.geode,texts:[title,hint])
             }
         }
-        if fraction(.init(x:0.68,y:0.125,width:0.12,height:0.034),pink)>0.35 {
-            let title=try words(.init(x:0.38,y:0.353,width:0.25,height:0.033),white:false)
-            let grid=try words(.init(x:0.37,y:0.616,width:0.26,height:0.029))
-            diagnostics += ["inventory",title,grid]
-            if compact(title)=="CRYSTALSTATS",compact(grid)=="CRYSTALS" {
-                let button=try words(.init(x:0.39,y:0.566,width:0.20,height:0.023))
-                let emptyButton=try words(.init(x:0.39,y:0.571,width:0.20,height:0.030))
-                let counter=try words(.init(x:0.20,y:0.596,width:0.072,height:0.027),white:false)
-                diagnostics += [button,emptyButton,counter]
-                let active=fraction(.init(x:0.39,y:0.565,width:0.20,height:0.043),yellow)>0.35
-                if compact(button)=="X1",active {
-                    return .init(screen:.inventoryReady,texts:[title,grid,button,counter])
-                }
-                // A grey, disabled OPEN is distinct from the active gold x1.
-                // The stylised counter is kept as raw evidence, not a made-up count.
-                let grey=fraction(.init(x:0.40,y:0.57,width:0.18,height:0.03),{r,g,b in
-                    r>120 && r<210 && abs(r-g)<15 && abs(r-b)<15})>0.30
-                if compact(emptyButton)=="OPEN",grey,!active {
-                    return .init(screen:.inventoryEmpty,texts:[title,grid,button,counter])
+        return .init(screen:.unknown,texts:diagnostics)
+    }
+}
+
+struct CrystalInventoryLayout {
+    let close:CGPoint
+    let yScale:Double
+    func point(_ p:CGPoint)->CGPoint {.init(x:p.x,y:close.y+(p.y-0.144)*yScale)}
+    func rect(_ r:CGRect)->CGRect {.init(origin:point(r.origin),size:.init(width:r.width,height:r.height*yScale))}
+    static func locate(_ p:Pixels)->Self? {
+        let x0=Int(Double(p.w)*0.66),x1=Int(Double(p.w)*0.83),y0=Int(Double(p.h)*0.045),y1=Int(Double(p.h)*0.23)
+        let w=x1-x0,h=y1-y0
+        guard w>0,h>0 else{return nil}
+        var mask=[Bool](repeating:false,count:w*h)
+        for y in 0..<h {for x in 0..<w {
+            let i=((y+y0)*p.w+x+x0)*4,r=Int(p.data[i]),g=Int(p.data[i+1]),b=Int(p.data[i+2])
+            mask[y*w+x]=r>185 && g<100 && b>55 && b<180
+        }}
+        for start in mask.indices where mask[start] {
+            var q=[start],head=0,l=w,r=0,t=h,b=0;mask[start]=false
+            while head<q.count {
+                let i=q[head],x=i%w,y=i/w;head+=1;l=min(l,x);r=max(r,x);t=min(t,y);b=max(b,y)
+                for (nx,ny) in [(x-1,y),(x+1,y),(x,y-1),(x,y+1)] where nx>=0 && nx<w && ny>=0 && ny<h {
+                    let j=ny*w+nx;if mask[j] {mask[j]=false;q.append(j)}
                 }
             }
+            let bw=Double(r-l+1),bh=Double(b-t+1),cx=Double(x0+l)+bw/2,cy=Double(y0+t)+bh/2
+            guard bw>=Double(p.w)*0.09,bw<=Double(p.w)*0.15,bh>=Double(p.w)*0.025,bh<=Double(p.w)*0.08,
+                  bw/bh>=1.5,bw/bh<=4,Double(q.count)>bw*bh*0.45,
+                  cx/Double(p.w)>0.71,cx/Double(p.w)<0.78 else{continue}
+            let center=CGRect(x:(cx-bw*0.22)/Double(p.w),y:(cy-bh*0.38)/Double(p.h),
+                              width:bw*0.44/Double(p.w),height:bh*0.76/Double(p.h))
+            let white=p.count(in:center){r,g,b in min(r,min(g,b))>200 && max(r,max(g,b))-min(r,min(g,b))<40}
+            guard Double(white)>bw*bh*0.025 else{continue}
+            return .init(close:.init(x:cx/Double(p.w),y:cy/Double(p.h)),yScale:(951.0/642.0)*Double(p.w)/Double(p.h))
         }
-        return .init(screen:.unknown,texts:diagnostics)
+        return nil
+    }
+}
+
+/// A single compact red disk with a spatially surrounding white ring and dark
+/// outline. Independent regional red/white counts also matched confetti.
+enum CrystalNotificationMatcher {
+    static func match(_ p:Pixels)->String? {
+        let x0=Int(Double(p.w)*0.945),x1=min(p.w,Int(Double(p.w)*0.998))
+        let y0=Int(Double(p.h)*0.45),y1=min(p.h,Int(Double(p.h)*0.505))
+        let w=x1-x0,h=y1-y0
+        guard w>0,h>0 else{return nil}
+        func rgb(_ x:Int,_ y:Int)->(Int,Int,Int) {
+            let i=(max(0,min(p.h-1,y))*p.w+max(0,min(p.w-1,x)))*4
+            return (Int(p.data[i]),Int(p.data[i+1]),Int(p.data[i+2]))
+        }
+        var mask=[Bool](repeating:false,count:w*h)
+        for y in 0..<h {for x in 0..<w {
+            let (r,g,b)=rgb(x+x0,y+y0)
+            mask[y*w+x]=r>185 && g<100 && b>55 && b<180
+        }}
+        for start in mask.indices where mask[start] {
+            var queue=[start],head=0,minX=w,maxX=0,minY=h,maxY=0
+            mask[start]=false
+            while head<queue.count {
+                let i=queue[head],x=i%w,y=i/w;head+=1
+                minX=min(minX,x);maxX=max(maxX,x);minY=min(minY,y);maxY=max(maxY,y)
+                for (nx,ny) in [(x-1,y),(x+1,y),(x,y-1),(x,y+1)] where nx>=0 && nx<w && ny>=0 && ny<h {
+                    let next=ny*w+nx
+                    if mask[next] {mask[next]=false;queue.append(next)}
+                }
+            }
+            let bw=Double(maxX-minX+1),bh=Double(maxY-minY+1),diameter=max(bw,bh)
+            guard bw/bh>=0.70,bw/bh<=1.40,diameter>=Double(p.w)*0.009,
+                  diameter<=Double(p.w)*0.029,Double(queue.count)/(bw*bh)>=0.55,
+                  minX>0,maxX<w-1,minY>0,maxY<h-1 else{continue}
+            let cx=Double(x0+minX)+((bw-1)/2),cy=Double(y0+minY)+((bh-1)/2),radius=diameter/2
+            var whiteAngles=0,darkAngles=0
+            for n in 0..<24 {
+                let a=Double(n)*2*Double.pi/24
+                func at(_ scales:[Double],_ predicate:(Int,Int,Int)->Bool)->Bool {
+                    scales.contains {scale in
+                        let (r,g,b)=rgb(Int((cx+cos(a)*radius*scale).rounded()),Int((cy+sin(a)*radius*scale).rounded()))
+                        return predicate(r,g,b)
+                    }
+                }
+                if at([1.10,1.30,1.50],{r,g,b in min(r,min(g,b))>205 && max(r,max(g,b))-min(r,min(g,b))<45}) {whiteAngles+=1}
+                if at([1.65,1.90,2.15],{r,g,b in max(r,max(g,b))<105}) {darkAngles+=1}
+            }
+            if whiteAngles>=18 && darkAngles>=16 {
+                return "center=\(cx),\(cy);diameter=\(diameter);whiteAngles=\(whiteAngles)/24;darkAngles=\(darkAngles)/24"
+            }
+        }
+        return nil
     }
 }
 
@@ -114,8 +206,13 @@ public enum CrystalAction: String, Codable {
         }
     }
     public func permits(_ observation: CrystalObservation)->Bool {
-        if self == .closeInventory {return observation.screen == .inventoryEmpty || observation.screen == .inventoryReady}
+        if self == .closeInventory {return [.inventoryEmpty,.inventoryReady,.inventoryUnavailable].contains(observation.screen)}
         return observation.screen==expectedScreen && (self != .openInventory || observation.notification)
+    }
+    public func point(in observation:CrystalObservation)->CGPoint {
+        if self == .closeInventory {return observation.closePoint ?? point}
+        if self == .openOne {return observation.openPoint ?? point}
+        return point
     }
 }
 
@@ -133,6 +230,7 @@ public struct CrystalFlow {
     private var previousNotification=false
     private var cooldownUntil: Double=0
     private var resultSeen=false
+    private var emptyCleanupStarted:Double?
     public init() {}
     /// Explicit operator recovery only, from the unfinished transaction's own
     /// journal. It retains sent-attempt limits; no assumed success or UI clicks.
@@ -156,33 +254,48 @@ public struct CrystalFlow {
         else {previous=observation.screen;previousNotification=observation.notification;stable=1}
         if phase == .idle {
             guard mayStart,inputReady,now>=cooldownUntil,observation.screen == .hud,observation.notification,stable>=2 else{return nil}
-            phase = .opening; started=now; attempts=[:]; strikes=0; failure=nil;resultSeen=false
+            phase = .opening; started=now; attempts=[:]; strikes=0; failure=nil;resultSeen=false;emptyCleanupStarted=nil
+        }
+        let unavailable=[CrystalScreen.inventoryEmpty,.inventoryUnavailable].contains(observation.screen)
+        let owned=attempts[.openInventory,default:0]>0
+        if phase == .opening,observation.screen == .hud,!observation.notification,stable>=2 {
+            phase = .idle;cooldownUntil=now+60;return nil
         }
         if phase == .blocked {
+            // One bounded cleanup of our OWN known inventory, never an unknown
+            // modal, never another open/strike and never a fabricated result.
+            if owned,unavailable,stable>=2,emptyCleanupStarted==nil,attempts[.closeInventory,default:0]<3 {
+                emptyCleanupStarted=now;phase = .closing;failure=nil
+            } else {
             // No auto-closing an unrecognised modal. Human return to HUD recovers.
             if observation.screen == .hud,stable>=2 {phase = .idle;cooldownUntil=now+60}
             return nil
+            }
         }
-        if now-started>90 {phase = .blocked;failure="transaction_timeout";return nil}
+        if let cleanup=emptyCleanupStarted {
+            if now-cleanup>10 {phase = .blocked;failure="empty_cleanup_timeout";return nil}
+        } else if now-started>90 {phase = .blocked;failure="transaction_timeout";return nil}
         if phase == .opening,attempts[.openInventory,default:0]>0,observation.screen == .inventoryReady {phase = .ready}
-        if phase == .opening,attempts[.openInventory,default:0]>0,observation.screen == .inventoryEmpty {phase = .closing}
+        if [.opening,.ready].contains(phase),owned,unavailable,
+           observation.screen == .inventoryEmpty || stable>=2 {phase = .closing}
         if phase == .ready,attempts[.openOne,default:0]>0,observation.screen == .geode {phase = .breaking}
         if phase == .breaking,attempts[.strike,default:0]>0,observation.screen == .result {phase = .continuing;resultSeen=true}
-        if phase == .continuing,attempts[.proceed,default:0]>0,observation.screen == .inventoryEmpty {phase = .closing}
+        if phase == .continuing,attempts[.proceed,default:0]>0,unavailable {phase = .closing}
         // Available inventory after Continue is also closed; do not spend more
         // geodes from one notification without a fresh HUD notification.
         if phase == .continuing,attempts[.proceed,default:0]>0,observation.screen == .inventoryReady {phase = .closing}
         if phase == .closing,attempts[.closeInventory,default:0]>0,observation.screen == .hud,stable>=2 {
-            if resultSeen {completed+=1}
-            phase = .idle;cooldownUntil=now+(resultSeen ? 5:60);return nil
+            let confirmed=resultSeen && attempts[.proceed,default:0]>0
+            if confirmed {completed+=1}
+            phase = .idle;cooldownUntil=now+(confirmed ? 5:60);return nil
         }
         let action:CrystalAction?
         switch phase {
-        case .opening: action = observation.screen == .hud ? .openInventory:nil
+        case .opening: action = observation.screen == .hud && observation.notification ? .openInventory:nil
         case .ready: action = observation.screen == .inventoryReady ? .openOne:nil
         case .breaking: action = observation.screen == .geode ? .strike:nil
         case .continuing: action = observation.screen == .result ? .proceed:nil
-        case .closing: action = [.inventoryEmpty,.inventoryReady].contains(observation.screen) ? .closeInventory:nil
+        case .closing: action = [.inventoryEmpty,.inventoryReady,.inventoryUnavailable].contains(observation.screen) ? .closeInventory:nil
         default: action=nil
         }
         guard let action,inputReady,now-lastSent>=1 else{return nil}

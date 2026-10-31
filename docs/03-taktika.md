@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+322: konfetti nem kristályértesítés. Két aktuális képi pöttyigazolás és
+preclick továbbra kötelező. Openbizonytalanság nem jogosít nyitásra;
+sajátismertpanel biztonságosX-e zárhat, kézi/unknownpanel nem. Ürespanel
+bezárása0jutalom,60s újrakeresési szünet; elfogyott3próbakeret nem nullázható.
+FutóPID vagy külsőmonitoros képolvasás nem bizonyít jó kattintást.322.
+
 321: félrekattintási jelentésnél nem ismétlünk vakon inputot. Előbb
 aktuálisablak/Quartzpont/aktívkijelző ellenőrzés, warp után ténylegeskurzor
 egyezés. Sikert csak továbbra is utóképek igazolnak, a helyes kurzorpont

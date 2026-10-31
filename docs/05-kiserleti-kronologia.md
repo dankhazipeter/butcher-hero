@@ -2,6 +2,16 @@
 
 ## 2026-10-31
 
+322: usernincs-pöttykonfettis HUD-ját régi kód true-ra olvasta; külön
+piros/fehér régióösszeg volt az ok, képből reprodukálva. Strukturáltkör+gyűrű
+után false, régi valódi pozitívok true. Ürespanel felismerését a sajátX-hez
+horgonyoztuk; szintetikus aspektus/OCRhiány+ownedcleanup tesztek. A menetet
+user megszakította teljeskapu/betöltés előtt. Új státuszkéréskor állógyűjtő;
+frisskép már külsőmonitor788×1083/Quartz−828,−370, valódi pöttytrue.
+Újbuild --resume-run betöltve, utána kijelzők ismét asleep/0active.
+Nincs új éles nyitás/bezárás/Freeigazolás. A regisztrált pozitívkép külön
+held-outminta, nem kitaláltinputeredmény. Teljes ellenőrzés322-ben.
+
 321: user külsőmonitoros rosszkattintást jelzett. Saját supervisor leállítva
 a hibásinput elkerülésére; read-only CG/SC/AppKit metadataellenőrzés.
 Két külső negatívQuartzeredettel, három kijelző asleep, aktívlistában0.

@@ -1,5 +1,26 @@
 # Butcher Hero — aktív projektutasítások
 
+## Kristály téves pötty és üres panel helyreállítása — 2026-10-31 (322)
+
+Userkonfettis HUD-ja régiCrystalVisionnel reprodukált false-positive:
+különállópiros5,79%+fehér3,42%+kékkristály38,82% elég volt. Most egyetlen
+kompaktpiroskör, körkörösen fehérgyűrű+sötétkörvonal kell; nem független
+színösszeg. A userképen márnotification=false, a3valódi pozitívontrue.
+Inventoryt sajátfelsőX-hez, szélességalapú elrendezéshez kötjük; CRYSTAL
+STATS+CRYSTALS kell. inventoryUnavailable: panelbiztos, Open nem biztos;
+ilyenkor nincs openOne, csak a sajátfolyamat zárhat. DinamikusX/Openpont
+frisspreclickből, nem régi fixY. Kézi panel nem automatikus cél és Free-t is
+tiltja még HUDszín-tévesztésnél. Eltűnt értesítés kétHUDképen feloldja az
+openinget60scooldownnal. Sajátüres panel readyből is closing; timeout után
+egyszeri max10s ismertürespanel-cleanup, eredeti3X-próbakeret, sosem unknownX.
+Nincs siker eredmény+sajátContinue+X+kétHUD nélkül. Ez a313blokkszabályának
+SZŰK kiegészítése, nem általánosmodal- vagy idegenfolyamat-helyreállítás.
+7újteszt, teljes145teszt+7JSsyntaxPASS, releasebuildPASS. Külső788×1083
+frisskép valódi pöttyét felismeri; játékQuartzkeret−828/−370/788/1083.
+A gyűjtőbiztonsági szünet után --resume-run-nal újraindult, de közben újra
+0aktív/3alvó kijelző lett; nincs még éles új kristálykör vagy kattintás-
+igazolás. Runtime aJSONból, nem történetiPIDből. Részletek322.
+
 ## Külső kijelző kattintásvédelme és diagnózisa — 2026-10-31 (321)
 
 User külső monitoron rossz helyre menő inputot jelzett. Pontos történeti
@@ -135,6 +156,11 @@ Never reuse historical PIDs or launch the legacy `ButcherHeroBot` executable.
 - Opens geodes when the right-hand blue crystal icon has its red dot:
   inventory → active gold x1 Open → repeated, visually checked strikes →
   Continue → inventory's red X → HUD. No selling, upgrading or equipping.
+  The dot requires a connected round red centre with a white ring; red and
+  white confetti elsewhere are not enough. A known empty/unreadable-Open
+  inventory opened by our own transaction is closed without claiming a
+  reward. A timed-out owned empty inventory has one bounded cleanup only;
+  unknown/manual panels never get a generic close click. See docs/322.
 - Dismisses the demonstrated expired **Diamond League** screens: **NO,
   THANKS** on the timed-out offer, then **CONTINUE** on its EVENT ENDS
   summary. Paid extension offers and unrelated Continue buttons are not

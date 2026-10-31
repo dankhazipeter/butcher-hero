@@ -2,6 +2,16 @@
 
 ## Aktív — 2026-10-31
 
+322: konfetti→hamispötty konkrét hiba javítva és userképre regresszióval
+ellenőrizve. Külön tényleges üres-panel screenshot a beragadás pillanatából
+nem áll rendelkezésre; ezért a korábbi konkrét bezáráshiba gyökérokát nem
+állítjuk bizonyítottnak. ÚjX-horgony+inventoryUnavailable+ownedcleanup
+szintetikus aspektus/olvasáshiány és állapotsorteszttel ellenőrzött.
+Éles új kör/bezárás/Free-visszatérés kell. Külsőképen valódi pöttytrue,
+de betöltéskor ismét alvó kijelzők miatt nincs kattintás. Az inventoryY
+rugalmasabb lett; geode/result új aspektusváltozata továbbra friss valós
+képpel vizsgálandó, nincs általános mindenfelbontás-támogatási ígéret.
+
 321: külsőmonitoros félrekattintás konkrét hibás pontja régi logból nem
 azonosítható. Új Quartz/kurzorvédelmek+input_geometry napló elkészült,
 6geometriatesztPASS; ébren tartott külsőmonitoros játék+valódi átvétel kell
