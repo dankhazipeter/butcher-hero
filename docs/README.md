@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Nyitható geode kimarad: kis ablakon a fehér szegély ellenőrzése tévesen elutasít](333-geode-jelzes-kisablak-diagnozis.md)
 - [CI: korán elutasított HTTP-kérés kliensoldali BrokenPipe-versenye](332-ci-http-kliens-verseny.md)
 - [Új statisztikai munkamenet: csak a Mostani futás nullázása, előzménytörlés nélkül](331-uj-statisztikai-munkamenet.md)
 - [CI-indulás: DNS-független loopback szerver és valódi dashboard-folyamatteszt](330-ci-loopback-dns.md)

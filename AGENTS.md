@@ -1,5 +1,20 @@
 # Butcher Hero — aktív projektutasítások
 
+## Nyitott: geode-jelzés elutasítása kis ablakban — 2026-10-31 (333)
+
+A felhasználó jelezte, hogy lenne nyitható geode. 22:42–22:44Z friss,
+637×882 HUD-képeken látható a valódi piros jelzés; a release inspect-crystal
+mégis notification=false / ringDot=absent. Blue0.371–0.378 elegendő, HUDtrue.
+Azonos CG DeviceRGB pixelekkel a piros komponens közép624/428,9×9px,
+kitöltés0.852, ROI-szél rendben. Sötét körvonal24/24, de a három fix
+sugáron vizsgált fehér szegély8/24 a szükséges18 helyett. Ez a konkrét
+elutasítás oka, nem workerleállás, egérvárakozás vagy beragadt tranzakció:
+worker4143 frissképekkel, crystal=idle/event=idle; közben Free575 igazolt.
+A legutóbbi kristálykör21:21:35.706Z completed_ui. Nincs vak ikonnyitás,
+küszöblazítás vagy --recover-crystal ebből a diagnózisból. A user most
+magyarázatot kért; a javításra külön rövid jóváhagyást kértünk. Válaszig
+a felismerő és a gyűjtő változatlanul fut. Részletek docs/333-geode-jelzes-kisablak-diagnozis.md.
+
 ## CI: korán elutasított HTTP-kérés tesztversenye — 2026-10-31 (332)
 
 A 331/c135ae3 távoli run41247735058 új session-suite-jában a tiltott

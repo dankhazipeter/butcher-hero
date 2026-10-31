@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+333 új nyitott: 637×882 képen a valódi kristályjelzés ringDot=absent,
+notification=false. A piros9×9komponens és a sötét körvonal megfelel,
+de fix sugármintán a fehér gyűrű8/24 a szükséges18/24 helyett. Aktív
+worker/freegyűjtés mellett ezért marad idle a kristályág. Nem javítottként
+kezelendő; jóváhagyás után valós pozitív + régi konfettis negatív teszt kell.
+
 331: a Mostani futás kézi újrakezdése most a modal gombjával lehetséges,
 adatvesztés és gyűjtőrestart nélkül. Régi bizonytalan sorok a többi
 időszakban szándékosan megmaradnak. Ne nullázzunk valódi statot tesztből:
