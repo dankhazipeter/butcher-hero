@@ -3,6 +3,64 @@ import ImageIO
 @testable import RewardAutomationCore
 
 final class RewardTests:XCTestCase {
+    func testFreeBadgeTemplatesUseReviewedSourcesAndKeepRegenAsHeldOut()throws {
+        let path=project.appendingPathComponent("Sources/RewardAutomationCore/Resources/FreeBadges/templates.json")
+        let model=try XCTUnwrap(JSONSerialization.jsonObject(with:Data(contentsOf:path)) as? [String:Any])
+        let templates=try XCTUnwrap(model["templates"] as? [[String:Any]])
+        XCTAssertEqual(templates.count,3)
+        let sources=templates.compactMap{$0["source"] as? String}
+        XCTAssertFalse(sources.contains("docs/references/2026-10-31/regen81-ree-heldout.png"))
+        for template in templates {
+            let signature=try XCTUnwrap(template["signature"] as? [Int])
+            XCTAssertEqual(signature.count,48*24)
+            XCTAssertTrue(signature.allSatisfy{(0...2).contains($0)})
+            let source=try XCTUnwrap(template["source"] as? String)
+            XCTAssertTrue(FileManager.default.fileExists(atPath:project.appendingPathComponent(source).path))
+        }
+    }
+    func testPixelFreeReadsRejectedHealthAndHeldOutRegenWithoutOCR()throws {
+        for (path,kind,amount) in [
+            ("docs/references/2026-10-31/health18300-preclick-fre.png","hp","18300"),
+            ("docs/references/2026-10-31/health18100-user.png","hp","18100"),
+            ("docs/references/2026-10-31/regen81-ree-heldout.png","regeneration","81")
+        ] {
+            let result=try RewardVision().observe(image(path))
+            XCTAssertEqual(result.badgeReader,"pixels",path)
+            XCTAssertEqual(result.reward?.kind,kind);XCTAssertEqual(result.reward?.amount,amount)
+        }
+        let absent=try RewardVision().observe(image("docs/references/2026-10-31/absent-grass-leaf-badge.png"))
+        XCTAssertFalse(absent.freeCardVisible);XCTAssertNil(absent.reward)
+    }
+    func testPreclickRetriesMissingReadsButNeverAcceptsOldOrChangedOffers() {
+        var gate=RewardPreclickValidation(expectedFingerprint:"left-event|18300")
+        XCTAssertEqual(gate.observe(fingerprint:nil,sameWindow:true,cancelled:false,elapsed:0.05),.retry)
+        XCTAssertEqual(gate.observe(fingerprint:"left-event|18300",sameWindow:true,cancelled:false,elapsed:0.35),.accept)
+        XCTAssertEqual(gate.observe(fingerprint:"left-event|18300",sameWindow:true,cancelled:false,elapsed:0.4),.reject,"A validation cannot issue two approvals")
+        var missing=RewardPreclickValidation(expectedFingerprint:"left-event|18300")
+        for n in 0..<3 {
+            XCTAssertEqual(missing.observe(fingerprint:nil,sameWindow:true,cancelled:false,elapsed:Double(n)*0.2),n<2 ? .retry:.reject)
+        }
+        var changed=RewardPreclickValidation(expectedFingerprint:"left-event|18300")
+        XCTAssertEqual(changed.observe(fingerprint:"left-event|540",sameWindow:true,cancelled:false,elapsed:0.05),.reject)
+    }
+    func testPreclickFailsClosedForMovedWindowsCancellationAndSlowReads() {
+        for (sameWindow,cancelled,elapsed) in [(false,false,0.1),(true,true,0.1),(true,false,1.21),(true,false,-1.0)] {
+            var gate=RewardPreclickValidation(expectedFingerprint:"left-event|18300")
+            XCTAssertEqual(gate.observe(fingerprint:"left-event|18300",sameWindow:sameWindow,cancelled:cancelled,elapsed:elapsed),.reject)
+        }
+    }
+    func testStabilityBridgesOnlyBriefUnreadableTextOnAStillVisibleCard() {
+        XCTAssertTrue(RewardStabilityPolicy.bridgeUnreadable(gameHUDVisible:true,cardVisible:true,lastReadableAt:10,now:11))
+        XCTAssertFalse(RewardStabilityPolicy.bridgeUnreadable(gameHUDVisible:true,cardVisible:false,lastReadableAt:10,now:11))
+        XCTAssertFalse(RewardStabilityPolicy.bridgeUnreadable(gameHUDVisible:false,cardVisible:true,lastReadableAt:10,now:11))
+        XCTAssertFalse(RewardStabilityPolicy.bridgeUnreadable(gameHUDVisible:true,cardVisible:true,lastReadableAt:10,now:12.51))
+        XCTAssertFalse(RewardStabilityPolicy.bridgeUnreadable(gameHUDVisible:true,cardVisible:true,lastReadableAt:nil,now:11))
+    }
+    func testDiagnosticReasonsDistinguishHiddenHUDAndAbsentBadge()throws {
+        let vision=RewardVision()
+        XCTAssertEqual(try vision.observe(image("docs/references/2026-10-30/reward-stats-top.png")).diagnosticReason,"hud_rejected")
+        XCTAssertEqual(try vision.observe(image("docs/references/2026-10-30/free-absent-grass-false-positive.jpg")).diagnosticReason,"badge_shape_missing")
+    }
     func testTesseractTSVParsingPreservesWordGeometryAndConfidence()throws {
         let words=TesseractOCR.parseTSV("5\t1\t1\t1\t1\t1\t12\t30\t60\t20\t95.5\t18.3K\n")
         let word=try XCTUnwrap(words.first)
