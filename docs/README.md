@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Üres dashboardlap: futó gyűjtő, változatlan cím, reload utáni helyreállás](327-dashboard-ures-lap-ujratoltes.md)
 - [Közös Terminal-indító: make start, stop, status és bárhonnan használható parancs](326-kozos-terminal-indito.md)
 - [A gyűjtő és a dashboard újabb folyamatkiesése](325-gyujto-es-dashboard-folyamatkieses.md)
 - [Pierce 567/575: szigorú számolvasás új glyphmintával és élő igazolással](324-pierce-szamolvasas-es-elo-575.md)

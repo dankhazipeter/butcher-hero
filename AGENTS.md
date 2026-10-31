@@ -1,5 +1,17 @@
 # Butcher Hero — aktív projektutasítások
 
+## Üres dashboardlap helyreállt újratöltéssel — 2026-10-31 (327)
+
+Userképen kapcsolódás/üresnyelvválasztó/alapértékek, miközben gyűjtés fut.
+Ellenőrzéskor runner70886/worker él, frissképidő,8765listener és HTTPhealth/
+rewardsAPI jó; címváltozás nincs. A tényleges IABlapon ugyanaz az üres UI
+látszott. Egy reload után nyelvválasztó, ÉLŐ NAPLÓ, játékfut és gyűjtőFut,
+grafikonok/lista visszatért;1349igazolt a pillanatképben. Nem futtatókiesés,
+nem bizonyított cache-/JS-/CSPgyökérok; nincs kód- vagy küszöbmódosítás,
+gyűjtő-/szerverrestart. CUAread-onlyevaluate scope nem megbízható bizonyíték
+a lapglobálisok hiányára; UI/HTTP és reload eredménye az érvényes tény.
+Helyi proof .build/ui-proof/dashboard-restored.jpg, nem Gitadat. Részletek327.
+
 ## Közös Terminal-indító — 2026-10-31 (326)
 
 A felhasználó saját Terminalból futtatható, közös indítót kért. Új
