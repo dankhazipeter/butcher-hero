@@ -33,7 +33,12 @@ darabbal és aránnyal, a statértékek nagyságától függetlenül: [295](docs
 
 Az első automatizáció elkészült: másodpercenként figyeli a bal oldali event
 alattiFree-jutalmat, átveszi és naplózza a8jutalomtípus egyikeként.
-Most csak ez fut; a korábbi teljes játékbot nem aktív.
+Ugyanez a figyelő a piros ponttal jelzett kristályt is megnyitja az engedélyezett
+x1 → feltörés → Continue → bezárás sorrendben, friss képi ellenőrzésekkel.
+A korábbi teljes játékbot nem aktív. [Kristályfolyamat és korlátok](docs/313-kristalygyujtes-es-kozos-vezerles.md).
+Külön napló: `data/crystal-rewards/events.jsonl` és `evidence/`; a kristály
+nem növeli a bal oldali Free-statisztikát. A `CrystalTests` valódi képei és
+állapotsortesztjei ugyanabban a `make test` / commit / push / PR-kapuban futnak.
 
 Kézi húzás közben várakozik. Elengedés után ellenőrzi újra aFreejutalmat;
 ha kattintás után megmaradt a kártya,1másodperc múlva újrapróbálja.

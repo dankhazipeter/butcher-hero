@@ -2,6 +2,17 @@
 
 ## Aktív — 2026-10-31
 
+313: CrystalVision szűk pixelkapuk+szöveghorgonyok alapján HUD/jelzés,
+inventoryReady/Empty, geode és eredmény képernyőket különít el. Nem teljes
+képes OCR: csak releváns kis sávok, Tesseract, nincs AppleVision. A változó
+kristályszín/level/stat nem döntési feltétel. A repedt köztes kő külön lila
+pixelmező+TAPhint; a kezdeti barna lap másik geodeág. CrystalFlow tiszta,
+tesztelhető állapotgép: csak ténylegesen elküldött lépés után fogad következő
+képernyőt;3/16próbakeret és90shatár. Action.permits friss aktiválás utáni
+képen ellenőrzi újra a célt. Közöswatchkör egy inputgazdával, külön
+kristályJournal; Freeclaim nem keveredhet kristályeredménnyel. Tényleges
+képi és állapotsor-regresszió a teljeskapu része. Részletek313.
+
 311: FreeBadgeMatcher elsődleges,3képből kalibrált48×24fehér/zöld/egyéb
 maszk. FehérglyphDice>=0.82 és0.85fehér+0.15zöld súlyozottpont>=0.82;
 ±1pixeles környezet. Ez hasonlóság, nem valószínűség. Szűk belsőTesseract

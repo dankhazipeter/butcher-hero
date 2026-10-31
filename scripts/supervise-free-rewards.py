@@ -52,7 +52,7 @@ def should_restart(exit_code, stalled, stop_requested):
     return not stop_requested and (stalled or exit_code != 0)
 
 
-def supervise(root, resume=False):
+def supervise(root, resume=False, recover_crystal=False):
     directory = root / "data/free-rewards"
     directory.mkdir(parents=True, exist_ok=True)
     stopping = False
@@ -88,6 +88,9 @@ def supervise(root, resume=False):
                            "watch-free", "--interval", "1"]
                 if resume:
                     command.append("--resume-run")
+                if recover_crystal:
+                    command.append("--recover-crystal")
+                    recover_crystal = False  # explicit, one-shot operator recovery
                 child = subprocess.Popen(command, cwd=root)
                 monitor = ProgressMonitor(time.monotonic())
                 stalled = False
@@ -123,5 +126,7 @@ def supervise(root, resume=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--resume-run", action="store_true")
+    parser.add_argument("--recover-crystal", action="store_true")
     options = parser.parse_args()
-    supervise(Path(__file__).resolve().parents[1], resume=options.resume_run)
+    supervise(Path(__file__).resolve().parents[1], resume=options.resume_run,
+              recover_crystal=options.recover_crystal)

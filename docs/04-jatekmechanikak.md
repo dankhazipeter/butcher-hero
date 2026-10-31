@@ -1,5 +1,17 @@
 # Új verzió megfigyelései — 2026-10-29
 
+## Kristálynyitás — 2026-10-31 (313, felülírja312 ismeretlen képernyősorát)
+
+Felhasználói négykép: főpanel aranyx1Open, kezdeti geodelap, változó színű/
+szintű/statú kristály Continue-gombbal, majd szürkeOpen+főpanelX. Élőben
+külön új közteskép: elsőütés után a barna lap eltűnik, a repedt lila kő és
+TAP TO OPEN GEODE marad. Két további igazolt ütés után kék40-es kristály,
+PierceDefense+291K és SellCost1.41K látszott. SellCost nem végrehajtott
+eladás, és a kristály statja nem igazolt karakterstat-növekedés. Continue
+után főpanel, bezárás után eltűnt a HUD-kristályikon piros pontja. Időzítő
+~45perc, ezért a következőnyitás idejét nem a felhasználói6perces képből
+égetjük be. Számláló0/9OCR-je0/S is lehet: ezt nem könyveljük számként.
+
 ## Következő: kristálytörés — 2026-10-31 (312)
 
 Felhasználói közlés: a jobb oldali kék kristályikon piros jelzése azt

@@ -115,6 +115,40 @@ private enum HumanInput {
         up.post(tap:.cghidEventTap)
         return (sentAt,current,evidence)
     }
+    func crystalClick(_ action:CrystalAction,frame:Frame,cancellation:Cancellation,
+                      validated:(Frame,CrystalObservation)throws->Void)async throws {
+        guard HumanInput.ready else{throw HumanInputBusy()}
+        guard AXIsProcessTrusted(),let pid=frame.window.owningApplication?.processID,
+              let app=NSRunningApplication(processIdentifier:pid) else{throw AutomationError("Crystal input unavailable")}
+        let previous=NSWorkspace.shared.frontmostApplication
+        var cursor:CGPoint?,warped=false
+        app.activate()
+        defer {
+            if !HumanInput.buttonDown {
+                if warped,let cursor {CGWarpMouseCursorPosition(cursor)}
+                if let previous,previous.processIdentifier != pid {previous.activate()}
+            }
+        }
+        try await Task.sleep(nanoseconds:180_000_000)
+        guard !cancellation.requested,HumanInput.ready else{throw HumanInputBusy()}
+        let fresh=try await self.frame()
+        guard fresh.window.windowID==frame.window.windowID else{throw AutomationError("Crystal window changed")}
+        let hud=try RewardVision().observe(fresh.image).gameHUDVisible
+        let observation=try CrystalVision().observe(fresh.image,hudVisible:hud)
+        guard action.permits(observation) else{throw AutomationError("Crystal preclick rejected: \(action.rawValue)/\(observation.screen.rawValue)")}
+        try validated(fresh,observation)
+        let point=CGPoint(x:fresh.window.frame.minX+action.point.x*fresh.window.frame.width,
+                          y:fresh.window.frame.minY+action.point.y*fresh.window.frame.height)
+        guard !cancellation.requested,HumanInput.ready,
+              let source=CGEventSource(stateID:.hidSystemState),
+              let down=CGEvent(mouseEventSource:source,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),
+              let up=CGEvent(mouseEventSource:source,mouseType:.leftMouseUp,mouseCursorPosition:point,mouseButton:.left)
+        else{throw HumanInputBusy()}
+        cursor=CGEvent(source:nil)?.location;CGWarpMouseCursorPosition(point);warped=true
+        down.post(tap:.cghidEventTap)
+        try? await Task.sleep(nanoseconds:70_000_000)
+        up.post(tap:.cghidEventTap)
+    }
 }
 
 private struct JournalEvent:Codable {
@@ -136,6 +170,7 @@ private struct WatchState:Codable {
     var pendingClaimID:String? = nil
     var verificationMode:String? = nil
     var ocrBackend:String? = nil
+    var crystalPhase:String? = nil
 }
 
 private final class Journal {
@@ -192,25 +227,40 @@ private final class Journal {
             let encoder=JSONEncoder();encoder.outputFormatting=[.prettyPrinted,.sortedKeys]
             print(String(decoding:try encoder.encode(RewardVision().observe(image)),as:UTF8.self));return
         }
+        if command=="inspect-crystal" {
+            guard args.count==2,let source=CGImageSourceCreateWithURL(URL(fileURLWithPath:args[1]) as CFURL,nil),
+                  let image=CGImageSourceCreateImageAtIndex(source,0,nil) else{throw AutomationError("inspect-crystal <frame.png>")}
+            let hud=try RewardVision().observe(image).gameHUDVisible
+            print(String(decoding:try JSONEncoder().encode(CrystalVision().observe(image,hudVisible:hud)),as:UTF8.self));return
+        }
+        if command=="snapshot" {
+            guard args.count==2 else{throw AutomationError("snapshot <output.png>")}
+            let frame=try await Capture().frame()
+            guard let destination=CGImageDestinationCreateWithURL(URL(fileURLWithPath:args[1]) as CFURL,UTType.png.identifier as CFString,1,nil)
+            else{throw AutomationError("Snapshot destination unavailable")}
+            CGImageDestinationAddImage(destination,frame.image,nil)
+            guard CGImageDestinationFinalize(destination) else{throw AutomationError("Snapshot failed")};return
+        }
         let root=URL(fileURLWithPath:FileManager.default.currentDirectoryPath).appendingPathComponent("data/free-rewards")
         if command=="stats" {try stats(root:root,args:Array(args.dropFirst()));return}
         if command=="reconcile" {try reconcile(root:root,args:Array(args.dropFirst()));return}
         guard command=="watch-free" else{throw AutomationError(usage)}
-        var interval=1.0,seconds=Double.infinity,dryRun=false,resumeRun=false
+        var interval=1.0,seconds=Double.infinity,dryRun=false,resumeRun=false,recoverCrystal=false
         var i=1
         while i<args.count {
             switch args[i] {
             case "--dry-run":dryRun=true
             case "--resume-run":resumeRun=true
+            case "--recover-crystal":recoverCrystal=true
             case "--interval","--seconds":
                 guard i+1<args.count,let n=Double(args[i+1]),n.isFinite,n>0 else{throw AutomationError("Hiányzó/hibás időérték.")}
                 if args[i]=="--interval" {guard n>=1 else{throw AutomationError("Legalább1másodperces mintavétel kell.")};interval=n}else{seconds=n};i+=1
             default:throw AutomationError("Ismeretlen kapcsoló: \(args[i])")
             };i+=1
         }
-        try await watch(root:root,interval:interval,seconds:seconds,dryRun:dryRun,resumeRun:resumeRun)
+        try await watch(root:root,interval:interval,seconds:seconds,dryRun:dryRun,resumeRun:resumeRun,recoverCrystal:recoverCrystal)
     }
-    @MainActor static func watch(root:URL,interval:Double,seconds:Double,dryRun:Bool,resumeRun:Bool=false)async throws {
+    @MainActor static func watch(root:URL,interval:Double,seconds:Double,dryRun:Bool,resumeRun:Bool=false,recoverCrystal:Bool=false)async throws {
         try FileManager.default.createDirectory(atPath:"docs/runs",withIntermediateDirectories:true)
         let lockFD=open("docs/runs/.live-capture.lock",O_CREAT|O_RDWR,mode_t(0o600))
         guard lockFD>=0 else{throw AutomationError("Képrögzítési zár nem hozható létre.")}
@@ -218,6 +268,22 @@ private final class Journal {
         defer{flock(lockFD,LOCK_UN);close(lockFD)}
         if !dryRun && !AXIsProcessTrusted(){throw AutomationError("Accessibility-engedély hiányzik.")}
         let journal=try Journal(root:root),capture=Capture(),vision=RewardVision(),cancel=Cancellation()
+        let crystalJournal=try Journal(root:root.deletingLastPathComponent().appendingPathComponent("crystal-rewards"))
+        let crystalVision=CrystalVision()
+        var crystal=CrystalFlow(),crystalID:String?,crystalScreen:CrystalScreen?,crystalFailure:String?
+        if recoverCrystal {
+            let path=crystalJournal.root.appendingPathComponent("events.jsonl")
+            let events=(try String(contentsOf:path,encoding:.utf8)).split(separator:"\n").compactMap{try? JSONDecoder().decode(JournalEvent.self,from:Data($0.utf8))}
+            guard let start=events.last(where:{$0.event=="crystal_started"}),let id=start.claimID,
+                  let at=ISO8601DateFormatter().date(from:start.timestamp.replacingOccurrences(of:#"\.\d{3}Z$"#,with:"Z",options:.regularExpression)),
+                  Date().timeIntervalSince(at)>=0,Date().timeIntervalSince(at)<600,
+                  !events.contains(where:{$0.claimID==id && ["crystal_completed_ui","crystal_finished_no_reward"].contains($0.event)})
+            else{throw AutomationError("No recent unfinished owned crystal transaction to recover")}
+            let actions=events.filter{$0.claimID==id && $0.event=="crystal_click_sent"}.compactMap{$0.message.flatMap(CrystalAction.init(rawValue:))}
+            guard !actions.isEmpty else{throw AutomationError("No owned crystal input to recover")}
+            crystal=CrystalFlow(recovering:actions,now:ProcessInfo.processInfo.systemUptime);crystalID=id
+            try crystalJournal.append("crystal_operator_recovered",claimID:id,message:"Explicit --recover-crystal; sent attempt counts retained; every click requires fresh known UI")
+        }
         // Old permanent reservations must not deadlock a visible Free card on
         // restart. Every new attempt still needs stable, freshly validated UI.
         var dryGate=RewardGate()
@@ -230,7 +296,7 @@ private final class Journal {
         }
         try journal.state(state)
         try journal.append(resumeRun && hasPriorRun ? "watcher_resumed":"watcher_started",
-            message:dryRun ? "dry run; no clicks":"left event Free only; vision3 verification; pixel FREE first, Tesseract fallback; labelled pixel digits")
+            message:dryRun ? "dry run; no clicks":"left event Free + user-authorized crystal opening; vision3 verification")
         defer {state.running=false;try? journal.state(state);try? journal.append("watcher_stopped")}
         print("Free-figyelő: \(interval)s; napló: \(root.appendingPathComponent("events.jsonl").path); PID \(getpid())\(dryRun ? " (csak megfigyelés)":"")")
         fflush(stdout)
@@ -264,6 +330,53 @@ private final class Journal {
                 }
                 state.lastCheckedAt=Journal.stamp(frame.capturedAt)
                 if lastError != nil {try journal.append("capture_recovered");lastError=nil}
+                // Single input owner: crystal transaction has priority. Free
+                // candidates cannot survive across its overlays. A pending Free
+                // claim must finish verification before a new transaction starts.
+                let co=try crystalVision.observe(frame.image,hudVisible:observation.gameHUDVisible)
+                let wasActive=crystal.active,completed=crystal.completed
+                let action=crystal.observe(co,now:tick,inputReady:HumanInput.ready,mayStart:pending==nil)
+                state.crystalPhase=crystal.phase.rawValue
+                if !wasActive && crystal.active {
+                    crystalID=UUID().uuidString;crystalScreen=nil;crystalFailure=nil
+                    try crystalJournal.append("crystal_started",claimID:crystalID)
+                }
+                if crystal.active || wasActive {
+                    state.waitingForMouseRelease = !HumanInput.ready
+                    stableKey=nil;stableCount=0;candidateID=nil;lastCandidateReadableAt=nil
+                    if co.screen != crystalScreen {
+                        crystalScreen=co.screen
+                        let proof=try crystalJournal.image(frame.image,id:crystalID ?? crystalJournal.runID,suffix:"\(co.screen.rawValue)-\(UUID().uuidString)")
+                        try crystalJournal.append("crystal_screen",claimID:crystalID,evidence:proof,message:"\(co.screen.rawValue); \(co.texts)")
+                    }
+                    if crystal.failure != crystalFailure,let failure=crystal.failure {
+                        crystalFailure=failure
+                        try crystalJournal.append("crystal_blocked",claimID:crystalID,message:failure)
+                    }
+                    if let action,!dryRun {
+                        do {
+                            try await capture.crystalClick(action,frame:frame,cancellation:cancel) {fresh,current in
+                                let proof=try crystalJournal.image(fresh.image,id:crystalID ?? crystalJournal.runID,suffix:"before-\(action.rawValue)-\(UUID().uuidString)")
+                                try crystalJournal.append("crystal_click_validated",claimID:crystalID,evidence:proof,message:"\(action.rawValue); \(current.texts)")
+                            }
+                            crystal.sent(action,now:ProcessInfo.processInfo.systemUptime)
+                            try crystalJournal.append("crystal_click_sent",claimID:crystalID,message:action.rawValue)
+                        } catch is HumanInputBusy {
+                            state.waitingForMouseRelease=true
+                        } catch {
+                            try crystalJournal.append("crystal_click_rejected",claimID:crystalID,message:error.localizedDescription)
+                        }
+                    }
+                    if crystal.completed>completed {
+                        try crystalJournal.append("crystal_completed_ui",claimID:crystalID,message:"Result, Continue, inventory and return to HUD observed; not a Free stat gain")
+                    } else if wasActive && !crystal.active {
+                        try crystalJournal.append("crystal_finished_no_reward",claimID:crystalID,message:"HUD returned without a fully observed result flow; not counted")
+                    }
+                    try journal.state(state)
+                    let delay=max(0,interval-(ProcessInfo.processInfo.systemUptime-tick))
+                    if delay>0 {try? await Task.sleep(nanoseconds:UInt64(delay*1_000_000_000))}
+                    continue
+                }
                 dryGate.observe(observation.reward)
                 if var p=pending {
                     if let changed=observation.reward,changed.fingerprint != p.reward.fingerprint {
@@ -435,8 +548,10 @@ private final class Journal {
         print("Bizonyítékkép alapján pontosítva: \(count). Eredeti kattintási sorok megőrizve.")
     }
     static let usage="""
-    ButcherHeroAutomation watch-free [--interval 1] [--seconds 60] [--dry-run] [--resume-run]
+    ButcherHeroAutomation watch-free [--interval 1] [--seconds 60] [--dry-run] [--resume-run] [--recover-crystal]
     ButcherHeroAutomation inspect <frame.png>
+    ButcherHeroAutomation inspect-crystal <frame.png>
+    ButcherHeroAutomation snapshot <output.png>  # passive single window capture
     ButcherHeroAutomation stats [--from 2026-10-29T22:00:00+02:00] [--to 2026-10-30T08:00:00+02:00]
     ButcherHeroAutomation reconcile [--current-run]  # offline re-read of uncertain saved rewards
     Local append-only journal: data/free-rewards/events.jsonl. Ctrl+C stops.

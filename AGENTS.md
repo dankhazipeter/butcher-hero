@@ -1,5 +1,33 @@
 # Butcher Hero — aktív projektutasítások
 
+## Aktív — Free + kristálynyitás, 2026-10-31 (313)
+
+A felhasználó MOST engedélyezte a bemutatott kristályfolyamatot; ez felülírja
+312 előjegyzett/Free-only korlátját kizárólag erre a műveletsorra. Két friss
+HUD-on piros, fehér szegélyű jel + kék kristályok → ismert inventory aktív
+arany x1 → geode ütései → Continue → inventory piros X → két friss HUD.
+Az első ütés után eltűnő barna panel NEM hiba: repedt lila kő + TAP TO OPEN
+GEODE szöveg külön felismerési ág. Ismeretlen képernyőn nincs input.
+Egy inputgazda: kristály közben nincs Free-kattintás, utána automatikus
+visszatérés; függő Free-igazolás alatt új kristályfolyamat nem indul.
+Kézi húzás/STOP minden lépést véd; aktiválás utáni frisskép kötelező.
+Nincs Sell All, Crystal Upgrade, felszereléscsere, vásárlás/reklám/gemköltés.
+Kristálynapló: data/crystal-rewards/events.jsonl + evidence; NEM Free-stat.
+Számláló OCR-0/S nem számszerű tény, eredménystat nem karakterstat-növekedés.
+Siker csak eredmény+Continue+visszatért panel+bezárás+HUD, nem puszta input.
+1s mintavétel/újrapróba, max3lépéskattintás/16ütés/90s tranzakció.
+Blokkolásnál nem vak bezárás. Újraindított worker nem vesz át önkényesen
+egy nyitott modalt; kizárólag friss saját naplóhoz --recover-crystal egyszeri,
+felügyelt helyreállítás (max10perc, régi próbakeret megtartva). Ez nem
+automatikus timeout-megkerülés, a felügyelő újraindításra nem ismétli a kapcsolót.
+Első élő tranzakció0D44E692: a közteskép miatt egyszer javítva/helyreállítva,
+09:21:59Zlezárult; kék40 PierceDefense+291K eredménykép.09:22:21Zúj Free581
+CutDefenseigazolt. Ez NEM bizonyított teljes megszakításmentes első kör.
+Végsőbuild52120worker/52048supervisor/session91902,09:29:05Zresume-run;
+09:29:23ZHealth18100újraigazolt.42Swift+16Pythonstats+3Gitkapu+
+10felügyeleti+31Node=102teszt és7JSszintaxisPASS; távoliCI külön ellenőrzendő.
+Részletek313; a régi bot/heartbeatPAUSED. Runtime mindigstate.jsonból.
+
 312következő feladat: a jobb oldali kék kristályikon piros pontja a felhasználó
 szerint törhető kristályt jelez. Referenciakép elmentve. A belső folyamat,
 költségmentesség, eredmény és ismétlési feltételek még nincsenek feltárva.

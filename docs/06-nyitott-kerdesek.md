@@ -2,6 +2,16 @@
 
 ## Aktív — 2026-10-31
 
+313felülírás: a bemutatott kristályfolyamat implementált, a repedt köztes
+kővel is lefedett; első élő kör javítás+egyszeri helyreállítás után lezárult,
+aFreegyűjtés új igazolással visszatért. Teljes megszakításmentes új kör,
+további ablakarányok/geodevariánsok még ellenőrizendők. Újraindulás alatt
+nyitva maradt modalhoz csak felügyelt --recover-crystal engedélyezett,
+saját friss naplóval; normálújraindítás nem találja ki a félbemaradt fázist.
+Kristályeredmény számszerű elemzése/statisztikai megjelenítése nincs ebben
+a körben, csak teljes bizonyítékképek+folyamatnapló. Vásárlás/eladás/fejlesztés
+továbbra tiltott. Az alábbi312 a feltárás előtti történeti állapot.
+
 312következő funkció: kristálytörés a piros pontos kék ikonnál. Még fel
 kell tárni a képernyősort, elérhetőséget, garantált költségmentességet,
 eredményképet/értékeket, könyvelést és a visszatérést aFreegyűjtéshez.

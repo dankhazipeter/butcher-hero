@@ -2,11 +2,12 @@
   "session": "updated-game-2026-10-29",
   "date": "2026-10-31",
   "timezone": "Europe/Bucharest",
-  "mode": "free-rewards-only",
+  "mode": "free-rewards-and-crystal-opening",
   "automaticGameplay": false,
   "automaticObservation": true,
   "observationIntervalSeconds": 1,
-  "allowedAutomaticActions": ["claim left event FREE reward"],
+  "allowedAutomaticActions": ["claim left event FREE reward", "red-dot crystal icon -> x1 Open -> geode strikes -> Continue -> inventory X -> HUD"],
+  "crystalLog": "data/crystal-rewards/events.jsonl",
   "rewardLog": "data/free-rewards/events.jsonl",
   "watcherStatus": "data/free-rewards/state.json",
   "heartbeat": "PAUSED",
@@ -17,5 +18,5 @@
   "verifiedCombatStats": null,
   "stoppedAt": "2026-10-30T12:50:59.818+02:00",
   "dashboardURL": "http://127.0.0.1:8765/",
-  "nextStep": "Free-only supervisor36813/worker36820 in persistent session21801. Backend pixel-free+pixel-digits-v2 with Tesseract fallback. Actual rejected Health18300 frame read FREE as FRE; Regen81 as REE. Three visually reviewed badge templates,35fixed screenshot fixtures; final preclick retries are fresh and bounded. click_sent stores final validated PNG/reward. Started2026-10-31T08:35:01Z with --resume-run; first3minutes6confirmed/3Health18100, explicit+18.1K afterimage checked. Local88testsPASS; remote result separate. Manual gifts and missed rewards not fabricated. Runtime authority remains data/free-rewards/state.json. No movement/combat/shop/unknown modals; heartbeat PAUSED."
+  "nextStep": "User-authorized crystal flow implemented alongside Free in one input owner. First live transaction0D44E692 stalled at the newly observed cracked-geode screen; fixed and explicitly recovered with retained attempt counts. Completed2026-10-31T09:21:59Z, blue40 PierceDefense291K; Free581CutDefense confirmed09:22:21Z afterwards. Final supervisor52048/worker52120/session91902 started09:29:05Z, FreeHealth18100confirmed09:29:23Z. Local102testsPASS. Fresh authority remains data/free-rewards/state.json. Automatic crystal restart recovery is not claimed; unknown modals remain untouched. No movement/combat/shop/sell/upgrade/purchases/ads; heartbeat PAUSED. Test and final deployment results are recorded in docs313."
 }

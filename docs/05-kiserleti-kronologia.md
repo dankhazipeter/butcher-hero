@@ -2,6 +2,19 @@
 
 ## 2026-10-31
 
+313: felhasználó megadta a kristály képernyősorát és kérte a bevezetést.
+36820Freeworker a fejlesztés/teszt alatt végig futott; két előre fordított
+betöltés történt.09:18:49Z48660worker elindult,0D44E692tranzakcióban HUD
+pirosjel→x1→geode→elsőütés. A repedt kő új állapota hiányzott a mintákból:
+nincs vakkattintás,09:20:21Z90stimeout. Valódi közteskép+új regresszió,
+09:21:44Z49939worker egyszeri saját-naplós helyreállítással.09:21:50/52Z
+két továbbiütés,54Zeredmény+Continue,57ZX,59ZkétHUD+crystal_completed_ui.
+Eredménykép:kék40/PierceDefense291K, nem Freejutalom.09:22:21ZFreeCutDefense
+581újraigazolt. Első kör javítás miatt megszakadt; a teljes elejétől végéig
+felügyeletnélküli ismétlés továbbra külön megfigyelés. Részletek313.
+Végső52120worker/52048supervisor/session91902,09:29:05Z;09:29:23ZHealth18100
+igazolva. Teljes102helyi tesztPASS,12külön kristályreferencia a35Freekép mellett.
+
 312: felhasználó előjegyezte a következő, bonyolultabb átvételt: kristályikon
 piros ponttal = törhető kristály. A kis ikonképet elmentettük, belső panelt
 nem nyitottunk meg. Nincs kristályinput/kódváltozás, aFreegyűjtő fut tovább.

@@ -2,8 +2,9 @@ import importlib.util
 from pathlib import Path
 import signal
 import subprocess
+import tempfile
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 SPEC = importlib.util.spec_from_file_location("free_supervisor",
     Path(__file__).resolve().parents[1] / "scripts/supervise-free-rewards.py")
@@ -63,6 +64,20 @@ class FreeSupervisorTests(unittest.TestCase):
     def test_own_stall_recovery_and_unexpected_crash_restart(self):
         self.assertTrue(supervisor.should_restart(0, True, False))
         self.assertTrue(supervisor.should_restart(1, False, False))
+
+    def test_crystal_operator_recovery_is_only_passed_to_first_worker(self):
+        failed, stopped = Mock(pid=123), Mock(pid=124)
+        failed.poll.return_value = 1
+        stopped.poll.return_value = 0
+        with tempfile.TemporaryDirectory(prefix="crystal-supervisor-test-") as directory, \
+                patch.object(supervisor.subprocess, "Popen", side_effect=[failed, stopped]) as start, \
+                patch.object(supervisor.signal, "signal"), patch.object(supervisor.time, "sleep"):
+            supervisor.supervise(Path(directory), resume=True, recover_crystal=True)
+        commands = [call.args[0] for call in start.call_args_list]
+        self.assertEqual(len(commands), 2)
+        self.assertIn("--recover-crystal", commands[0])
+        self.assertNotIn("--recover-crystal", commands[1])
+        self.assertTrue(all("--resume-run" in command for command in commands))
 
 
 if __name__ == "__main__":

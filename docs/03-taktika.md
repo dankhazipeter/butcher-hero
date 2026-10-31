@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-31
 
+313: piros pontnál egy x1nyitás, nem inventorymenedzsment. A panel alatt
+nem próbálunk Freeajándékot szedni, de a közösfigyelő nem áll le. A result
+Continue után a főpanel saját felsőX-e zár; a geodeX-e sosem helyettesíti.
+Több elérhető geode esetén is előbb HUD-ra térünk, új jelzés indíthat új
+kört. Nyitott kézi/idegen modalhoz nem nyúlunk. Ismeretlenállapot/próbakeret
+lejárta blokkot ad, nem SellAllt vagy vakkattintást. Ütésenként frisskép,
+a gyorsabb burst nem írhatja felül a Continue megjelenését. Részletek313.
+
 311: a félperces ajándékvárakozás nem sikerkritérium; input+eltűnés+helyes
 könyvelés kell. Folyamat-PID/friss képidő önmagában nem bizonyít gyűjtést.
 Nincs FRE/REE elfogadása, összeg kitalálása vagy végtelenrégi cél megtartása.

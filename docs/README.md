@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Kristálynyitás, köztes repedt kő és közös inputvezérlés](313-kristalygyujtes-es-kozos-vezerles.md)
+
 - [Következő feladat: piros ponttal jelzett kristálytörés](312-kristalytorese-elokeszites.md)
 
 - [Healthkimaradások: bizonyított okok, képi FREE és friss könyvelés](311-free-kepi-felismeres-es-ujraproba.md)
@@ -42,8 +44,8 @@
 - [Élő, helyi jutalomstatisztika](292-elo-jutalomstatisztika.md)
 - [Helyes új adatok:18,3K és a zöld fű téves kártyajelzése](293-free-igazolas-es-183k-javitasa.md)
 
-Felhasználói kérésre csak aFree-jutalom figyelése és átvétele engedélyezett,
-1s ütemmel és kézi húzásvédelemmel. A régi játékbot/heartbeat továbbraPAUSED.
+Felhasználói kérésre aFree-jutalom és a313-ban bemutatott kristálynyitás
+engedélyezett,1s ütemmel és kézi húzásvédelemmel. A régi játékbot/heartbeat továbbraPAUSED.
 Minden lezárt változtatási kör automatikus commitot ÉS main-push-t kap.
 
 - [Automatikus commit+push és a Free-gyűjtés újraindítása](291-automatikus-commit-push-es-free-ujrainditas.md)
