@@ -2,6 +2,10 @@
 
 ## Külső kijelző élő igazolása és geodesor — 2026-10-31 (323)
 
+323kiegészítés: minden újresult új sajátContinue-t igényel, korábbi geode
+Continue-ja nem felhatalmazás. continuePending kapu+meglévőteszt bővítve;
+teljes147teszt kötelező. Nincs új művelet vagy limitreset.
+
 19:42:33Z537BAD04Freeigazolt, utóképen+575nyíl, Quartz/cursorcél egyezik
 −773.628/319.06967; előolvasásamountnil külön nyitott ügy. Ablak−828/−370/
 788/1083. KristályC1F57DA9 új x1+x2paneljén322ablakszélesség-scale hibás;

@@ -74,7 +74,11 @@ final class CrystalTests:XCTestCase {
         let result=try CrystalVision().observe(image("result-external-blue-live"),hudVisible:false)
         XCTAssertEqual(result.screen,.result)
         XCTAssertEqual(flow.observe(result,now:12,inputReady:true),.proceed)
-        flow.sent(.proceed,now:12)
+        XCTAssertNil(flow.observe(observation(.inventoryEmpty),now:12.1,inputReady:true),"Previous result's Continue cannot approve this result")
+        XCTAssertNil(flow.observe(next,now:12.2,inputReady:true))
+        XCTAssertNil(flow.observe(next,now:12.3,inputReady:true))
+        XCTAssertEqual(flow.observe(result,now:13,inputReady:true),.proceed)
+        flow.sent(.proceed,now:13)
         let final=try CrystalVision().observe(image("inventory-unavailable-external-live"),hudVisible:false)
         XCTAssertEqual(final.screen,.inventoryUnavailable)
         XCTAssertEqual(flow.observe(final,now:14,inputReady:true),.closeInventory)
@@ -87,6 +91,14 @@ final class CrystalTests:XCTestCase {
         _=unownedContinue.observe(result,now:7,inputReady:true)
         XCTAssertNil(unownedContinue.observe(next,now:9,inputReady:true))
         XCTAssertNil(unownedContinue.observe(next,now:10,inputReady:true))
+        var interrupted=CrystalFlow(recovering:[.openInventory,.openOne,.strike,.proceed,.strike],now:100)
+        _=interrupted.observe(observation(.unknown),now:191,inputReady:true)
+        _=interrupted.observe(observation(.inventoryEmpty),now:192,inputReady:true)
+        XCTAssertEqual(interrupted.observe(observation(.inventoryEmpty),now:193,inputReady:true),.closeInventory)
+        interrupted.sent(.closeInventory,now:193)
+        _=interrupted.observe(observation(.hud),now:195,inputReady:true)
+        _=interrupted.observe(observation(.hud),now:196,inputReady:true)
+        XCTAssertEqual(interrupted.completed,0,"An earlier geode's result cannot complete the interrupted next stone")
     }
     func testVanishedNotificationStopsOpeningAndReleasesInputWithoutInventingSuccess() {
         for sent in [false,true] {

@@ -60,6 +60,16 @@ megszakításmentes teljesönálló menet. Következő új értesítéses kör m
 
 ## Tesztek
 
+Kiegészítő ellenőrzés: minden új eredmény külön sajátContinue-t igényel.
+A korábbi geodeContinue-ja nem jogosítja a következő eredmény zárását vagy
+újabb kő ütését. continuePending kapu, a meglévő regresszióban ellenőrizve;
+nem új inputengedély vagy számlálóreset. A gyűjtő az offline ellenőrzés
+alatt a korábbi eredményt helyreállításkor sem viszi át félbehagyott újkőre:
+csak utolsósajátContinue/X esetén tekinti az utolsóeredményt megfigyeltnek.
+Ezt ugyanabban a regresszióban külön megszakított-kő állapotsor ellenőrzi.
+Az offline ellenőrzés
+alatt tovább fut; csak a kész build betöltéséhez rövid technikai folytatás.
+
 2újCrystalteszt: valósX1/X2célválasztás és sajátContinue→következőgeode,
 idegenContinue tiltásával, régi keretek megtartásával. Meglévő teszt bővült
 valódiüres/HUDképekkel. Teljes147teszt:68Swift+19stat+7game+3git+

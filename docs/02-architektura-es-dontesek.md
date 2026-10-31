@@ -2,6 +2,10 @@
 
 ## Aktív — 2026-10-31
 
+323kiegészítés: continuePending minden újresultnál újraélesedik; csak az
+adott eredmény sajátproceed küldése oldja. KorábbiProceed nem átvihető a
+következő eredményhez, cleanup sem számolhat kéziContinue-t sikernek.
+
 323felülírja322ablakszélesség-skáláját: pinkX78px-es referenciához mért
 tényleges szélessége adja a panelXYscale-t. Aranygombkomponensenként csak
 pontosX1címke, pont a kiválasztott gombközepén; X2 nem választott. Saját

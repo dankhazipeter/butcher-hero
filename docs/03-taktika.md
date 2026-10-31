@@ -2,6 +2,9 @@
 
 ## Aktív — 2026-10-31
 
+323kiegészítés: geodesorban minden eredmény külön sajátContinue-t igényel;
+emberi közbelépést nem könyvelünk át korábbi robotContinue felhasználásával.
+
 323: külsőn+575utókép és+84RegenFreeigazolás, Quartzpont/ténylegeskurzor
 egyezik. X1+X2panel csakX1célja után a játékContinueja következőgeodet
 hozhat; nincs újOpen. Helyreállított kétgeodés siker, következő új teljesen

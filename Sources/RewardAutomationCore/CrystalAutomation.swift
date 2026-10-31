@@ -266,6 +266,7 @@ public struct CrystalFlow {
     private var previousNotification=false
     private var cooldownUntil: Double=0
     private var resultSeen=false
+    private var continuePending=false
     private var emptyCleanupStarted:Double?
     public init() {}
     /// Explicit operator recovery only, from the unfinished transaction's own
@@ -275,7 +276,8 @@ public struct CrystalFlow {
         guard let last=actions.last else{return}
         started=now;lastSent=now
         for action in actions {attempts[action,default:0]+=1}
-        strikes=attempts[.strike,default:0];resultSeen=attempts[.proceed,default:0]>0
+        strikes=attempts[.strike,default:0]
+        resultSeen=last == .proceed || last == .closeInventory
         switch last {
         case .openInventory:phase = .opening
         case .openOne:phase = .ready
@@ -290,7 +292,7 @@ public struct CrystalFlow {
         else {previous=observation.screen;previousNotification=observation.notification;stable=1}
         if phase == .idle {
             guard mayStart,inputReady,now>=cooldownUntil,observation.screen == .hud,observation.notification,stable>=2 else{return nil}
-            phase = .opening; started=now; attempts=[:]; strikes=0; failure=nil;resultSeen=false;emptyCleanupStarted=nil
+            phase = .opening; started=now; attempts=[:]; strikes=0; failure=nil;resultSeen=false;continuePending=false;emptyCleanupStarted=nil
         }
         let unavailable=[CrystalScreen.inventoryEmpty,.inventoryUnavailable].contains(observation.screen)
         let owned=attempts[.openInventory,default:0]>0
@@ -315,18 +317,18 @@ public struct CrystalFlow {
         if [.opening,.ready].contains(phase),owned,unavailable,
            observation.screen == .inventoryEmpty || stable>=2 {phase = .closing}
         if phase == .ready,attempts[.openOne,default:0]>0,observation.screen == .geode {phase = .breaking}
-        if phase == .breaking,attempts[.strike,default:0]>0,observation.screen == .result {phase = .continuing;resultSeen=true}
+        if phase == .breaking,attempts[.strike,default:0]>0,observation.screen == .result {phase = .continuing;resultSeen=true;continuePending=true}
         // With multiple queued geodes, the game's own Continue may immediately
         // show the next stone. Never send another Open; retain TOTAL budgets.
-        if phase == .continuing,attempts[.proceed,default:0]>0,observation.screen == .geode,stable>=2 {
+        if phase == .continuing,!continuePending,attempts[.proceed,default:0]>0,observation.screen == .geode,stable>=2 {
             phase = .breaking;resultSeen=false
         }
-        if phase == .continuing,attempts[.proceed,default:0]>0,unavailable {phase = .closing}
+        if phase == .continuing,!continuePending,attempts[.proceed,default:0]>0,unavailable {phase = .closing}
         // Available inventory after Continue is also closed; do not spend more
         // geodes from one notification without a fresh HUD notification.
-        if phase == .continuing,attempts[.proceed,default:0]>0,observation.screen == .inventoryReady {phase = .closing}
+        if phase == .continuing,!continuePending,attempts[.proceed,default:0]>0,observation.screen == .inventoryReady {phase = .closing}
         if phase == .closing,attempts[.closeInventory,default:0]>0,observation.screen == .hud,stable>=2 {
-            let confirmed=resultSeen && attempts[.proceed,default:0]>0
+            let confirmed=resultSeen && !continuePending && attempts[.proceed,default:0]>0
             if confirmed {completed+=1}
             phase = .idle;cooldownUntil=now+(confirmed ? 5:60);return nil
         }
@@ -347,6 +349,7 @@ public struct CrystalFlow {
     public mutating func sent(_ action:CrystalAction,now:Double) {
         lastSent=now;attempts[action,default:0]+=1
         if action == .strike {strikes+=1}
+        if action == .proceed {continuePending=false}
     }
     /// The initial notification may disappear after activation. No inventory
     /// click was sent, so don't monopolise collection for the full90s timeout.
