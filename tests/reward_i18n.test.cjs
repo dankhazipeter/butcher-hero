@@ -10,6 +10,13 @@ const catalogs=Object.fromEntries(fs.readdirSync(folder).filter(file=>file.endsW
   .map(file=>{const catalog=require(path.join(folder,file));return [catalog.language,catalog];}));
 const placeholders=text=>[...text.matchAll(/\{(\w+)\}/g)].map(m=>m[1]).sort();
 
+test("game stat names stay in English in both UI languages",()=>{
+  const names={hp:"Health",regeneration:"Health Regen",piercing_damage:"Pierce Damage",cutting_damage:"Cut Damage",
+    smash_damage:"Smash Damage",piercing_defense:"Pierce Defense",cutting_defense:"Cut Defense",smash_defense:"Smash Defense"};
+  for(const [kind,name] of Object.entries(names)) for(const catalog of Object.values(catalogs))
+    assert.equal(catalog.messages[`kind.${kind}`],name);
+});
+
 test("language files and translator also register correctly as browser scripts",()=>{
   const vm=require("node:vm"),context=vm.createContext({});
   for(const language of Object.keys(catalogs))

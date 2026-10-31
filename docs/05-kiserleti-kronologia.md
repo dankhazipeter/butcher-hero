@@ -2,6 +2,12 @@
 
 ## 2026-10-31
 
+328: user egyórával későbbi dátumot és nem kívánt magyar statneveket
+jelzett. FixBucharest a JSben és Pythonban bizonyított; rendszerzóna
+Europe/Budapest. Újtesztek előbb hibáztak, utána browserzone/APIzone/
+Ma/custom/DST és angol játéknévcímkék javítva.13190naplóidőből0naiv,
+nincs történeti átírás.3Python+3Node új regresszió. Részletek328.
+
 326: user saját Terminalban látható, egyparancsos teljes indítást kért.
 Közös foregroundrunner+Make start/stop/status+opcionális globalnév készült.
 19offline unit/izolált valódi álfolyamat-teszt: Ctrl+C, külsőstop, duplazár,

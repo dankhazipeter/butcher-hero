@@ -1,5 +1,30 @@
 # Butcher Hero — aktív projektutasítások
 
+## Helyi időzóna és játékbeli statnevek — 2026-10-31 (328)
+
+A user már nem Romániában van. Dashboardidő nem rögzítettBucharest:
+Intl böngésző-IANAzone minden pollnál, timezone query a backendnek.
+Minden dátum/tooltip/tengely/szűrőmező ugyanazt használja; nyelvváltás nem
+időzónaváltás. Ma=ennek helyi éjfele, customnaiv idő is ebben értelmezett;
+explicitUTC/offset változatlan, APIzone nélkülUTC. Hibás/többszöröszone
+elutasított, DSTnemlétező falióraidő hiba, ismétlődő óra elsőfold.
+Nincs naplóátírás vagy statreset: ellenőrzött13190UTC/offsetes timestamp,
+0naiv. A magyarfelületen is Health, HealthRegen, Pierce/Cut/SmashDamage és
+Pierce/Cut/SmashDefense a játék szerinti angol nevekkel; a tényleges címkék
+szóközösek, a többiUI magyar. Ez szándékosan felülírja310statnévfordítását.
+3újPython+3újNode regresszió; a régi dátumteszt explicitBucharestre maradt,
+nem elvártérték-lazítás. Scope: UI/APIidőszak, nem gyűjtő/vision/input.
+Korábbi launcherCI4startup-timeout külön nyitott, nem javítottuk ebben.
+Részletek328; a gyűjtő csak az új szerverkód rövid betöltésére állhat meg.
+
+328betöltés:21:17:09.087Zstop→09.646Zresume, nincs újwatcher_started.
+Runner80593/dashboard80612/supervisor80613/worker80614/session74565;
+friss runtime továbbra JSONból.21:17:41.373ZHealth18100UIigazolt,
+frissképek. ÚjIABtesztlap22:18:32helyi idő/EuropeBudapest, eredeti8név,
+lista és legenda igazolt. Régi lap eszközösreloadja nem volt elérhető;
+azt a usernek egyszer frissítenie kell. Helyi173teszt+7JSsyntaxPASS.
+Proof .build/ui-proof/dashboard-local-time.jpg, nem commitolt személyesadat.
+
 ## Üres dashboardlap helyreállt újratöltéssel — 2026-10-31 (327)
 
 Userképen kapcsolódás/üresnyelvválasztó/alapértékek, miközben gyűjtés fut.
@@ -508,6 +533,14 @@ The page supports HU/EN, period/run filters, per-stat growth, a shared chart
 of **collection counts**, and recent reward rows. It reads the journal
 automatically; the status indicator distinguishes a fresh live worker,
 mouse-related waiting, stopped/stale state and an unreachable backend.
+Dates use the browser's current IANA time zone, rechecked during polling,
+not a fixed Romanian zone or the chosen UI language. The page sends that
+zone to the API so Today starts at the same local midnight and custom
+datetime-local inputs are interpreted consistently. API requests without
+`timezone` default to UTC; explicit-offset timestamps retain their instant.
+Invalid time zones and nonexistent spring-DST custom times are rejected.
+The eight game stat names stay in English even on the Hungarian page,
+matching the game; surrounding explanations and number formats still switch.
 The small info button next to the time-range buttons explains their meaning
 in a keyboard-accessible dialog. Current run is the logical session since
 the latest `watcher_started`, not a single process or calendar day.

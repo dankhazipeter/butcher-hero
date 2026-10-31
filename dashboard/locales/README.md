@@ -12,13 +12,20 @@
   A behelyettesítés textContenttel történik, nem HTML-ként.
 - Az eredeti gyűjtőnapló diagnosztikai üzeneteit szándékosan változatlanul
   idézzük; ez nem a napló vagy a játék nyelvének átállítása.
+- A nyolc játékbeli stat `kind.*` neve minden nyelven az angol eredeti:
+  Health, Health Regen, Pierce Damage, Cut Damage, Smash Damage,
+  Pierce Defense, Cut Defense, Smash Defense. Ezeket ne fordítsd le.
+  A `kind.unknown` továbbra lefordítandó, mert felületi diagnosztikai címke.
+- A locale a szám-/dátumformátumot adja, nem az időzónát. Az időzóna a
+  böngésző aktuális IANA zónája; nyelvváltáskor nem változik.
 
 ## Új nyelv hozzáadása
 
 1. Másold az `en.js` szerkezetét például `fr.js` néven.
 2. Állítsd át a `language` értékét `fr`-re, `name` értékét `Français`-re,
    `locale` értékét `fr-FR`-re és a böngészős regisztrációt `.fr=catalog`-ra.
-3. Fordítsd le az összes `messages` értéket, a kulcsokat/helyőrzőket ne módosítsd.
+3. Fordítsd le a `messages` értékeket a fenti nyolc statnév kivételével;
+   a kulcsokat/helyőrzőket ne módosítsd.
 4. Az index.htmlben az i18n.js elé kerüljön egy helyi, defer script:
    `<script src="/locales/fr.js" defer></script>`.
 5. Futtasd: `make test`. A nyelvi fájlokat a teszt automatikusan felfedezi;

@@ -15,7 +15,7 @@ import re
 import secrets
 import threading
 from urllib.parse import parse_qs, urlsplit
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 if __package__:
     from .game_control import GameControl, GameControlError
@@ -23,7 +23,6 @@ else:
     from game_control import GameControl, GameControlError
 
 ROOT = Path(__file__).resolve().parents[1]
-ZONE = ZoneInfo("Europe/Bucharest")
 UTC = timezone.utc
 KINDS = {
     "hp": "Health",
@@ -41,11 +40,25 @@ def stamp(value: datetime) -> str:
     return value.astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
-def parse_time(value: str) -> datetime:
+def parse_time(value: str, zone=UTC) -> datetime:
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=ZONE)
+        local = parsed
+        parsed = local.replace(tzinfo=zone)
+        # Do not silently shift a custom time in a daylight-saving spring gap.
+        if parsed.astimezone(UTC).astimezone(zone).replace(tzinfo=None) != local:
+            raise ValueError("A helyi időpont az óraátállítás miatt nem létezik.")
     return parsed.astimezone(UTC)
+
+
+def query_zone(query):
+    values = query.get("timezone", ["UTC"])
+    if len(values) != 1 or not isinstance(values[0], str) or not 1 <= len(values[0]) <= 100:
+        raise ValueError("Érvénytelen időzóna.")
+    try:
+        return ZoneInfo(values[0])
+    except (ZoneInfoNotFoundError, ValueError) as error:
+        raise ValueError("Ismeretlen időzóna.") from error
 
 
 def amount(value) -> Decimal | None:
@@ -116,13 +129,14 @@ class Journal:
 
 
 def time_window(query: dict, events: list, now: datetime):
+    zone = query_zone(query)
     mode = query.get("range", ["run"])[0]
-    end = parse_time(query["to"][0]) if query.get("to") else now
+    end = parse_time(query["to"][0], zone) if query.get("to") else now
     if query.get("from"):
-        start = parse_time(query["from"][0])
+        start = parse_time(query["from"][0], zone)
         mode = "custom"
     elif mode == "today":
-        start = now.astimezone(ZONE).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
+        start = now.astimezone(zone).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
     elif mode == "hour":
         start = now - timedelta(hours=1)
     elif mode == "day":
@@ -221,7 +235,7 @@ def aggregate(events, malformed, log_exists, query, now):
     runs = [event for event in events if event["event"] == "watcher_started"]
     current_quality = bool(runs and "vision3" in (runs[-1]["message"] or "") and start >= runs[-1]["at"])
     return {
-        "app": "butcher-reward-dashboard", "timezone": "Europe/Bucharest", "generatedAt": stamp(now),
+        "app": "butcher-reward-dashboard", "timezone": query_zone(query).key, "generatedAt": stamp(now),
         "range": {"mode": mode, "from": stamp(start), "to": stamp(end), "bucketSeconds": step},
         "logExists": log_exists, "malformedLines": malformed,
         "confirmedClaims": sum(claim in confirmed for claim, _ in selected),
@@ -318,7 +332,7 @@ def make_server(root: Path, port: int, *, game_control=None):
                     events, malformed, exists = journal.snapshot()
                     with localcontext() as context:
                         context.prec = 90
-                        payload = aggregate(events, malformed, exists, parse_qs(url.query), now)
+                        payload = aggregate(events, malformed, exists, parse_qs(url.query, keep_blank_values=True), now)
                     payload["watcher"] = watcher_state(root / "data/free-rewards/state.json", now)
                     payload["game"] = game.snapshot()
                     payload["gameLaunchToken"] = launch_token

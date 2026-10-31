@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-31
 
+328: eltávolítva a dashboard fixBucharestzone. JS IntlresolvedOptions
+mindenpollnál, APItimezoneparaméter ZoneInfo-validálással. Ma/custom és
+visszaadottmetadata ugyanaz a zóna; querynélkülUTC. parse_time explicit
+offsetet megőriz, naivcustomot a kért zónába helyezi, DSTlyukat elutasítja.
+Napló awaretimestampjei/összegei változatlanok. HUkindcímkék egyeznek a
+játék angolneveivel; közös labelOf miatt kártya/lista/legend/tooltip/ARIA
+mind követi. Nyelvi formázás és időzóna egymástól független.328.
+
 326: scripts/butcher-hero.py foregroundfolyamat kezeli a dashboardot és a
 meglévő gyűjtősupervisort, saját session/processgroupokban. A dashboard
 HTTP-készültsége előfeltétel; bármelyik szolgáltatáskilépés közös takarítás.

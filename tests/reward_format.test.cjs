@@ -61,7 +61,7 @@ test("reward icons remain transparent on cards, ledger and frequency legend",()=
   }
 });
 
-async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFetch=false,fetchReply=null}={}) {
+async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFetch=false,fetchReply=null,timeZone="UTC"}={}) {
   const vm=require("node:vm");
   class Element {
     constructor(tagName="") {this.tagName=tagName;this.children=[];this.dataset={};this.attributes={};this.listeners={};this.style={};this.classList={add(){},remove(){}};}
@@ -112,9 +112,13 @@ async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFet
     staticNodes.push(node);
   }
   let requests=0,scheduled;const requestLog=[];
+  const browserIntl=Object.create(Intl);
+  browserIntl.DateTimeFormat=function(locale,options) {
+    return new Intl.DateTimeFormat(locale,{...options,timeZone:options?.timeZone??timeZone});
+  };
   const storage={getItem(){return savedLanguage;},setItem(key,value){savedLanguage=value;}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../dashboard/app.js"),"utf8"),{
-    document,Intl,Date,URLSearchParams,AbortSignal,
+    document,Intl:browserIntl,Date,URLSearchParams,AbortSignal,
     localStorage:storage,RewardI18n:require("../dashboard/i18n.js"),
     RewardLocales:{hu:require("../dashboard/locales/hu.js"),en:require("../dashboard/locales/en.js")},
     RewardFormat:require("../dashboard/format.js"),RewardStatus:require("../dashboard/status.js"),
@@ -125,6 +129,7 @@ async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFet
   await new Promise(resolve=>setImmediate(resolve));
   elements.document=document;elements.storage=storage;elements.requests=()=>requests;elements.staticNodes=staticNodes;
   elements.requestLog=requestLog;
+  elements.setTimeZone=value=>{timeZone=value;};
   elements.poll=()=>scheduled();
   return elements;
 }
@@ -139,7 +144,7 @@ test("actual ledger rendering uses compact amounts and retains exact tooltips",a
   const cells=elements.get("entries").children.map(row=>row.children[2]);
   assert.deepEqual(cells.map(cell=>cell.textContent),["+18,3K","+540","+2,3M","+99,8M","+100M","?"]);
   assert.equal(cells[0].title,"Pontos naplóérték: +18\u202f300");
-  assert.equal(cells[2].attributes["aria-label"],"Életerő: +2\u202f360\u202f000");
+  assert.equal(cells[2].attributes["aria-label"],"Health: +2\u202f360\u202f000");
   assert.equal(cells[5].title,undefined,"missing amounts must not fabricate a zero");
   assert.deepEqual(data.recent.map(row=>row.amount),amounts,"rendering must not change source amounts");
 });
@@ -204,7 +209,7 @@ test("live language switch updates existing cards, legend, amounts and ledger wi
   assert.equal(elements.requests(),1);
   picker.value="hu";picker.listeners.change();
   assert.equal(elements.get("collector").textContent,"Fut");
-  assert.equal(card.querySelector("h3").textContent,"Életerő");
+  assert.equal(card.querySelector("h3").textContent,"Health");
   assert.equal(card.querySelector(".stat-value").textContent,"+18,3K");
 });
 
@@ -222,6 +227,36 @@ function helpData() {
   return {generatedAt:at,range:{mode:"run",from:"2026-10-30T16:50:44.381Z",to:at,bucketSeconds:60},kinds:[],
     collectionCounts:{},collectionSeries:{},confirmedClaims:3,pendingClaims:0,clickAttempts:3,logExists:true,recent:[]};
 }
+
+test("all displayed dates and request filters use the browser zone, not the UI language or Romania",async()=>{
+  const at="2026-10-31T20:00:00Z";
+  const data={...helpData(),generatedAt:at,lastConfirmedAt:at,recent:[{at,kind:"hp",label:"Health",amount:"18100",confirmed:true}]};
+  for(const [timeZone,hour] of [["Europe/Budapest","21:00:00"],["Europe/Bucharest","22:00:00"],["America/New_York","16:00:00"]]) {
+    const elements=await renderDashboard(data,0,{timeZone});
+    assert.equal(new URL(elements.requestLog[0].url,"http://localhost").searchParams.get("timezone"),timeZone);
+    assert.match(elements.get("range-description").textContent,new RegExp(timeZone));
+    assert.equal(elements.get("last-claim").textContent,hour);
+    assert.ok(elements.get("entries").children[0].children[0].textContent.includes(hour));
+    assert.ok(elements.get("updated").textContent.includes(hour));
+    const picker=elements.get("language");picker.value="en";picker.listeners.change();
+    assert.equal(elements.get("last-claim").textContent,hour,"language must not change timezone");
+    assert.equal(elements.requests(),1);
+  }
+});
+
+test("travel updates timezone on polling and custom date fields are sent with that same zone",async()=>{
+  const at="2026-10-31T20:00:00Z";
+  const elements=await renderDashboard({...helpData(),generatedAt:at,lastConfirmedAt:at},0,{timeZone:"Europe/Bucharest"});
+  elements.setTimeZone("Europe/Budapest");elements.poll();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.get("last-claim").textContent,"21:00:00");
+  elements.get("from").value="2026-10-31T09:15";elements.get("to").value="2026-10-31T10:15";
+  elements.get("custom-range").listeners.submit({preventDefault(){}});
+  await new Promise(resolve=>setImmediate(resolve));
+  const query=new URL(elements.requestLog.at(-1).url,"http://localhost").searchParams;
+  assert.equal(query.get("timezone"),"Europe/Budapest");
+  assert.equal(query.get("from"),"2026-10-31T09:15");assert.equal(query.get("to"),"2026-10-31T10:15");
+});
 test("time-range info opens without selecting a range, refreshing or changing counters",async()=>{
   const elements=await renderDashboard(helpData());
   const opener=elements.get("range-help-open"),dialog=elements.get("range-help");

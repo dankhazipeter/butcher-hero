@@ -104,11 +104,12 @@ class DashboardTests(unittest.TestCase):
         replacement.replace(self.path)
         self.assertEqual(reader.snapshot()[0][0]["event"], "watcher_started")
 
-    def test_bucharest_day_boundary_naive_custom_and_latest_run(self):
+    def test_explicit_bucharest_day_boundary_and_latest_run(self):
         now = parse_time("2026-10-30T11:00:00Z")
-        _, start, _ = time_window({"range": ["today"]}, [], now)
+        _, start, _ = time_window({"range": ["today"], "timezone": ["Europe/Bucharest"]}, [], now)
         self.assertEqual(start, parse_time("2026-10-29T22:00:00Z"))
-        self.assertEqual(parse_time("2026-10-30T12:00"), parse_time("2026-10-30T10:00:00Z"))
+        _, custom, _ = time_window({"from": ["2026-10-30T12:00"], "timezone": ["Europe/Bucharest"]}, [], now)
+        self.assertEqual(custom, parse_time("2026-10-30T10:00:00Z"))
         self.write([event("watcher_started", 0), event("click_sent", 2), event("claim_confirmed_ui", 4),
                     event("watcher_started", 10), event("click_sent", 12, "new"),
                     event("claim_confirmed_ui", 14, "new")])
@@ -123,6 +124,32 @@ class DashboardTests(unittest.TestCase):
                     event("claim_confirmed_ui", 4, "b")])
         result = self.result()
         self.assertEqual(next(row["total"] for row in result["kinds"] if row["kind"] == "regeneration"), "0.3")
+
+    def test_browser_zone_controls_midnight_and_custom_inputs_not_utc_journal(self):
+        now=parse_time("2026-10-31T12:00:00Z")
+        for zone, midnight, custom in (
+            ("Europe/Budapest", "2026-10-30T23:00:00Z", "2026-10-31T08:15:00Z"),
+            ("Europe/Bucharest", "2026-10-30T22:00:00Z", "2026-10-31T07:15:00Z"),
+            ("America/New_York", "2026-10-31T04:00:00Z", "2026-10-31T13:15:00Z"),
+        ):
+            self.assertEqual(time_window({"range":["today"],"timezone":[zone]},[],now)[1],parse_time(midnight))
+            self.assertEqual(time_window({"from":["2026-10-31T09:15"],"to":["2026-10-31T15:00"],"timezone":[zone]},[],now)[1],parse_time(custom))
+            result=self.result({"range":["all"],"timezone":[zone]})
+            self.assertEqual(result["timezone"],zone)
+            self.assertEqual(time_window({"from":["2026-10-31T09:15Z"],"timezone":[zone]},[],now)[1],parse_time("2026-10-31T09:15Z"))
+        self.assertEqual(parse_time("2026-10-31T09:15"),parse_time("2026-10-31T09:15Z"))
+        self.assertEqual(self.result()["timezone"],"UTC","API requests without a browser zone have a neutral default")
+
+    def test_budapest_dst_days_and_nonexistent_local_custom_time(self):
+        for now, midnight in (("2026-03-29T12:00Z","2026-03-28T23:00Z"),("2026-10-25T12:00Z","2026-10-24T22:00Z")):
+            self.assertEqual(time_window({"range":["today"],"timezone":["Europe/Budapest"]},[],parse_time(now))[1],parse_time(midnight))
+        with self.assertRaises(ValueError):
+            time_window({"from":["2026-03-29T02:30"],"timezone":["Europe/Budapest"]},[],parse_time("2026-03-29T12:00Z"))
+
+    def test_invalid_or_duplicate_timezone_is_rejected(self):
+        for values in (["Not/A_Zone"],["../../etc/passwd"],["Europe/Budapest","UTC"],[""]):
+            with self.assertRaises(ValueError):
+                self.result({"range":["all"],"timezone":values})
 
     def test_new_fixed_run_does_not_mix_legacy_data(self):
         run = event("watcher_started", 10)
@@ -283,6 +310,16 @@ class DashboardTests(unittest.TestCase):
                 output.write(json.dumps(event("claim_confirmed_ui", 2)) + "\n")
             with urlopen(base + "/api/rewards?range=all") as response:
                 self.assertEqual(json.load(response)["confirmedClaims"], 1)
+            with urlopen(base + "/api/rewards?range=all&timezone=Europe%2FBudapest") as response:
+                self.assertEqual(json.load(response)["timezone"],"Europe/Budapest")
+            with self.assertRaises(HTTPError) as error:
+                urlopen(base + "/api/rewards?timezone=Not%2FA_Zone")
+            self.assertEqual(error.exception.code,400)
+            error.exception.close()
+            with self.assertRaises(HTTPError) as error:
+                urlopen(base + "/api/rewards?timezone=")
+            self.assertEqual(error.exception.code,400)
+            error.exception.close()
             for path in ("/../AGENTS.md", "/data/free-rewards/events.jsonl", "/locales/../../AGENTS.md", "/locales/en.js/..", "/locales/README.md", "/locales/zz.js"):
                 with self.assertRaises(HTTPError) as error:
                     urlopen(base + path)

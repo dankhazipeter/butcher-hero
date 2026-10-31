@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-31
 
+328: utazásnál a megjelenítés és Ma/customszűrő a böngésző helyi zónáját
+követi, nem mozgatjuk a múltbeli UTCnaplóidőket. MagyarUI-ban is a játék
+Health/HealthRegen/Pierce/Cut/Smash statnevei maradnak azonosíthatók.
+Nem fordításból próbálunk jutalomtípust vagy mennyiséget visszakövetkeztetni.
+
 326: normálüzem saját Terminalból make start / butcher-hero start,
 fejlesztéskor make stop és ellenőrzött újraindítás. Egy inputgazda marad;
 foglalt régi worker/port nem jogosít párhuzamos futásra vagy idegenkillre.

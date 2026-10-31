@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Böngésző szerinti helyi idő és angol játékbeli statnevek magyar felületen is](328-helyi-idozona-es-jatekbeli-statnevek.md)
 - [Üres dashboardlap: futó gyűjtő, változatlan cím, reload utáni helyreállás](327-dashboard-ures-lap-ujratoltes.md)
 - [Közös Terminal-indító: make start, stop, status és bárhonnan használható parancs](326-kozos-terminal-indito.md)
 - [A gyűjtő és a dashboard újabb folyamatkiesése](325-gyujto-es-dashboard-folyamatkieses.md)

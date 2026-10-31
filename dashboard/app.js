@@ -1,7 +1,8 @@
 "use strict";
 (() => {
   const $ = id => document.getElementById(id);
-  const zone = "Europe/Bucharest";
+  function browserZone() {return Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";}
+  let zone = browserZone();
   let storage;try {storage=globalThis.localStorage;} catch {}
   const i18n=RewardI18n.createI18n({catalogs:RewardLocales,storage});
   const t=i18n.t;
@@ -271,7 +272,14 @@
   }
   async function refresh() {
     const version=++sequence;
-    const query=new URLSearchParams({range:mode});
+    const nextZone=browserZone();
+    if(nextZone!==zone) {
+      zone=nextZone;applyLanguage();
+      // Keep an explicitly entered custom wall-time range, but initialise the
+      // inactive quick-range inputs in the newly detected local time.
+      if(mode!=="custom") {$("to").value=localInput(new Date());$("from").value=localInput(new Date(Date.now()-3600e3));}
+    }
+    const query=new URLSearchParams({range:mode,timezone:zone});
     if(mode==="custom") {query.set("from",$("from").value);query.set("to",$("to").value);}
     try {
       const response=await fetch(`/api/rewards?${query}`,{cache:"no-store",signal:AbortSignal.timeout(6000)});

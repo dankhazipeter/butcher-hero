@@ -1,7 +1,8 @@
 {
   "session": "updated-game-2026-10-29",
   "date": "2026-10-31",
-  "timezone": "Europe/Bucharest",
+  "timezone": "Europe/Budapest",
+  "dashboardTimezonePolicy": "328: browser IANA timezone per poll/request; API fallback UTC; journal instants unchanged; HU/EN game stat names stay English",
   "mode": "free-rewards-and-crystal-opening",
   "automaticGameplay": false,
   "automaticObservation": true,
@@ -20,7 +21,7 @@
   "stoppedAt": "2026-10-31T11:40:27.872073+02:00",
   "resumedAt": "2026-10-31T14:22:09.780+02:00",
   "dashboardURL": "http://127.0.0.1:8765/",
-  "dashboardCheck": "327: Empty user IAB dashboard restored by one reload; actual page now live/game running/collector running/charts visible. HTTP and worker stayed healthy, no collector restart or code change. Exact prior loading cause unknown. Proof local .build/ui-proof/dashboard-restored.jpg, not committed.",
+  "dashboardCheck": "328: Browser IANA zone now drives all dates plus API Today/custom filters; HU stat names are game's English originals. Actual new IAB page verified Europe/Budapest/22:18 local time/all8labels. Old tab's tool reload unavailable; user should refresh once. Full173localtests+7JSsyntax passed. Runner80593/dashboard80612/supervisor80613/worker80614/session74565 resumed at21:17:09.646Z after0.56s stop, current logical run preserved. Fresh frames and Health18100 confirmed21:17:41.373Z. Runtime JSON authoritative. Existing CI4launcher-startup timeouts remain a separate unfixed issue. Proof .build/ui-proof/dashboard-local-time.jpg local only.",
   "gameStatus": "326: User requested one-command foreground Terminal runtime. Added make start/stop/status and installed user-local butcher-hero CLI; login zsh resolves it. Shared launcher preserves logical run by default; bare make still setup only. Old owned standalone services stopped; external-cwd status/stop and quick make -C restart/HTTP health verified. TIME_WAIT false conflict reproduced/fixed, no live port takeover. Runner70886/dashboard70890/supervisor70891/session2352 since20:55:51Z; actual runtime JSON authoritative. User game now running; fresh frames and NEW autonomous E5662CA8 crystal cycle20:56:44Z to20:57:04Z completed without recovery/restart. Visually reviewed green40 Lifesteal10.5K result and HUD, separate crystal journal. Legacy gameplay/heartbeat PAUSED.",
   "nextStep": "For user-owned Terminal operation: butcher-hero stop to end transitional AI-run combined instance, then butcher-hero start in own Terminal; Ctrl+C stops both, status works anywhere. Verify Terminal-specific screen/input permissions and fresh frame/actual collection. No login/startup service or shell profile changes. The325death cause remains unknown; separate Smash692 unknown/nil remains open. Full test gate including19new launcher tests required before commit/push."
 }
