@@ -259,6 +259,15 @@
     refresh();
   }
   for(const button of document.querySelectorAll("[data-range]")) button.addEventListener("click",()=>choose(button.dataset.range));
+  const rangeHelp=$("range-help");
+  $("range-help-open").addEventListener("click",()=>{if(!rangeHelp.open) rangeHelp.showModal();});
+  $("range-help-close").addEventListener("click",()=>rangeHelp.close());
+  rangeHelp.addEventListener("close",()=>$("range-help-open").focus({preventScroll:true}));
+  rangeHelp.addEventListener("click",event=>{
+    if(event.target!==rangeHelp) return;
+    const box=rangeHelp.getBoundingClientRect();
+    if(event.clientX<box.left || event.clientX>box.right || event.clientY<box.top || event.clientY>box.bottom) rangeHelp.close();
+  });
   $("custom-range").addEventListener("submit",event=>{event.preventDefault();choose("custom");});
   function localInput(now) {
     const parts=new Intl.DateTimeFormat("sv-SE",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(now);

@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+319: statikus HTMLdialog, i-ikon a data-rangegombok mellett, de sajátadat-
+választó attribútum nélkül. NatívshowModal/close/Escape/fókuszcsapda;
+closeesemény visszafókuszál azikonra. Határolórecten kívüli háttérkattintás
+zár, belsőpadding/fejléc nem. Kulcsok külön HU/EN katalógusban, i18n.apply
+fordítja a tartalmat ésARIA-t is, nincs innerHTML. Backend/runhatár és
+API változatlan; a meglévőadatból/időszakból semmit nem nulláz vagy ír át.
+Teszt-DOM a valódiindex.html statikus kulcsait/attribútumait olvassa;
+nyelvváltási/nyitás/zárás/nem-fetch regresszió+Python időszaktesztek.319.
+
 318: CrystalFlow.abandonUnsentOpening csak opening és0openInventoryküldés
 esetén enged idle-visszatérést,60scooldownnal. A nem-human preclickhiba
 ága hívja; HumanInputBusy nem. Különcrystal_opening_abandoned diagnosztika,

@@ -2,6 +2,15 @@
 
 ## 2026-10-31
 
+319: userCurrentrun jelentését és gombok mellé infóikont kért. Forrás
+time_window ésCLIindító alapján logikai munkamenet, nem processz vagy nap.
+Élőread-onlyAPIkezdés:2026-10-30T16:50:44.381Z (oldalBucharest18:50:44).
+StatikusHU/EN natívdialog, resetsemleges megnyitás/zárás,3Node+3Pythonteszt.
+A meglévőIABkapcsolat browser.userunavailable; külön ideiglenesprofilos,
+helyiheadlessChrome1280×1000EN/375×812HU vizuálisan és natívEscape/fókusz-
+visszaadással ellenőrizve. Nem használt felhasználói profilt vagy játékinputot.
+Gyűjtő21386 változatlanul fut, szerver sem igényel újraindítást.319.
+
 318:317betöltése utáni ellenőrzésben677E54A4openingfázis ismételt
 openInventory/hudpreclicke­lutasítás, nincs elküldött input. A régi90s
 keret mégis elzárta aFreegyűjtést. Szűk javítás: csak el nem küldött első

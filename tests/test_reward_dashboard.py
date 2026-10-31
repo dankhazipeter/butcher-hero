@@ -193,6 +193,35 @@ class DashboardTests(unittest.TestCase):
         self.write(rows + [new_error])
         self.assertEqual(self.result()["observationError"], "new process error")
 
+    def test_current_run_survives_stop_resume_game_event_and_midnight(self):
+        rows = [event("watcher_started", 0), event("click_sent", 2),
+                event("claim_confirmed_ui", 4), event("watcher_stopped", 10)]
+        for kind in ("watcher_resumed", "event_dismissed_ui", "crystal_completed_ui"):
+            row = event(kind, 0)
+            row["timestamp"] = "2026-10-31T02:00:00Z"
+            row["runID"] = "new-physical-process"
+            rows.append(row)
+        self.write(rows)
+        events, bad, exists = Journal(self.path).snapshot()
+        now = parse_time("2026-10-31T03:00:00Z")
+        result = aggregate(events, bad, exists, {"range": ["run"]}, now)
+        self.assertEqual(result["range"]["from"], "2026-10-30T10:00:00.000Z")
+        self.assertEqual(result["confirmedClaims"], 1)
+        self.assertEqual(aggregate(events, bad, exists, {"range": ["today"]}, now)["confirmedClaims"], 0)
+
+    def test_new_session_resets_run_view_but_preserves_all_time_history(self):
+        self.write([event("watcher_started", 0), event("click_sent", 2),
+                    event("claim_confirmed_ui", 4), event("watcher_started", 20)])
+        self.assertEqual(self.result({"range": ["run"]})["confirmedClaims"], 0)
+        self.assertEqual(self.result({"range": ["run"]})["range"]["from"], "2026-10-30T10:00:20.000Z")
+        self.assertEqual(self.result({"range": ["all"]})["confirmedClaims"], 1)
+
+    def test_run_without_start_marker_falls_back_to_retained_log_beginning(self):
+        self.write([event("click_sent", 2), event("claim_confirmed_ui", 4), event("watcher_resumed", 10)])
+        result = self.result({"range": ["run"]})
+        self.assertEqual(result["range"]["from"], "2026-10-30T10:00:02.000Z")
+        self.assertEqual(result["confirmedClaims"], 1)
+
     def test_watcher_status_checks_worker_liveness_and_preserves_frame_age(self):
         path=self.path.with_name("state.json")
         path.write_text(json.dumps({"pid":123,"running":True,"lastCheckedAt":"2026-10-30T10:00:00Z","waitingForMouseRelease":True}))

@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-31
 
+319: UIidőszak magyarázata nem új gyűjtési munkamenet. Nem állítjuk le a
+gyűjtőt, nem indítjuk újra folytatás nélkül, és nem töröljük a logot azért,
+hogy a Currentrun rövidebbnek látsszon. A runhatár a valódiwatcher_started;
+szünet/technikaiújraindítás nálunk --resume-run-nal ugyanazt folytatja.
+
 318: az aktiváláskor megszűnő/elutasított kristályjelzés nem indokol90s
 Freevárakozást, ha a legelső kattintás sem ment ki. Ilyenkor megszakítás és
 60s újrakeresési szünet, nem ismételt fókuszvillogtatás. Ez nem alkalmazható

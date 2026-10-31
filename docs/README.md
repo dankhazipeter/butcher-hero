@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Current run jelentése és időszakszűrő infóablak](319-current-run-es-idoszak-info.md)
+
 - [El nem küldött kristálynyitás ne foglalja a Free-gyűjtést](318-elutasitott-kristalynyitas-feloldasa.md)
 
 - [Esemény vége: NO,THANKS → CONTINUE → HUD](317-event-vege-kepernyok.md)

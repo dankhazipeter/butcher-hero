@@ -69,6 +69,10 @@ async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFet
     replaceChildren(...children) {this.children=children;}
     setAttribute(key,value) {this.attributes[key]=value;if(key==="class") this.className=value;}
     addEventListener(name,callback) {this.listeners[name]=callback;}
+    showModal() {this.open=true;this.showModalCalls=(this.showModalCalls||0)+1;}
+    close() {this.open=false;this.listeners.close?.();}
+    focus(options) {this.focused=true;this.focusOptions=options;}
+    getAttribute(key) {return this.attributes[key];}
     getBoundingClientRect() {return {width:this.width||0,left:0,top:0};}
     querySelector(selector) {
       for(const child of this.children) {
@@ -87,8 +91,26 @@ async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFet
     },
     createElement(tag) {return new Element(tag);},createElementNS(ns,tag) {return new Element(tag);},
     createTextNode(text) {return {textContent:text};},
-    querySelectorAll() {return [];}, addEventListener() {},
+    querySelectorAll(selector) {
+      if(selector==="[data-range]") return staticNodes.filter(node=>node.dataset.range);
+      if(selector==="[data-i18n]") return staticNodes.filter(node=>node.dataset.i18n);
+      const attribute=/^\[(data-i18n-(?:aria-label|title))\]$/.exec(selector)?.[1];
+      return attribute?staticNodes.filter(node=>Object.hasOwn(node.attributes,attribute)):[];
+    }, addEventListener() {},
   };
+  // Register the real HTML's static hooks rather than fabricating modal labels.
+  const staticNodes=[];
+  const html=fs.readFileSync(path.join(__dirname,"../dashboard/index.html"),"utf8");
+  for(const [,tag,attributes] of html.matchAll(/<([a-z][a-z\d-]*)\b([^<>]*)>/gi)) {
+    const attrs=Object.fromEntries([...attributes.matchAll(/([\w-]+)="([^"]*)"/g)].map(m=>[m[1],m[2]]));
+    const node=attrs.id?document.getElementById(attrs.id):new Element(tag);
+    node.tagName=tag;
+    for(const [key,value] of Object.entries(attrs)) {
+      node.setAttribute(key,value);
+      if(key.startsWith("data-")) node.dataset[key.slice(5).replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase())]=value;
+    }
+    staticNodes.push(node);
+  }
   let requests=0,scheduled;
   const storage={getItem(){return savedLanguage;},setItem(key,value){savedLanguage=value;}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../dashboard/app.js"),"utf8"),{
@@ -101,7 +123,7 @@ async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFet
     fetch:async()=>{requests++;if(typeof failFetch==="function"?failFetch(requests):failFetch) throw new Error("offline");return {ok:true,json:async()=>data};},
   });
   await new Promise(resolve=>setImmediate(resolve));
-  elements.document=document;elements.storage=storage;elements.requests=()=>requests;
+  elements.document=document;elements.storage=storage;elements.requests=()=>requests;elements.staticNodes=staticNodes;
   elements.poll=()=>scheduled();
   return elements;
 }
@@ -192,6 +214,60 @@ test("saved English selection is used at startup",async()=>{
   assert.equal(elements.document.documentElement.lang,"en");
   assert.equal(elements.get("language").value,"en");
   assert.equal(elements.get("last-claim").textContent,"None yet");
+});
+
+function helpData() {
+  const at=new Date().toISOString();
+  return {generatedAt:at,range:{mode:"run",from:"2026-10-30T16:50:44.381Z",to:at,bucketSeconds:60},kinds:[],
+    collectionCounts:{},collectionSeries:{},confirmedClaims:3,pendingClaims:0,clickAttempts:3,logExists:true,recent:[]};
+}
+test("time-range info opens without selecting a range, refreshing or changing counters",async()=>{
+  const elements=await renderDashboard(helpData());
+  const opener=elements.get("range-help-open"),dialog=elements.get("range-help");
+  const description=elements.get("range-description").textContent;
+  assert.equal(opener.attributes["aria-haspopup"],"dialog");
+  assert.equal(opener.attributes["aria-controls"],"range-help");
+  assert.equal(opener.dataset.range,undefined,"info must not become a range selection");
+  assert.equal(dialog.attributes["aria-labelledby"],"range-help-title");
+  assert.equal(Boolean(dialog.open),false);
+  opener.listeners.click();opener.listeners.click();
+  assert.equal(dialog.open,true);assert.equal(dialog.showModalCalls,1);
+  assert.equal(elements.requests(),1);
+  assert.equal(elements.get("confirmed").textContent,"3");
+  assert.equal(elements.get("range-description").textContent,description);
+  elements.get("range-help-close").listeners.click();
+  assert.equal(dialog.open,false);assert.equal(opener.focused,true);
+  assert.equal(opener.focusOptions.preventScroll,true);
+});
+test("info dialog ignores inside clicks, closes on backdrop and keeps native Escape semantics",async()=>{
+  const elements=await renderDashboard(helpData()),dialog=elements.get("range-help");
+  const opener=elements.get("range-help-open");opener.listeners.click();
+  dialog.getBoundingClientRect=()=>({left:100,right:600,top:100,bottom:500});
+  dialog.listeners.click({target:elements.get("range-help-title"),clientX:150,clientY:150});
+  assert.equal(dialog.open,true);
+  dialog.listeners.click({target:dialog,clientX:150,clientY:150});
+  assert.equal(dialog.open,true,"dialog padding is not its backdrop");
+  dialog.listeners.click({target:dialog,clientX:50,clientY:150});
+  assert.equal(dialog.open,false);assert.equal(opener.focused,true);
+  assert.equal(dialog.listeners.cancel,undefined,"do not prevent the native Escape-to-close action");
+  const html=fs.readFileSync(path.join(__dirname,"../dashboard/index.html"),"utf8");
+  assert.match(html,/<dialog\b[^>]*id="range-help"/);
+  assert.match(html,/<button\b[^>]*id="range-help-close"[^>]*autofocus/);
+});
+test("help is translated on first load and language changes preserve open state and filters",async()=>{
+  const elements=await renderDashboard(helpData(),0,{savedLanguage:"en"});
+  const title=elements.get("range-help-title"),opener=elements.get("range-help-open"),dialog=elements.get("range-help");
+  assert.equal(title.textContent,"What do the time ranges mean?");
+  assert.equal(opener.attributes["aria-label"],title.textContent);
+  opener.listeners.click();
+  const from=elements.get("from").value,to=elements.get("to").value;
+  const picker=elements.get("language");picker.value="hu";picker.listeners.change();
+  assert.equal(dialog.open,true);assert.equal(title.textContent,"Mit jelentenek az időszakok?");
+  assert.equal(elements.get("range-help-close").attributes["aria-label"],"Bezárás");
+  assert.equal(elements.staticNodes.find(node=>node.dataset.i18n==="rangeHelpTechnical").textContent,
+    require("../dashboard/locales/hu.js").messages.rangeHelpTechnical);
+  assert.equal(elements.get("from").value,from);assert.equal(elements.get("to").value,to);
+  assert.equal(elements.requests(),1);
 });
 
 test("switching language after a connection failure cannot mark the collector healthy",async()=>{

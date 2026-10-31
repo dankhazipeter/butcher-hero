@@ -1,5 +1,20 @@
 # Butcher Hero — aktív projektutasítások
 
+## Időszakszűrő súgó — 2026-10-31 (319)
+
+Current run/Mostani futás = a legutolsó watcher_started óta megőrzött
+logikai gyűjtési munkamenet, nem processz/chat/játék életideje. A --resume-run
+watcher_resumed-et ír, nem nulláz: szünet/automatikus újraindítás/éjfél/UI-
+frissítés/eseményvége sem új kezdet. Új alapindítás új watcher_started-et
+ír; a régi napló nem törlődik, Minden nézetben megmarad. Kezdőjel nélküli
+naplónál a megőrzött napló legkorábbi ideje a fallback. Backend változatlan.
+A szűrőgombok mellett i-ikon natívdialogot nyit, HU/EN fájlból fordítva;
+Escape/X/háttérkattintás bezár, fókusz azikonra vissza. Nemdata-rangegomb,
+nincs reset/újfetch/gameinput.3Node+3Pythonúj regresszió. IzoláltChrome
+asztali/mobilUI+Escape+fókusz ellenőrzött;119helyi tesztes teljes kapu.
+Gyűjtő21386 nem állt le; csak statikusUI-fájlok változtak, meglévőoldal
+egyszer újratöltendő. Nem indítunk új statfutást pusztaUIkérésből.319.
+
 ## Kiegészítő gyűjtésvédelmi javítás — 2026-10-31 (318)
 
 317élesfigyelésekor677E54A4kristálynyitás ismételten preclickopenInventory/hud
@@ -245,6 +260,12 @@ The page supports HU/EN, period/run filters, per-stat growth, a shared chart
 of **collection counts**, and recent reward rows. It reads the journal
 automatically; the status indicator distinguishes a fresh live worker,
 mouse-related waiting, stopped/stale state and an unreachable backend.
+The small info button next to the time-range buttons explains their meaning
+in a keyboard-accessible dialog. Current run is the logical session since
+the latest `watcher_started`, not a single process or calendar day.
+`--resume-run` preserves it across pauses/restarts; a new non-resumed launch
+starts a new view without deleting All time history. Refreshing this page
+or changing ranges does not reset anything. See docs/319.
 A process PID alone is not proof of successful collection.
 
 Local files (not committed to Git):

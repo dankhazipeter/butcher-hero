@@ -38,10 +38,22 @@
         <button type="button" data-range="hour" aria-pressed="false" data-i18n="hour">Utolsó óra</button>
         <button type="button" data-range="day" aria-pressed="false" data-i18n="day">24 óra</button>
         <button type="button" data-range="all" aria-pressed="false" data-i18n="all">Minden</button>
+        <button type="button" id="range-help-open" class="range-help-trigger" aria-haspopup="dialog" aria-controls="range-help" aria-label="Mit jelentenek az időszakok?" title="Mit jelentenek az időszakok?" data-i18n-aria-label="rangeHelpOpen" data-i18n-title="rangeHelpOpen"><span aria-hidden="true">i</span></button>
       </div>
       <form id="custom-range"><label><span data-i18n="from">Kezdet</span><input type="datetime-local" id="from" required></label>
       <label><span data-i18n="to">Vége</span><input type="datetime-local" id="to" required></label><button type="submit" data-i18n="filter">Szűrés</button></form>
     </section>
+    <dialog id="range-help" class="range-help" aria-labelledby="range-help-title" aria-describedby="range-help-intro">
+      <div class="range-help-heading"><h2 id="range-help-title" data-i18n="rangeHelpOpen">Mit jelentenek az időszakok?</h2><button type="button" id="range-help-close" class="range-help-close" autofocus aria-label="Bezárás" data-i18n-aria-label="close"><span aria-hidden="true">×</span></button></div>
+      <p id="range-help-intro" data-i18n="rangeHelpIntro">Ezek a gombok csak a mentett napló megjelenített időszakát választják ki. Nem indítják vagy állítják le a gyűjtőt, és nem törölnek adatot.</p>
+      <h3 data-i18n="run">Mostani futás</h3>
+      <p data-i18n="rangeHelpRun">A legutóbbi új gyűjtési munkamenet kezdete óta naplózott átvételek. Nem a jelenlegi programfolyamat életidejét jelenti: szüneteken és folytatásos újraindításokon át is megmarad.</p>
+      <p data-i18n="rangeHelpReset">Új munkamenetként indított gyűjtőnél kezdődik újra ez a nézet. Nem nullázza az éjfél, az oldal frissítése, az időszakváltás, a játék újranyitása vagy az esemény vége. A korábbi adatok a Minden nézetben megmaradnak.</p>
+      <h3 data-i18n="rangeHelpOtherTitle">A többi időszak</h3>
+      <p data-i18n="rangeHelpOther">Ma: a kijelzett időzóna szerinti éjféltől mostanáig. Utolsó óra és 24 óra: gördülő időablak. Minden: a teljes megőrzött napló. A Kezdet és Vége mezőkkel saját időszak választható.</p>
+      <p class="subtle" data-i18n="rangeHelpScope">Csak a naplózott Free-átvételekről van szó. A kristályok és az eseményablakok kezelése külön naplóba kerül.</p>
+      <details><summary data-i18n="rangeHelpTechnicalTitle">Technikai részletek</summary><p data-i18n="rangeHelpTechnical">Az utolsó watcher_started naplóbejegyzés jelöli a kezdetet. Az alap indítás új munkamenetet jelöl; a --resume-run kapcsoló watcher_resumed bejegyzéssel folytatja a meglévőt. Ha még nincs kezdőbejegyzés, a nézet a megőrzött napló elejétől indul.</p></details>
+    </dialog>
     <p id="range-description" class="range-description">Időzóna: Europe/Bucharest</p>
     <div class="notice" id="data-quality-note" role="status" hidden data-i18n="historicalWarning">Korábbi futások naplóadatai is szerepelnek: régi Health-félreolvasások és hiányzó átvételi igazolások maradhattak bennük. A javított gyűjtő adataihoz válaszd a Mostani futást.</div>
     <div id="notice" class="notice" role="status" hidden></div>
