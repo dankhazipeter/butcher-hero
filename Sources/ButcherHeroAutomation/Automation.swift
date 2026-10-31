@@ -149,6 +149,43 @@ private enum HumanInput {
         try? await Task.sleep(nanoseconds:70_000_000)
         up.post(tap:.cghidEventTap)
     }
+    func eventEndClick(_ action:EventEndAction,frame:Frame,cancellation:Cancellation,
+                       validated:(Frame,EventEndObservation)throws->Void)async throws {
+        guard HumanInput.ready else{throw HumanInputBusy()}
+        guard AXIsProcessTrusted(),let pid=frame.window.owningApplication?.processID,
+              let app=NSRunningApplication(processIdentifier:pid) else{throw AutomationError("Event input unavailable")}
+        let previous=NSWorkspace.shared.frontmostApplication
+        var cursor:CGPoint?,warped=false
+        app.activate()
+        defer {
+            if !HumanInput.buttonDown {
+                if warped,let cursor {CGWarpMouseCursorPosition(cursor)}
+                if let previous,previous.processIdentifier != pid {previous.activate()}
+            }
+        }
+        try await Task.sleep(nanoseconds:180_000_000)
+        guard !cancellation.requested,HumanInput.ready else{throw HumanInputBusy()}
+        let fresh=try await self.frame()
+        guard fresh.window.windowID==frame.window.windowID else{throw AutomationError("Event window changed")}
+        let hud=try RewardVision().observe(fresh.image).gameHUDVisible
+        let observation=try EventEndVision().observe(fresh.image,hudVisible:hud)
+        let age=Date().timeIntervalSince(fresh.capturedAt)
+        guard action.permits(observation,sameWindow:fresh.window.windowID==frame.window.windowID,
+                             cancelled:cancellation.requested,elapsed:age)
+        else{throw AutomationError("Event preclick rejected: \(action.rawValue)/\(observation.screen.rawValue); age=\(age);cancelled=\(cancellation.requested)")}
+        try validated(fresh,observation)
+        let point=CGPoint(x:fresh.window.frame.minX+action.point.x*fresh.window.frame.width,
+                          y:fresh.window.frame.minY+action.point.y*fresh.window.frame.height)
+        guard !cancellation.requested,HumanInput.ready,
+              let source=CGEventSource(stateID:.hidSystemState),
+              let down=CGEvent(mouseEventSource:source,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),
+              let up=CGEvent(mouseEventSource:source,mouseType:.leftMouseUp,mouseCursorPosition:point,mouseButton:.left)
+        else{throw HumanInputBusy()}
+        cursor=CGEvent(source:nil)?.location;CGWarpMouseCursorPosition(point);warped=true
+        down.post(tap:.cghidEventTap)
+        try? await Task.sleep(nanoseconds:70_000_000)
+        up.post(tap:.cghidEventTap)
+    }
 }
 
 private struct JournalEvent:Codable {
@@ -171,6 +208,7 @@ private struct WatchState:Codable {
     var verificationMode:String? = nil
     var ocrBackend:String? = nil
     var crystalPhase:String? = nil
+    var eventEndPhase:String? = nil
 }
 
 private final class Journal {
@@ -227,11 +265,15 @@ private final class Journal {
             let encoder=JSONEncoder();encoder.outputFormatting=[.prettyPrinted,.sortedKeys]
             print(String(decoding:try encoder.encode(RewardVision().observe(image)),as:UTF8.self));return
         }
-        if command=="inspect-crystal" {
+        if command=="inspect-crystal" || command=="inspect-event" {
             guard args.count==2,let source=CGImageSourceCreateWithURL(URL(fileURLWithPath:args[1]) as CFURL,nil),
                   let image=CGImageSourceCreateImageAtIndex(source,0,nil) else{throw AutomationError("inspect-crystal <frame.png>")}
             let hud=try RewardVision().observe(image).gameHUDVisible
-            print(String(decoding:try JSONEncoder().encode(CrystalVision().observe(image,hudVisible:hud)),as:UTF8.self));return
+            if command=="inspect-event" {
+                print(String(decoding:try JSONEncoder().encode(EventEndVision().observe(image,hudVisible:hud)),as:UTF8.self))
+            } else {
+                print(String(decoding:try JSONEncoder().encode(CrystalVision().observe(image,hudVisible:hud)),as:UTF8.self))
+            };return
         }
         if command=="snapshot" {
             guard args.count==2 else{throw AutomationError("snapshot <output.png>")}
@@ -271,6 +313,9 @@ private final class Journal {
         let crystalJournal=try Journal(root:root.deletingLastPathComponent().appendingPathComponent("crystal-rewards"))
         let crystalVision=CrystalVision()
         var crystal=CrystalFlow(),crystalID:String?,crystalScreen:CrystalScreen?,crystalFailure:String?
+        let eventJournal=try Journal(root:root.deletingLastPathComponent().appendingPathComponent("event-dismissals"))
+        let eventVision=EventEndVision()
+        var eventFlow=EventEndFlow(),eventID:String?,eventScreen:EventEndScreen?,eventFailure:String?
         if recoverCrystal {
             let path=crystalJournal.root.appendingPathComponent("events.jsonl")
             let events=(try String(contentsOf:path,encoding:.utf8)).split(separator:"\n").compactMap{try? JSONDecoder().decode(JournalEvent.self,from:Data($0.utf8))}
@@ -330,6 +375,56 @@ private final class Journal {
                 }
                 state.lastCheckedAt=Journal.stamp(frame.capturedAt)
                 if lastError != nil {try journal.append("capture_recovered");lastError=nil}
+                // Recognised event overlays have priority over Free and crystals.
+                // Their disappearance must never count as a Free reward claim.
+                let eo=try eventVision.observe(frame.image,hudVisible:observation.gameHUDVisible)
+                let eventWasActive=eventFlow.active,eventCompleted=eventFlow.completed
+                let eventAction=eventFlow.observe(eo,now:tick,inputReady:HumanInput.ready)
+                state.eventEndPhase=eventFlow.phase.rawValue
+                if !eventWasActive && eventFlow.active {
+                    eventID=UUID().uuidString;eventScreen=nil;eventFailure=nil
+                    try eventJournal.append("event_started",claimID:eventID)
+                }
+                // Reserve even the first recognised frame while stability builds.
+                if EventEndInputPolicy.reservesInput(screen:eo.screen,active:eventFlow.active,wasActive:eventWasActive) {
+                    if let p=pending {
+                        try journal.append("claim_unconfirmed",claimID:p.id,reward:p.reward,message:"Event overlay interrupted Free verification; no reward inferred from its disappearance")
+                        pending=nil
+                    }
+                    stableKey=nil;stableCount=0;candidateID=nil;lastCandidateReadableAt=nil
+                    state.waitingForMouseRelease = !HumanInput.ready
+                    if eventFlow.active || eventWasActive {
+                        if eo.screen != eventScreen {
+                            eventScreen=eo.screen
+                            let proof=try eventJournal.image(frame.image,id:eventID ?? eventJournal.runID,suffix:"\(eo.screen.rawValue)-\(UUID().uuidString)")
+                            try eventJournal.append("event_screen",claimID:eventID,evidence:proof,message:"\(eo.screen.rawValue); \(eo.texts)")
+                        }
+                        if eventFlow.failure != eventFailure,let failure=eventFlow.failure {
+                            eventFailure=failure;try eventJournal.append("event_blocked",claimID:eventID,message:failure)
+                        }
+                        if let action=eventAction,!dryRun {
+                            do {
+                                try await capture.eventEndClick(action,frame:frame,cancellation:cancel) {fresh,current in
+                                    let proof=try eventJournal.image(fresh.image,id:eventID ?? eventJournal.runID,suffix:"before-\(action.rawValue)-\(UUID().uuidString)")
+                                    try eventJournal.append("event_click_validated",claimID:eventID,evidence:proof,message:"\(action.rawValue); \(current.texts)")
+                                }
+                                eventFlow.sent(action,now:ProcessInfo.processInfo.systemUptime)
+                                try eventJournal.append("event_click_sent",claimID:eventID,message:action.rawValue)
+                            } catch is HumanInputBusy {state.waitingForMouseRelease=true}
+                            catch {try eventJournal.append("event_click_rejected",claimID:eventID,message:error.localizedDescription)}
+                        }
+                        if eventFlow.completed>eventCompleted {
+                            try eventJournal.append("event_dismissed_ui",claimID:eventID,message:"Event Continue sent and two subsequent game-HUD frames observed; no purchase or reward booked")
+                        } else if eventWasActive && !eventFlow.active {
+                            try eventJournal.append("event_returned_to_hud",claimID:eventID,message:"HUD returned without a fully observed automated Continue; not counted as an automated dismissal or reward")
+                        }
+                    }
+                    state.pendingClaimID=pending?.id
+                    try journal.state(state)
+                    let delay=max(0,interval-(ProcessInfo.processInfo.systemUptime-tick))
+                    if delay>0 {try? await Task.sleep(nanoseconds:UInt64(delay*1_000_000_000))}
+                    continue
+                }
                 // Single input owner: crystal transaction has priority. Free
                 // candidates cannot survive across its overlays. A pending Free
                 // claim must finish verification before a new transaction starts.
@@ -551,6 +646,7 @@ private final class Journal {
     ButcherHeroAutomation watch-free [--interval 1] [--seconds 60] [--dry-run] [--resume-run] [--recover-crystal]
     ButcherHeroAutomation inspect <frame.png>
     ButcherHeroAutomation inspect-crystal <frame.png>
+    ButcherHeroAutomation inspect-event <frame.png>
     ButcherHeroAutomation snapshot <output.png>  # passive single window capture
     ButcherHeroAutomation stats [--from 2026-10-29T22:00:00+02:00] [--to 2026-10-30T08:00:00+02:00]
     ButcherHeroAutomation reconcile [--current-run]  # offline re-read of uncertain saved rewards

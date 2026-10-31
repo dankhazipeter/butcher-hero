@@ -6,7 +6,8 @@
   "automaticGameplay": false,
   "automaticObservation": true,
   "observationIntervalSeconds": 1,
-  "allowedAutomaticActions": ["claim left event FREE reward", "red-dot crystal icon -> x1 Open -> geode strikes -> Continue -> inventory X -> HUD"],
+  "allowedAutomaticActions": ["claim left event FREE reward", "red-dot crystal icon -> x1 Open -> geode strikes -> Continue -> inventory X -> HUD", "recognised expired Diamond League offer NO THANKS -> event summary CONTINUE -> HUD"],
+  "eventDismissalLog": "data/event-dismissals/events.jsonl",
   "crystalLog": "data/crystal-rewards/events.jsonl",
   "rewardLog": "data/free-rewards/events.jsonl",
   "watcherStatus": "data/free-rewards/state.json",
@@ -19,5 +20,5 @@
   "stoppedAt": "2026-10-31T11:40:27.872073+02:00",
   "resumedAt": "2026-10-31T14:22:09.780+02:00",
   "dashboardURL": "http://127.0.0.1:8765/",
-  "nextStep": "Explicit user restart request overrides314STOP for Free+crystal collection only. Supervisor95036/worker95041/persistent session91364 started2026-10-31T12:22:09Z with --resume-run; existing logical statistics run preserved. First Health18100claim37F08443 confirmed12:22:31.699Z, explicit+18.1Kheart afterimage reviewed. Fresh state and PID authority remain data/free-rewards/state.json. Crystal branch active but no new crystal completion verified in this restart yet. Legacy bot and heartbeat remain PAUSED. Separate PierceDamage amount=nil issue remains in06. No movement/combat/shop/sell/upgrade/purchases/ads. Restart documented in316."
+  "nextStep": "User-authorised Diamond League expiry dismissal added: known offer NO THANKS, then separately recognised EVENT ENDS summary CONTINUE. Event input priority before crystal/Free; interrupted pending Free claim is not inferred as success. Two user screenshots,10newtests and47existingnegativeimages; full112localtestsPASS including synthetic header occlusion. Initial18:10Z deployment waited for game window; it is available again. Final staged release deployed18:17:20Z with --resume-run, supervisor18213/worker18248/session63806. First new PierceDamage575claimAE1DB63B confirmed18:17:37Z, explicit+575arrow afterimage reviewed. The actual event popup is no longer open, so no live automated event dismissal is claimed; event journal still empty at this checkpoint. Runtime authority remains data/free-rewards/state.json. Legacy bot and heartbeat PAUSED. No movement/combat/shop/sell/upgrade/purchases/ads or unknown-modal handling. Current docs317; earlier restart316 and amount=nil issues in06 preserved."
 }

@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+317: a konkrét DiamondLeague kétzáróképe implementált és tesztelt.
+Éles NO,THANKS→CONTINUE→HUD még ellenőrizendő: a játékablak újra
+elérhető és újFree575igazolt, de ez a popup már nincs nyitva. Ez nem az
+automatikusbezárás bizonyítéka. Más league/felbontás/szövegváltozat
+csak új valós példával engedélyezhető; nincs általánosmodalbezáró.
+
 313záró Free-naplóellenőrzés:09:25:06Z/09:28:19Z/09:30:28ZPierceDamage
 átvétel igazolt, de az összegnil. UtóbbiF8A1C9B4 előképe:
 data/free-rewards/evidence/F8A1C9B4-B70B-4D28-9F99-3AFA5C7F113A-validated-9902009E-0CE1-4EDE-A9F2-93A646B5899B.png.

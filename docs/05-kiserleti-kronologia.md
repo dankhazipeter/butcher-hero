@@ -2,6 +2,18 @@
 
 ## 2026-10-31
 
+317: új userkétkép és kért kezelés: DiamondLeague TimeisoverNO,THANKS,
+majd EVENTENDSösszesítőCONTINUE. Kiderült: az offer gameHUDVisible=true
+a saját pinkgomb/zöldcsík miatt, ezért önállóeventfelismerés aHUDdöntés
+ELŐTT. Különállapotgép, frisspreclick és kéziaktivításvédelmek,2userPNG+
+10újteszt+47korábbi negatív. Teljes112helyi tesztPASS. Régiworker futott
+a külön releasebuild alatt; rövid betöltés --resume-run-nal,18:10:34Z
+supervisor16250/worker16284/session36072. Játékablak nem található,
+program ekkor várakozott. Utána újra elérhető játékablak. Végsőbuild
+18:17:20Zsupervisor18213/worker18248/session63806,18:17:37ZPierceDamage575
+igazolt; AE1DB63Butóképen+575nyíl. Eventnapló üres, a konkrétpopup ekkor
+nincs nyitva: éleseventbezárás továbbra nem állított.317.
+
 316: kifejezett újraindítási kérés. Régiworker/felügyelő nem futott,
 12:22:09Z95036supervisor+95041worker/session91364 --resume-run módban
 elindult. FrissHUD és1s képidő.12:22:28ZHealth18100észlelés,

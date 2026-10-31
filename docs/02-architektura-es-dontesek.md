@@ -2,6 +2,17 @@
 
 ## Aktív — 2026-10-31
 
+317: EventEndVision+EventEndFlow külön, tesztelhető modul. Pink/goldgomb
+pixelkapu után négy szűkTesseractsáv igazolja a konkrétDiamondLeague
+offer/summary képernyőt. Ismert eventet aHUDszínheurisztika előtt kell
+felismerni, mert az offer átmegy a régiHUD-kapun. Friss aktiválás utáni
+preclick azonoswindow+legfeljebb3s kép+STOP+egérvédelemmel. Inputprioritás
+event→kristály→Free; már az elsőeventképen függőFreeclaim érvénytelenítve,
+nem következtetünk jutalomra egy köztes overlay eltűnéséből. Eventnapló
+különJournal, state.eventEndPhase. DiamondLeagueeredményt nem olvasunk
+be Freeösszegként. Rögzített pozitív és47korábbi negatív kép + tiszta
+állapotsor/regresszió a közös commit/push/PR-kapuban. Részletek317.
+
 313: CrystalVision szűk pixelkapuk+szöveghorgonyok alapján HUD/jelzés,
 inventoryReady/Empty, geode és eredmény képernyőket különít el. Nem teljes
 képes OCR: csak releváns kis sávok, Tesseract, nincs AppleVision. A változó

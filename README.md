@@ -49,6 +49,9 @@ alattiFree-jutalmat, átveszi és naplózza a8jutalomtípus egyikeként.
 Ugyanez a figyelő a piros ponttal jelzett kristályt is megnyitja az engedélyezett
 x1 → feltörés → Continue → bezárás sorrendben, friss képi ellenőrzésekkel.
 A korábbi teljes játékbot nem aktív. [Kristályfolyamat és korlátok](docs/313-kristalygyujtes-es-kozos-vezerles.md).
+Az ismert DiamondLeague eseményzáráskor aNO,THANKS, majd az összesítő
+CONTINUEgombját kezeli; áras ajánlatokra nem kattint. Két frissHUD-kép
+után folytatja a gyűjtést. [Eseményzáró képernyők](docs/317-event-vege-kepernyok.md).
 Külön napló: `data/crystal-rewards/events.jsonl` és `evidence/`; a kristály
 nem növeli a bal oldali Free-statisztikát. A `CrystalTests` valódi képei és
 állapotsortesztjei ugyanabban a `make test` / commit / push / PR-kapuban futnak.
@@ -72,6 +75,7 @@ Nincs AppleVisionOCRhívás ebben a körben.
 Terminálban közvetlenül: `.build/release/ButcherHeroAutomation watch-free --interval 1`.
 Összesítés: `.build/release/ButcherHeroAutomation stats --from <ISO8601> --to <ISO8601>`.
 Napló: `data/free-rewards/events.jsonl`, státusz: `data/free-rewards/state.json`.
+Eseményablakok külön naplója: `data/event-dismissals/events.jsonl`.
 [Részletes leírás és élő teszt](docs/282-nyolc-free-jutalom-es-naplozas.md).
 
 Az alábbi első napi előkészítés már történeti.

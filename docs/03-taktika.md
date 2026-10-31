@@ -2,6 +2,13 @@
 
 ## Aktív — 2026-10-31
 
+317: konkrét lejártDiamondLeague offernél NO,THANKS, külön összesítőn
+CONTINUE; a zöldáras+30m/+60m ajánlatok sosem célok. Másik league vagy
+ismeretlen modal nem kap automatikus elutasítást. A summary kéziNoThanks
+után önállóan is felismerhető. A kettősHUD-visszatérésig nincs Free- vagy
+kristályinput; eventkattintás és elutasítás nem jutalom. Kézi egér/húzás
+nem fogyasztja a küldöttpróbák keretét, emberi HUD-visszatérés nem deadlock.
+
 313: piros pontnál egy x1nyitás, nem inventorymenedzsment. A panel alatt
 nem próbálunk Freeajándékot szedni, de a közösfigyelő nem áll le. A result
 Continue után a főpanel saját felsőX-e zár; a geodeX-e sosem helyettesíti.

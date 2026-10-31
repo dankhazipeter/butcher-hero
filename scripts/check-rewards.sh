@@ -4,7 +4,7 @@ set -eu
 cd "$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 export PYTHONDONTWRITEBYTECODE=1
 command -v tesseract >/dev/null || { printf 'Missing OCR engine: install with brew install tesseract\n' >&2; exit 1; }
-swift test --filter '(Reward(Corpus)?|Crystal)Tests'
+swift test --filter '(Reward(Corpus)?|Crystal|EventEnd)Tests'
 python3 -m unittest discover -s tests -p 'test_reward_dashboard.py'
 python3 -m unittest discover -s tests -p 'test_git_test_gate.py'
 python3 -m unittest discover -s tests -p 'test_free_supervisor.py'

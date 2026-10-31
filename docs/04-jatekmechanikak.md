@@ -1,5 +1,18 @@
 # Új verzió megfigyelései — 2026-10-29
 
+## Lejárt DiamondLeague két képernyője — 2026-10-31 (317)
+
+Felhasználói képi tény: a Time is over / DIAMOND LEAGUE panel alján
+NO,THANKS, fölötte két zöld, pénzáras időhosszabbítás. A következő külön
+EVENT ENDS! / DIAMOND LEAGUE összesítő alján aranyCONTINUE; ez hoz vissza
+a játékba a felhasználó szerint. A CRYSTAL REWARDS és az összesítőn látszó
+statok nem Free-átvételek. Képes tesztben az offer régiHUDheurisztikája
+true: saját pinkgomb+zöldprogresszió megtévesztő, ezért az eventfelismerő
+megelőzi ezt. Ezekből nem általánosítunk más league-re, eladási/vásárlási
+gombokra vagy mindenCONTINUE-ra. Éles átmenet ebben a körben még nincs
+igazolva; az átmenetileg hiányzó játékablak újra elérhető, de ez a popup
+már nincs nyitva. Forrásképek és tesztek317-ben.
+
 ## No Ads és a feladatok megjelenése — 2026-10-31 (315)
 
 Felhasználói pontosítás: No Ads nélkül egyáltalán nem jelenik meg aFree-

@@ -1,5 +1,27 @@
 # Butcher Hero — aktív projektutasítások
 
+## Aktív új engedély — eseményzáró képernyők, 2026-10-31 (317)
+
+A felhasználó két konkrét DiamondLeague záróképet adott: Time is over
+ajánlat NO,THANKS → EVENT ENDS! összesítő CONTINUE → játékHUD. Csak ezek
+a bemutatott elutasítások engedélyezettek; az áras zöld ajánlatokra nincs input.
+EventEndVision a konkrét fejléc+kontextus+gombszöveg+szín alapján dönt,
+MÉG a régi HUDheurisztika elfogadása előtt: az ajánlat pinkgomb+zöldcsíkja
+tévesHUDtrue-t okoz. EventEndFlow két stabilkezdőkép, frisspreclick/azonosablak/
+STOP/egérvédelem, max3elküldöttpróba/lépés,1s újrapróba,60s határ.
+Az összesítő önállóan is kezelhető, ha aNO,THANKS-et ember nyomta meg.
+Kézi HUD-visszatérés feloldja a sajátUIvárakozást, nem gyárt automatikus sikert.
+Sorrend:event → kristály → Free. Első felismert eventképnél a megszakított
+függőFreeclaim claim_unconfirmed, nincs utólagos eltűnésből jutalomkönyvelés.
+Napló külön:data/event-dismissals/events.jsonl+evidence; state.eventEndPhase.
+10újteszt/2valódi userkép+47régiFree/kristálynegatív; teljes112tesztPASS.
+Elsőbetöltéskor18:10Znem volt játékablak; most újra elérhető. Végsőbuild
+18:17:20Zsupervisor18213/worker18248/session63806 --resume-run.18:17:37Z
+PierceDamage575igazolt, AE1DB63Butóképen explicit+575nyíl. Az esemény-
+képernyő jelenleg nincs nyitva: éleseventbezárás még nem igazolt. Friss
+runtime mindigstate.jsonból. Régi
+bot/heartbeatPAUSED; más modal/league nincs általánosan engedélyezve.317.
+
 ## ELSŐBBSÉG — GYŰJTÉS ÚJRA ENGEDÉLYEZVE, 2026-10-31 (316)
 
 Új kifejezett felhasználói kérés: „indítsd el a programot, hadd szedje a
@@ -45,6 +67,10 @@ Never reuse historical PIDs or launch the legacy `ButcherHeroBot` executable.
 - Opens geodes when the right-hand blue crystal icon has its red dot:
   inventory → active gold x1 Open → repeated, visually checked strikes →
   Continue → inventory's red X → HUD. No selling, upgrading or equipping.
+- Dismisses the demonstrated expired **Diamond League** screens: **NO,
+  THANKS** on the timed-out offer, then **CONTINUE** on its EVENT ENDS
+  summary. Paid extension offers and unrelated Continue buttons are not
+  targets. The summary can also be handled after a manual No Thanks.
 - Supplies a local, automatically refreshing **HU/EN statistics dashboard**
   for FREE rewards. Crystal transactions have a separate journal and images;
   crystal stats are not added to FREE-reward totals.
@@ -131,7 +157,7 @@ clicks re-read the window geometry, but arbitrary new layouts/resolutions
 have not all been validated. Moving a window is not a promise of support
 for hidden/minimized windows or every resize.
 Recognition currently uses the game's English labels (FREE, CRYSTAL STATS,
-TAP TO OPEN GEODE, CONTINUE); keep that game UI available. The dashboard's
+TAP TO OPEN GEODE, NO THANKS, EVENT ENDS, CONTINUE); keep that game UI available. The dashboard's
 HU/EN selector changes only the dashboard, not the supported game labels.
 
 The current input path briefly activates the game and moves/restores the
@@ -214,6 +240,8 @@ Local files (not committed to Git):
 - `data/free-rewards/state.json`: worker status and crystal phase.
 - `data/free-rewards/supervisor.json` and `supervisor-events.jsonl`: supervision.
 - `data/crystal-rewards/events.jsonl` and `evidence/`: crystal flow and images.
+- `data/event-dismissals/events.jsonl` and `evidence/`: known event-popup
+  dismissal attempts and HUD-return verification, never FREE reward totals.
 
 An offline CLI summary is available without starting capture or input:
 
@@ -244,6 +272,10 @@ confirmed rewards, and manual collections are not attributed to the bot.
   buttons, ads or purchase confirmations. The bounded crystal flow can block;
   `--recover-crystal` is an **operator-only** recovery for a recent unfinished
   transaction in its own journal, not a normal startup flag. See docs/313.
+  The specifically authorised Diamond League expiry offer/summary in
+  docs/317 is an exception: the watcher dismisses only those recognised
+  screens before returning to normal collection. Other leagues/layouts
+  require reviewed examples; there is no generic "click any Continue" rule.
 - A known open issue is a Pierce Damage reward collected with an unreadable
   amount; evidence and current limitations are in `docs/06-nyitott-kerdesek.md`.
   Do not advertise perfect recognition, every layout, or fully general
