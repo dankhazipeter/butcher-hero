@@ -2,6 +2,13 @@
 
 ## Aktív — 2026-10-31
 
+330: a numerikus loopback HTTP-bind nem végez reverz DNS-feloldást.
+LoopbackHTTPServer megtartja a ThreadingHTTPServer működését, de a bindot
+közvetlen TCPServer.server_bind végzi; server_name a kötött IP, server_port
+a tényleges port. Host/Origin/token/loopback szabályok változatlanok.
+A launcher folyamatteszt az izolált projektbe másolt valódi dashboardot
+indítja tiltott getfqdn mellett; továbbra sincs valódi gyűjtő vagy játékinput.
+
 329: ikonnál9→12fix igazítás, egyetlen újdy=-4, változatlan0.48/0.035
 kapuk. Számkomponensek a felső sor mellett medián alsóbaseline-t is követnek,
 eltérés<=max(2,height/10), decimalpont külön korábbiága megmarad.

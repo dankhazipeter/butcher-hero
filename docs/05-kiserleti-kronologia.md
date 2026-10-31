@@ -2,6 +2,14 @@
 
 ## 2026-10-31
 
+330: a felhasználó a CI javítását kérte. A régi run négy launcher
+setUp-timeoutját visszanéztük. Új piros→zöld regresszió mutatja a standard
+HTTPServer felesleges getfqdn-függőségét; a loopback bind ezt kihagyja.
+Az izolált valódi dashboard/álgyűjtő-folyamatteszt tiltott reverz DNS-sel
+is sikeres Python 3.13-on. A 6/8 s-os korlát nem nőtt. Teljes helyi kapu
+177 teszt + 7 JS-szintaxis PASS; távoli eredményhez a feltöltött commit
+saját GitHub-futását kell ellenőrizni. Élő gyűjtést nem állítottunk le.
+
 329: userunknownok visszanézését kérte, majd külön jóváhagyta a jövőbeli
 javítást.46eredeti bizonytalanclaim vizuálisan auditálva; régi kóddal13jó,
 9frissikon4pxfeljebb vágva mind jó.22darab521nél2/8margó kevés;692és

@@ -4,6 +4,7 @@
   "timezone": "Europe/Budapest",
   "dashboardTimezonePolicy": "328: browser IANA timezone per poll/request; API fallback UTC; journal instants unchanged; HU/EN game stat names stay English",
   "mode": "free-rewards-and-crystal-opening",
+  "ciStatus": "330: Removed unnecessary reverse-DNS dependency from numeric loopback HTTP bind. Real isolated dashboard process tests forbid getfqdn; original 6s fixture and 8s production health deadlines retained.177localtests+7JSsyntax pass, including launcher/dashboard/game tests on Python3.13. Remote status must be read from the tested commit's GitHub run, never inferred from local PASS. No live restart; collection continues.",
   "automaticGameplay": false,
   "automaticObservation": true,
   "observationIntervalSeconds": 1,

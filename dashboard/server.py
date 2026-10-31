@@ -13,6 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import re
 import secrets
+from socketserver import TCPServer
 import threading
 from urllib.parse import parse_qs, urlsplit
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -34,6 +35,15 @@ KINDS = {
     "cutting_defense": "Cut Defense",
     "smash_defense": "Smash Defense",
 }
+
+
+class LoopbackHTTPServer(ThreadingHTTPServer):
+    def server_bind(self):
+        # HTTPServer normally resolves its own FQDN here. This server only
+        # binds a numeric loopback address; reverse DNS is unnecessary and
+        # can block local startup on machines with a slow/offline resolver.
+        TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
 
 
 def stamp(value: datetime) -> str:
@@ -384,7 +394,7 @@ def make_server(root: Path, port: int, *, game_control=None):
             except GameControlError as error:
                 self.send_json(error.status, {"error": error.code})
 
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    server = LoopbackHTTPServer(("127.0.0.1", port), Handler)
     server.daemon_threads = True
     return server
 

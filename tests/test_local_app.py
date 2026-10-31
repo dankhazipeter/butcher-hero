@@ -177,7 +177,7 @@ class LocalAppTests(unittest.TestCase):
 
 
 class LocalAppProcessTests(unittest.TestCase):
-    """Real processes, but an isolated fake project, HTTP server and worker."""
+    """Real launcher/dashboard, isolated project and fake collector; no game."""
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="butcher process test ")
         self.addCleanup(self.temporary.cleanup)
@@ -191,15 +191,18 @@ class LocalAppProcessTests(unittest.TestCase):
         ocr = self.root / "bin/tesseract"
         ocr.write_text("#!/bin/sh\nprintf 'eng\\n'\n")
         ocr.chmod(0o755)
-        (self.root / "dashboard/server.py").write_text('''
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import sys
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200); self.end_headers()
-        self.wfile.write(b'{"app":"butcher-reward-dashboard"}')
-    def log_message(self, *args): pass
-HTTPServer(("127.0.0.1", int(sys.argv[2])), Handler).serve_forever()
+        # Exercise the production loopback bind/health check, not a duplicate
+        # HTTPServer fixture with different startup behaviour. /health never
+        # invokes the native probe, and the fake collector cannot click.
+        for name in ("server.py", "game_control.py"):
+            shutil.copy2(SOURCE.parent.parent / "dashboard" / name, self.root / "dashboard" / name)
+        # A broken/offline reverse resolver must not prevent numeric-loopback
+        # startup. The guard is inherited only by this isolated fixture tree.
+        (self.root / "bin/sitecustomize.py").write_text('''
+import socket
+def forbidden_reverse_dns(*args, **kwargs):
+    raise AssertionError("Fixture startup must not require reverse DNS")
+socket.getfqdn = forbidden_reverse_dns
 ''')
         (self.root / "scripts/supervise-free-rewards.py").write_text('''
 import subprocess, sys, time
@@ -210,7 +213,9 @@ time.sleep(60)
         with socket.socket() as probe:
             probe.bind(("127.0.0.1", 0))
             self.port = probe.getsockname()[1]
-        self.environment = {**os.environ, "PATH": str(self.root / "bin") + os.pathsep + os.environ["PATH"]}
+        self.environment = {**os.environ,
+                            "PATH": str(self.root / "bin") + os.pathsep + os.environ["PATH"],
+                            "PYTHONPATH": str(self.root / "bin")}
         self.output = tempfile.TemporaryFile(mode="w+")
         self.addCleanup(self.output.close)
         self.process = subprocess.Popen(
@@ -227,7 +232,8 @@ time.sleep(60)
                 self.fail(self.output.read())
             time.sleep(0.02)
         else:
-            self.fail("fixture launcher did not become ready")
+            self.output.seek(0)
+            self.fail(f"fixture launcher did not become ready; state={self.state!r}; output:\n{self.output.read()}")
 
     def cleanup_process(self):
         if self.process.poll() is None:

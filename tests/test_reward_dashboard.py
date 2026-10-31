@@ -17,6 +17,16 @@ def event(kind, second, claim="one", value="578", reward_kind="cutting_defense")
 
 
 class DashboardTests(unittest.TestCase):
+    def test_loopback_server_binding_never_uses_reverse_dns(self):
+        # HTTPServer's default server_bind calls getfqdn, which can wait on
+        # external resolver configuration even for a numeric loopback address.
+        with patch("socket.getfqdn", side_effect=AssertionError("Unexpected reverse DNS lookup")):
+            server = make_server(self.root, 0)
+        self.addCleanup(server.server_close)
+        self.assertEqual(server.server_address[0], "127.0.0.1")
+        self.assertEqual(server.server_name, "127.0.0.1")
+        self.assertEqual(server.server_port, server.server_address[1])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="butcher-dashboard-test-")
         self.root = Path(self.temp.name)

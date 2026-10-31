@@ -1,5 +1,26 @@
 # Butcher Hero — aktív projektutasítások
 
+## CI-indulás: DNS-független loopback szerver — 2026-10-31 (330)
+
+A felhasználó kérte a CI javítását. A 41241697382 futásban mind a négy
+launcher-folyamatteszt a 6 s-os setUp-készültségnél bukott; a Swift képi
+tesztek sikeresek voltak. A régi HTTPServer.server_bind még a 127.0.0.1
+címhez is socket.getfqdn-t hívott. Ezt egy először piros regresszió
+bizonyítja: a loopback bind nem függhet külső/reverz DNS-től.
+LoopbackHTTPServer most közvetlen TCPServer-bindot használ, saját numerikus
+server_name/valódi server_port értékekkel. Bindcím/Host/Origin/tokenvédelem
+változatlan. Az izolált launcher teszt most a valódi dashboard-kódot futtatja,
+álgyűjtővel és csak a fixture folyamatokra tiltott getfqdn-nel. A teszt
+6 s-os, a production health-várakozás 8 s-os határa nem lazult; hiba esetén
+az állapot és a gyermek kimenete is látszik, a kapu verbose launcher-tesztet
+futtat. Sem kihagyott teszt, sem continue-on-error nincs. Helyi Python 3.13
+ellenőrzés is szükséges; távoli zöldet csak az adott GitHub-runból állítunk,
+nem pusztán helyi PASS-ból. A régi runner DNS-stackjét nem rögzítette a log,
+ezért a pontos történeti blokkolási hely nem nevezhető bizonyítottnak.
+A gyűjtő és a már futó dashboard ehhez nem áll le, nincs capture/input/
+napló- vagy statmódosítás. Az új bindkód következő szerverindításkor töltődik.
+Részletek: docs/330-ci-loopback-dns.md.
+
 ## Ismeretlen jutalmak feltárása és javítása — 2026-10-31 (329)
 
 User előbb visszanézést, majd kifejezetten a további felismerés javítását
