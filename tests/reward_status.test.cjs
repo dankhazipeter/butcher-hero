@@ -1,6 +1,6 @@
 const test=require("node:test");
 const assert=require("node:assert/strict");
-const {collectorStatus}=require("../dashboard/status.js");
+const {collectorStatus,gameStatus}=require("../dashboard/status.js");
 const now=Date.parse("2026-10-30T20:00:10Z");
 const fresh="2026-10-30T20:00:09Z";
 const active={stateKnown:true,running:true,lastCheckedAt:fresh,waitingForMouseRelease:false};
@@ -35,4 +35,31 @@ test("missing or unreadable state is unknown, not falsely stopped or running",()
   for(const watcher of [undefined,{}, {running:true,lastCheckedAt:fresh}, {...active,stateKnown:false}]) {
     assert.equal(status(watcher).state,"unknown");
   }
+});
+const game={known:true,installed:true,running:false,hidden:false,windowVisible:false,checkedAt:fresh};
+test("independent native game status distinguishes stopped, invisible and visible games",()=>{
+  assert.equal(gameStatus(game,fresh,now,true,t).state,"not_running");
+  assert.equal(gameStatus(game,fresh,now,true,t).canLaunch,true);
+  assert.equal(gameStatus({...game,running:true,hidden:true},fresh,now,true,t).state,"window_unavailable");
+  assert.equal(gameStatus({...game,running:true},fresh,now,true,t).state,"window_unavailable");
+  assert.equal(gameStatus({...game,running:true,windowVisible:true},fresh,now,true,t).state,"running");
+  assert.equal(gameStatus({...game,installed:false},fresh,now,true,t).state,"not_installed");
+  assert.equal(gameStatus({...game,installed:false},fresh,now,true,t).canLaunch,false);
+});
+test("unavailable, malformed and stale game probes never claim the game is stopped or enable launch",()=>{
+  for(const current of [undefined,{}, {...game,known:false},{...game,running:"false"},{...game,windowVisible:"false"},
+    {...game,checkedAt:"2026-10-30T19:59:30Z"},{...game,checkedAt:"2026-10-30T20:01:00Z"}]) {
+    const result=gameStatus(current,fresh,now,true,t);
+    assert.equal(result.state,"unknown");assert.equal(result.canLaunch,false);
+  }
+  assert.equal(gameStatus(game,fresh,now,false,t).canLaunch,false);
+  assert.equal(gameStatus(game,fresh,now+21000,true,t).state,"unknown");
+});
+test("collector waits explicitly for a known stopped game or invisible window, not generic stale frames",()=>{
+  const stale={...active,lastCheckedAt:"2026-10-30T19:00:00Z"};
+  assert.equal(collectorStatus(stale,fresh,now,true,t,game).state,"waiting_game");
+  assert.equal(collectorStatus(stale,fresh,now,true,t,{...game,running:true}).state,"waiting_window");
+  assert.equal(collectorStatus({...stale,running:false},fresh,now,true,t,game).state,"stopped");
+  assert.equal(collectorStatus(stale,fresh,now,true,t,{...game,known:false}).state,"stale");
+  assert.equal(collectorStatus(stale,fresh,now,false,t,game).state,"unknown");
 });

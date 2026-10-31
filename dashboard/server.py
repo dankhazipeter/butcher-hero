@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only, loopback-only live view of the Free reward journal. No dependencies."""
+"""Loopback-only reward statistics with one explicit, fixed-target game-launch action."""
 from __future__ import annotations
 
 import argparse
@@ -12,9 +12,15 @@ from decimal import Decimal, InvalidOperation, localcontext
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import re
+import secrets
 import threading
 from urllib.parse import parse_qs, urlsplit
 from zoneinfo import ZoneInfo
+
+if __package__:
+    from .game_control import GameControl, GameControlError
+else:
+    from game_control import GameControl, GameControlError
 
 ROOT = Path(__file__).resolve().parents[1]
 ZONE = ZoneInfo("Europe/Bucharest")
@@ -263,11 +269,13 @@ def watcher_state(path: Path, now: datetime):
                 "frameAgeSeconds": None, "pendingClaimID": None}
 
 
-def make_server(root: Path, port: int):
+def make_server(root: Path, port: int, *, game_control=None):
     journal = Journal(root / "data/free-rewards/events.jsonl")
     static = root / "dashboard"
     # UI-only cutouts. Recognition templates are deliberately untouched.
     icons = static / "icons"
+    game = game_control if game_control is not None else GameControl(root)
+    launch_token = secrets.token_urlsafe(32)
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
@@ -280,7 +288,8 @@ def make_server(root: Path, port: int):
             self.send_header("Cache-Control", cache)
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
-            self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'")
+            self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'")
+            self.send_header("X-Frame-Options", "DENY")
             self.end_headers()
             try:
                 self.wfile.write(data)
@@ -302,7 +311,8 @@ def make_server(root: Path, port: int):
             url = urlsplit(self.path)
             try:
                 if url.path == "/health":
-                    self.send_json(200, {"app": "butcher-reward-dashboard", "readOnly": True})
+                    self.send_json(200, {"app": "butcher-reward-dashboard", "statisticsReadOnly": True,
+                                         "readOnly": False, "explicitGameLaunch": True})
                 elif url.path == "/api/rewards":
                     now = datetime.now(UTC)
                     events, malformed, exists = journal.snapshot()
@@ -310,6 +320,8 @@ def make_server(root: Path, port: int):
                         context.prec = 90
                         payload = aggregate(events, malformed, exists, parse_qs(url.query), now)
                     payload["watcher"] = watcher_state(root / "data/free-rewards/state.json", now)
+                    payload["game"] = game.snapshot()
+                    payload["gameLaunchToken"] = launch_token
                     self.send_json(200, payload)
                 elif re.fullmatch(r"/locales/[a-z]{2}(?:-[A-Z]{2})?\.js", url.path):
                     path = static / url.path.lstrip("/")
@@ -331,7 +343,32 @@ def make_server(root: Path, port: int):
                 self.send_json(503, {"error": "A helyi adatfájl most nem olvasható."})
 
         def do_POST(self):
-            self.send_json(405, {"error": "Ez a nézet csak olvas; játékot és naplót nem módosít."})
+            if urlsplit(self.path).path != "/api/game/launch":
+                self.send_json(405, {"error": "Only explicit game launch is supported; statistics are read-only."})
+                return
+            allowed = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
+            host = self.headers.get("Host")
+            if (host not in allowed or self.headers.get("Origin") != "http://" + host
+                    or self.headers.get("Sec-Fetch-Site") not in (None, "same-origin")
+                    or not secrets.compare_digest(self.headers.get("X-Game-Launch-Token", "").encode("utf-8"), launch_token.encode("ascii"))):
+                self.send_json(403, {"error": "launch_forbidden"})
+                return
+            try:
+                length = int(self.headers.get("Content-Length", "-1"))
+                if (not 0 < length <= 128 or self.headers.get("Transfer-Encoding")
+                        or self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json"):
+                    raise ValueError("Invalid body")
+                self.connection.settimeout(3)
+                body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict) or body:
+                    raise ValueError("No launch arguments accepted")
+            except (ValueError, OSError):
+                self.send_json(400, {"error": "invalid_launch_request"})
+                return
+            try:
+                self.send_json(200, {"status": game.launch()})
+            except GameControlError as error:
+                self.send_json(error.status, {"error": error.code})
 
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     server.daemon_threads = True
@@ -343,7 +380,7 @@ def main():
     parser.add_argument("--port", type=int, default=8765)
     args = parser.parse_args()
     server = make_server(ROOT, args.port)
-    print(f"Élő jutalomnapló: http://127.0.0.1:{server.server_port}/ — csak olvasás; Ctrl+C: leállítás", flush=True)
+    print(f"Élő jutalomnapló: http://127.0.0.1:{server.server_port}/ — statisztika csak olvasás; külön játékindító gomb; Ctrl+C: leállítás", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -35,6 +35,11 @@ Minden push és PR ugyanazt a tesztet futtatja GitHubon is.
 [Közreműködői útmutató](CONTRIBUTING.md).
 
 Élő statisztika: [helyi jutalomnézet](http://127.0.0.1:8765/).
+A játék külön állapotsávot kapott: „A játék nem fut”, nem található,
+ablaka nem látható, fut vagy nem ellenőrizhető. Biztosan telepített, leállt
+játékhoz **Játék indítása** gomb jelenik meg. Csak kattintásra nyitja meg
+a játékot; a gyűjtőt nem indítja el és a statisztikát nem nullázza.
+A napló továbbra csak olvasható. [Játékállapot és indítás](docs/320-jatekallapot-es-inditogomb.md).
 A tetején külön színes állapotsáv mutatja, hogy a gyűjtő fut, leállt vagy
 várakozik, az utolsó sikeres képolvasás idejével. Elavult adat vagy kapcsolat-
 hiba nem jelenhet meg működő gyűjtésként. [Állapotjelzés részletei](docs/304-lathato-gyujtoallapot.md).

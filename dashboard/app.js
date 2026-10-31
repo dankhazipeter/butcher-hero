@@ -17,6 +17,7 @@
   applyLanguage();
   let mode = "run", snapshot, sequence = 0, pollVersion = 0, timer, lastCount;
   let statusConnected=false,connectionError=null;
+  let launchBusy=false,launchUntil=0,launchFeedback=null;
   let cards = new Map();
   const hiddenKinds=new Set();
   const frequencyButtons=new Map();
@@ -36,12 +37,44 @@
     hidden:()=>document.hidden,
   });
   function renderCollector() {
-    const status=RewardStatus.collectorStatus(snapshot?.watcher,snapshot?.generatedAt,Date.now(),statusConnected,t);
+    const now=Date.now();
+    const game=RewardStatus.gameStatus(snapshot?.game,snapshot?.generatedAt,now,statusConnected,t);
+    if(game.state==="running") {launchUntil=0;if(!launchBusy) launchFeedback=null;}
+    if(launchUntil && now>=launchUntil && !launchBusy) {
+      launchUntil=0;launchFeedback=game.state==="window_unavailable"?null:"game.launchFailed";
+    }
+    const launching=launchBusy || (now<launchUntil && ["not_running","window_unavailable"].includes(game.state));
+    $("game-panel").dataset.state=launching?"launching":game.state;
+    $("game-status").textContent=launching?t("game.launching"):game.label;
+    $("game-detail").textContent=launching?t("game.launchingDetail"):game.detail;
+    const launchButton=$("game-launch");
+    launchButton.hidden=!game.canLaunch;
+    launchButton.disabled=launchBusy || launching || !snapshot?.gameLaunchToken;
+    launchButton.textContent=t(launching?"game.launching":"game.launch");
+    $("game-launch-feedback").textContent=launchFeedback?t(launchFeedback):"";
+    const status=RewardStatus.collectorStatus(snapshot?.watcher,snapshot?.generatedAt,now,statusConnected,t,snapshot?.game);
     $("collector-panel").dataset.state=status.state;
     if($("collector").textContent!==status.label) $("collector").textContent=status.label;
     $("collector-detail").textContent=status.detail;
     $("collector-frame").textContent=t("lastFrame",{time:status.checkedAt?clock.format(new Date(status.checkedAt)):t("noData")});
   }
+  $("game-launch").addEventListener("click",async()=>{
+    const game=RewardStatus.gameStatus(snapshot?.game,snapshot?.generatedAt,Date.now(),statusConnected,t);
+    if(launchBusy || Date.now()<launchUntil || !game.canLaunch || !snapshot?.gameLaunchToken) return;
+    launchBusy=true;launchFeedback=null;renderCollector();
+    try {
+      const response=await fetch("/api/game/launch",{method:"POST",cache:"no-store",
+        headers:{"Content-Type":"application/json","X-Game-Launch-Token":snapshot.gameLaunchToken},
+        body:"{}",signal:AbortSignal.timeout(6000)});
+      const data=await response.json();
+      if(!response.ok || !["requested","already_running"].includes(data.status)) {
+        launchFeedback=data.error==="not_installed"?"game.notInstalledDetail":data.error==="launch_cooldown"?"game.cooldown":"game.launchFailed";
+      } else {
+        launchUntil=Date.now()+15000;launchFeedback="game.launchRequested";
+      }
+    } catch {launchFeedback="game.launchFailed";}
+    finally {launchBusy=false;renderCollector();refresh();}
+  });
   function field(tag, text, className) {
     const node = document.createElement(tag); node.textContent = text;
     if(className) node.className=className;

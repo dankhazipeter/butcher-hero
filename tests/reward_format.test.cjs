@@ -61,7 +61,7 @@ test("reward icons remain transparent on cards, ledger and frequency legend",()=
   }
 });
 
-async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFetch=false}={}) {
+async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFetch=false,fetchReply=null}={}) {
   const vm=require("node:vm");
   class Element {
     constructor(tagName="") {this.tagName=tagName;this.children=[];this.dataset={};this.attributes={};this.listeners={};this.style={};this.classList={add(){},remove(){}};}
@@ -111,7 +111,7 @@ async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFet
     }
     staticNodes.push(node);
   }
-  let requests=0,scheduled;
+  let requests=0,scheduled;const requestLog=[];
   const storage={getItem(){return savedLanguage;},setItem(key,value){savedLanguage=value;}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../dashboard/app.js"),"utf8"),{
     document,Intl,Date,URLSearchParams,AbortSignal,
@@ -120,10 +120,11 @@ async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFet
     RewardFormat:require("../dashboard/format.js"),RewardStatus:require("../dashboard/status.js"),
     RewardAnimation:require("../dashboard/animation.js"),
     ResizeObserver:class {observe() {}},setInterval(){},setTimeout(fn){scheduled=fn;},clearTimeout(){},
-    fetch:async()=>{requests++;if(typeof failFetch==="function"?failFetch(requests):failFetch) throw new Error("offline");return {ok:true,json:async()=>data};},
+    fetch:async(url,options)=>{requests++;requestLog.push({url,options});if(typeof failFetch==="function"?failFetch(requests):failFetch) throw new Error("offline");return fetchReply?fetchReply(url,options,requests):{ok:true,json:async()=>data};},
   });
   await new Promise(resolve=>setImmediate(resolve));
   elements.document=document;elements.storage=storage;elements.requests=()=>requests;elements.staticNodes=staticNodes;
+  elements.requestLog=requestLog;
   elements.poll=()=>scheduled();
   return elements;
 }
@@ -268,6 +269,59 @@ test("help is translated on first load and language changes preserve open state 
     require("../dashboard/locales/hu.js").messages.rangeHelpTechnical);
   assert.equal(elements.get("from").value,from);assert.equal(elements.get("to").value,to);
   assert.equal(elements.requests(),1);
+});
+
+test("game-not-running is explicit and launch only occurs on a user action with the local token",async()=>{
+  const data=helpData(),at=data.generatedAt;
+  data.watcher={stateKnown:true,running:true,lastCheckedAt:at};
+  data.game={known:true,installed:true,running:false,hidden:false,windowVisible:false,checkedAt:at};
+  data.gameLaunchToken="fixture-server-token";
+  let posts=0,release;
+  const elements=await renderDashboard(data,0,{savedLanguage:"en",fetchReply:async(url)=>{
+    if(url==="/api/game/launch") {posts++;await new Promise(resolve=>release=resolve);return {ok:true,json:async()=>({status:"requested"})};}
+    return {ok:true,json:async()=>data};
+  }});
+  assert.equal(posts,0,"polling must never launch the game");
+  assert.equal(elements.get("game-status").textContent,"The game is not running");
+  assert.equal(elements.get("collector").textContent,"Waiting for game");
+  const button=elements.get("game-launch");assert.equal(button.hidden,false);assert.equal(button.disabled,false);
+  const action=button.listeners.click();
+  assert.equal(button.disabled,true);assert.equal(elements.get("game-status").textContent,"Launching game…");
+  await button.listeners.click();assert.equal(posts,1,"double clicks must not create two launch requests");
+  const sent=elements.requestLog.find(row=>row.url==="/api/game/launch");
+  assert.equal(sent.options.method,"POST");assert.equal(sent.options.headers["X-Game-Launch-Token"],"fixture-server-token");
+  assert.equal(sent.options.body,"{}");
+  release();await action;await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.get("game-status").textContent,"Launching game…","request success is not running-game proof");
+  assert.equal(elements.get("confirmed").textContent,"3","launch must not reset statistics");
+});
+test("hidden game, unknown status and stopped collector remain distinct; no unguarded launch",async()=>{
+  for(const [game,expected] of [
+    [{known:true,installed:true,running:true,hidden:true,windowVisible:false},"Game window is not visible"],
+    [{known:false},"Cannot verify"],
+    [{known:true,installed:false,running:false,hidden:false,windowVisible:false},"Game not found"],
+  ]) {
+    const data=helpData();data.game={...game,checkedAt:data.generatedAt};data.gameLaunchToken="fixture";
+    data.watcher={stateKnown:true,running:false,lastCheckedAt:data.generatedAt};
+    const elements=await renderDashboard(data,0,{savedLanguage:"en"});
+    assert.equal(elements.get("game-status").textContent,expected);
+    assert.equal(elements.get("collector").textContent,"Stopped");
+    assert.equal(elements.get("game-launch").hidden,true);
+    await elements.get("game-launch").listeners.click();
+    assert.equal(elements.requests(),1,"programmatic click cannot bypass game-state checks");
+  }
+});
+test("launch failure is translated, permits retry and cannot advertise the game as running",async()=>{
+  const data=helpData();data.game={known:true,installed:true,running:false,hidden:false,windowVisible:false,checkedAt:data.generatedAt};data.gameLaunchToken="fixture";
+  const elements=await renderDashboard(data,0,{savedLanguage:"en",fetchReply:async(url)=>url==="/api/game/launch"
+    ?{ok:false,json:async()=>({error:"launch_failed"})}:{ok:true,json:async()=>data}});
+  await elements.get("game-launch").listeners.click();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.get("game-status").textContent,"The game is not running");
+  assert.equal(elements.get("game-launch").disabled,false);
+  assert.ok(elements.get("game-launch-feedback").textContent.includes("could not be confirmed"));
+  const picker=elements.get("language");picker.value="hu";picker.listeners.change();
+  assert.equal(elements.get("game-launch").textContent,"Játék indítása");
+  assert.equal(elements.get("game-status").textContent,"A játék nem fut");
 });
 
 test("switching language after a connection failure cannot mark the collector healthy",async()=>{

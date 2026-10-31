@@ -2,6 +2,13 @@
 
 ## Aktív — 2026-10-31
 
+320: külön natív game-status CLI, AppKit/CGWindow metaadat képrögzítés nélkül.
+GameControl 5s cache, szigorú boolvalidálás, hiba UNKNOWN. Külön game panel;
+gyűjtő csak friss ismert hiányzó játék/ablak esetén vár arra. Új explicit,
+tokenvédett same-origin POST csak fixbundleindításhoz; nincs statírás,
+watcherstart vagy általános parancsfuttatás. Ez a korábbi teljes read-only
+szerverhatárt szűken módosítja. 7Python+6Node új regresszió, részletek320.
+
 319: statikus HTMLdialog, i-ikon a data-rangegombok mellett, de sajátadat-
 választó attribútum nélkül. NatívshowModal/close/Escape/fókuszcsapda;
 closeesemény visszafókuszál azikonra. Határolórecten kívüli háttérkattintás

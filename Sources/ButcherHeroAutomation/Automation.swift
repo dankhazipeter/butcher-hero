@@ -254,6 +254,10 @@ private final class Journal {
     }
     @MainActor static func run(_ args:[String])async throws {
         guard let command=args.first else{print(usage);return}
+        if command=="game-status" {
+            guard args.count==1 else{throw AutomationError("game-status takes no arguments")}
+            print(String(decoding:try JSONEncoder().encode(NativeGameStatus.read()),as:UTF8.self));return
+        }
         if command=="badge-signature" {
             guard args.count==2,let source=CGImageSourceCreateWithURL(URL(fileURLWithPath:args[1]) as CFURL,nil),
                   let image=CGImageSourceCreateImageAtIndex(source,0,nil),let signature=try FreeBadgeMatcher.calibrationSignature(image)
@@ -652,6 +656,7 @@ private final class Journal {
     ButcherHeroAutomation inspect <frame.png>
     ButcherHeroAutomation inspect-crystal <frame.png>
     ButcherHeroAutomation inspect-event <frame.png>
+    ButcherHeroAutomation game-status  # process/window metadata only; never launches the game
     ButcherHeroAutomation snapshot <output.png>  # passive single window capture
     ButcherHeroAutomation stats [--from 2026-10-29T22:00:00+02:00] [--to 2026-10-30T08:00:00+02:00]
     ButcherHeroAutomation reconcile [--current-run]  # offline re-read of uncertain saved rewards

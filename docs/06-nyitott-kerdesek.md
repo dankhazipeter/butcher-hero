@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+320: 18:45utántól ScreenCaptureKit „Nem sikerült elindítani a streamet
+audió-/videórögzítési hiba miatt”; játékfolyamat/ablak natívpróba szerint
+fut/látható. Supervisor újraindítja a saját workert, de frisskép nincs.
+320új build/resume sem javította. Gyűjtés nem igazolt; nem indítunk újra
+már futó játékot vakon. Következő külön diagnózis: képrögzítési szolgáltatás,
+engedély/streamállapot, friss sikeres képpel ellenőrizve.
+Indítógomb valódi leállt játék melletti megnyitása még nincs élesben
+kipróbálva; fixparancs és biztonsági szerződés mockkal tesztelt.320.
+
 317: a konkrét DiamondLeague kétzáróképe implementált és tesztelt.
 Éles NO,THANKS→CONTINUE→HUD még ellenőrizendő: a játékablak újra
 elérhető és újFree575igazolt, de ez a popup már nincs nyitva. Ez nem az

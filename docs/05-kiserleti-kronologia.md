@@ -2,6 +2,16 @@
 
 ## 2026-10-31
 
+320: user külön „játék nem fut” jelzést és indítógombot kért. Natív
+metadatahelper+5scache, külön HU/EN panel, explicit tokenes indítás.
+Teljes132teszt+7JSsyntaxPASS; valódi helyi API futó/látható játékot adott,
+izoláltChrome1280×1000/375×812 ellenőrzött, nincs vízszintes túlcsordulás.
+Hiányzó játék/hibás próba/indítás/same-origin védelem offline mockteszt;
+valódi játék bezárás/indítás nem történt. A felügyelő régi workerjeit
+18:45után streamhiba miatt újraindította; a320build betöltése sem oldotta
+meg. 18:54:51Zjáték fut, de watchernek nincs sikeresfrissképe. Külön
+nyitott runtimehiba, nem „nem fut” és nem igazolt gyűjtés. Részletek320.
+
 319: userCurrentrun jelentését és gombok mellé infóikont kért. Forrás
 time_window ésCLIindító alapján logikai munkamenet, nem processz vagy nap.
 Élőread-onlyAPIkezdés:2026-10-30T16:50:44.381Z (oldalBucharest18:50:44).

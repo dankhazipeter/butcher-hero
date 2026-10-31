@@ -1,5 +1,23 @@
 # Butcher Hero — aktív projektutasítások
 
+## Külön játékállapot és kézi indítógomb — 2026-10-31 (320)
+
+A dashboard külön jelzi a játékot és a gyűjtőt. game-status csak natív
+folyamat-/telepítés-/ablakmetaadat, nem képrögzítés vagy input. 5s cache;
+hibás/elavult próba UNKNOWN, sosem automatikusan „nem fut”. Telepített,
+biztosan nem futó játékhoz explicit Játék indítása gomb. Nincs automatikus
+indítás, gyűjtőstart vagy statreset. A korábbi teljes read-only dashboard-
+leírást ez SZŰKEN felülírja: a statnapló továbbra csak olvasható; az egyetlen
+új íróhatás POST /api/game/launch, loopback+azonosOrigin+szerverenkénti token,
+üresJSON, fix /usr/bin/open -b com.multicastgames.butcher. Már futó játékot
+nem nyit/fókuszál újra; nincs más alkalmazás vagy argumentum. 10s cooldown.
+7Python+6Node újteszt, összesen132teszt+7JSsyntax a kötelező kapuban.
+Éles státusz18:54:51Z: játék fut/ablaka látható, de ScreenCaptureKit stream-
+hiba miatt nincs sikeres gyűjtőkép. Nem állítunk működő gyűjtést. Új build
+--resume-run, supervisor30241/elsőworker30268/session92768; dashboard újraindítva,
+session49803. FrissPID mindig runtimeJSONból. Valódi játékot tesztből nem
+zártunk/indítottunk; indítószerződés mockkal ellenőrzött. Részletek320.
+
 ## Időszakszűrő súgó — 2026-10-31 (319)
 
 Current run/Mostani futás = a legutolsó watcher_started óta megőrzött
@@ -252,8 +270,12 @@ In a **second** terminal at the repository root:
 Open `http://127.0.0.1:8765/`. If that port is occupied, use
 `./scripts/start-reward-dashboard.sh --port 8766` and open that port instead;
 do not kill an unrelated server. Ctrl+C in this terminal stops only the
-dashboard. It is read-only, bound to loopback and does not control/capture
-the game; stopping collection does not require deleting or closing it.
+dashboard. Statistics remain read-only and the server is bound to loopback.
+It checks native game process/window metadata without capturing screenshots.
+The only game-control action is the explicit **Launch game** button: it
+opens the fixed installed Butcher Hero app only when it is not running.
+It never starts the collector, resets statistics, installs the game or
+automatically opens it. Stopping collection does not require closing the dashboard.
 Do not expose it publicly without a separate security review.
 
 The page supports HU/EN, period/run filters, per-stat growth, a shared chart
@@ -267,6 +289,14 @@ the latest `watcher_started`, not a single process or calendar day.
 starts a new view without deleting All time history. Refreshing this page
 or changing ranges does not reset anything. See docs/319.
 A process PID alone is not proof of successful collection.
+Game status is separate: not running, not installed, running with no usable
+visible window, running, or unknown. An unavailable/stale probe is not proof
+that the game stopped. Launch appears only for a known installed, stopped
+game. An accepted launch request is not displayed as running until the next
+native check confirms it. Window metadata does not prove the game is
+unobscured or screen capture works; read the collector indicator too.
+Updating from an older version requires rebuilding the native helper and
+restarting the dashboard; the UI needs one reload. See docs/320.
 
 Local files (not committed to Git):
 

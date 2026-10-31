@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Külön játékállapot és kézi indítógomb](320-jatekallapot-es-inditogomb.md)
 - [Current run jelentése és időszakszűrő infóablak](319-current-run-es-idoszak-info.md)
 
 - [El nem küldött kristálynyitás ne foglalja a Free-gyűjtést](318-elutasitott-kristalynyitas-feloldasa.md)

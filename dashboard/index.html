@@ -23,6 +23,16 @@
       <div class="live-panel"><label class="language-picker"><span data-i18n="language">Nyelv</span><select id="language"></select></label><span id="connection" class="live-status" data-i18n="connecting">Kapcsolódás…</span>
       <span id="updated" class="subtle" data-i18n="refreshInterval">2 másodpercenként frissül</span></div>
     </header>
+    <section id="game-panel" class="collector-panel game-panel" data-state="unknown" aria-label="Játék állapota" data-i18n-aria-label="game.panelLabel">
+      <div class="collector-heading"><span class="collector-dot" aria-hidden="true"></span><div>
+        <span class="metric-label" data-i18n="game.eyebrow">JÁTÉK ÁLLAPOTA</span>
+        <strong id="game-status" role="status" aria-live="polite" aria-atomic="true" data-i18n="game.unknown">Ellenőrzés…</strong>
+      </div></div>
+      <div class="game-actions"><span id="game-detail" class="subtle" data-i18n="game.unknownDetail">A játék állapota még nem ellenőrizhető.</span>
+        <button type="button" id="game-launch" hidden data-i18n="game.launch">Játék indítása</button>
+        <span id="game-launch-feedback" class="subtle" role="status" aria-live="polite"></span>
+      </div>
+    </section>
     <section id="collector-panel" class="collector-panel" data-state="unknown" aria-label="Gyűjtőprogram állapota" data-i18n-aria-label="collectorLabel">
       <div class="collector-heading"><span class="collector-dot" aria-hidden="true"></span><div>
         <span class="metric-label" data-i18n="collectorEyebrow">GYŰJTŐPROGRAM ÁLLAPOTA</span>

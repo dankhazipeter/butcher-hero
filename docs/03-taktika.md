@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+320: hiányzó frisskép nem egyenlő leállt játékkal. Játékfolyamat és gyűjtő
+külön ellenőrzendő; most streamhiba mellett a játék ténylegesen fut.
+Játékot csak a felhasználó új gombnyomása indít, nem poll/heartbeat/teszt.
+Indítás nem gyűjtőengedély és nem új statmunkamenet. A felhasználó játékát
+nem zárjuk be csak azért, hogy a hiányállapotot kipróbáljuk.320.
+
 319: UIidőszak magyarázata nem új gyűjtési munkamenet. Nem állítjuk le a
 gyűjtőt, nem indítjuk újra folytatás nélkül, és nem töröljük a logot azért,
 hogy a Currentrun rövidebbnek látsszon. A runhatár a valódiwatcher_started;
