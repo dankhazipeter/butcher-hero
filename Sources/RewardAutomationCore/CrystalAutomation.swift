@@ -44,16 +44,22 @@ public final class CrystalVision {
         if let layout=CrystalInventoryLayout.locate(p) {
             let title=try words(layout.rect(.init(x:0.38,y:0.353,width:0.25,height:0.033)),white:false)
             let grid=try words(layout.rect(.init(x:0.37,y:0.616,width:0.26,height:0.029)))
-            diagnostics += ["inventory",title,grid]
+            diagnostics += ["inventory",title,grid,"layout=\(layout)"]
             if compact(title)=="CRYSTALSTATS",compact(grid)=="CRYSTALS" {
+                for box in layout.goldButtons(p) {
+                    let label=try words(.init(x:box.minX,y:box.minY,width:box.width,height:box.height*0.55))
+                    if compact(label)=="X1" {
+                        return .init(screen:.inventoryReady,texts:[title,grid,label,"layout=\(layout)"],
+                            closePoint:layout.close,openPoint:.init(x:box.midX,y:box.midY))
+                    }
+                }
                 let button=try words(layout.rect(.init(x:0.39,y:0.566,width:0.20,height:0.023)))
                 let emptyButton=try words(layout.rect(.init(x:0.39,y:0.571,width:0.20,height:0.030)))
                 let active=fraction(layout.rect(.init(x:0.39,y:0.565,width:0.20,height:0.043)),yellow)>0.35
                 let grey=fraction(layout.rect(.init(x:0.40,y:0.57,width:0.18,height:0.03)),{r,g,b in
                     r>120 && r<210 && abs(r-g)<15 && abs(r-b)<15})>0.30
-                let screen:CrystalScreen = active && compact(button)=="X1" ? .inventoryReady:
-                    (!active && grey && compact(emptyButton)=="OPEN" ? .inventoryEmpty:.inventoryUnavailable)
-                return .init(screen:screen,texts:[title,grid,button,emptyButton,"close=\(layout.close)"],
+                let screen:CrystalScreen = !active && grey && compact(emptyButton)=="OPEN" ? .inventoryEmpty:.inventoryUnavailable
+                return .init(screen:screen,texts:[title,grid,button,emptyButton,"layout=\(layout)"],
                     closePoint:layout.close,openPoint:layout.point(.init(x:0.49,y:0.585)))
             }
         }
@@ -99,8 +105,34 @@ public final class CrystalVision {
 struct CrystalInventoryLayout {
     let close:CGPoint
     let yScale:Double
-    func point(_ p:CGPoint)->CGPoint {.init(x:p.x,y:close.y+(p.y-0.144)*yScale)}
-    func rect(_ r:CGRect)->CGRect {.init(origin:point(r.origin),size:.init(width:r.width,height:r.height*yScale))}
+    let xScale:Double
+    let buttonWidth:Double
+    func point(_ p:CGPoint)->CGPoint {.init(x:close.x+(p.x-0.74)*xScale,y:close.y+(p.y-0.144)*yScale)}
+    func rect(_ r:CGRect)->CGRect {.init(origin:point(r.origin),size:.init(width:r.width*xScale,height:r.height*yScale))}
+    func goldButtons(_ p:Pixels)->[CGRect] {
+        let roi=rect(.init(x:0.33,y:0.55,width:0.34,height:0.065))
+        let x0=max(0,Int(roi.minX*Double(p.w))),x1=min(p.w,Int(roi.maxX*Double(p.w)))
+        let y0=max(0,Int(roi.minY*Double(p.h))),y1=min(p.h,Int(roi.maxY*Double(p.h)))
+        let w=x1-x0,h=y1-y0;guard w>0,h>0 else{return []}
+        var mask=[Bool](repeating:false,count:w*h),boxes:[CGRect]=[]
+        for y in 0..<h {for x in 0..<w {let i=((y+y0)*p.w+x+x0)*4
+            mask[y*w+x]=p.data[i]>200 && p.data[i+1]>120 && p.data[i+2]<70
+        }}
+        for start in mask.indices where mask[start] {
+            var q=[start],head=0,l=w,r=0,t=h,b=0;mask[start]=false
+            while head<q.count {
+                let i=q[head],x=i%w,y=i/w;head+=1;l=min(l,x);r=max(r,x);t=min(t,y);b=max(b,y)
+                for (nx,ny) in [(x-1,y),(x+1,y),(x,y-1),(x,y+1)] where nx>=0 && nx<w && ny>=0 && ny<h {
+                    let j=ny*w+nx;if mask[j] {mask[j]=false;q.append(j)}
+                }
+            }
+            let bw=Double(r-l+1),bh=Double(b-t+1)
+            if bw>Double(p.w)*0.06,bh>Double(p.h)*0.018,bw/bh>1.2,bw/bh<5,Double(q.count)>bw*bh*0.4 {
+                boxes.append(.init(x:Double(x0+l)/Double(p.w),y:Double(y0+t)/Double(p.h),width:bw/Double(p.w),height:bh/Double(p.h)))
+            }
+        }
+        return boxes.sorted{$0.minX<$1.minX}
+    }
     static func locate(_ p:Pixels)->Self? {
         let x0=Int(Double(p.w)*0.66),x1=Int(Double(p.w)*0.83),y0=Int(Double(p.h)*0.045),y1=Int(Double(p.h)*0.23)
         let w=x1-x0,h=y1-y0
@@ -126,7 +158,11 @@ struct CrystalInventoryLayout {
                               width:bw*0.44/Double(p.w),height:bh*0.76/Double(p.h))
             let white=p.count(in:center){r,g,b in min(r,min(g,b))>200 && max(r,max(g,b))-min(r,min(g,b))<40}
             guard Double(white)>bw*bh*0.025 else{continue}
-            return .init(close:.init(x:cx/Double(p.w),y:cy/Double(p.h)),yScale:(951.0/642.0)*Double(p.w)/Double(p.h))
+            // The panel can shrink independently of the entire window (e.g. x1+x2).
+            // Reviewed642x951 reference has a78px pink-button component.
+            let scale=bw/78.0
+            return .init(close:.init(x:cx/Double(p.w),y:cy/Double(p.h)),
+                yScale:951.0*scale/Double(p.h),xScale:642.0*scale/Double(p.w),buttonWidth:bw)
         }
         return nil
     }
@@ -280,6 +316,11 @@ public struct CrystalFlow {
            observation.screen == .inventoryEmpty || stable>=2 {phase = .closing}
         if phase == .ready,attempts[.openOne,default:0]>0,observation.screen == .geode {phase = .breaking}
         if phase == .breaking,attempts[.strike,default:0]>0,observation.screen == .result {phase = .continuing;resultSeen=true}
+        // With multiple queued geodes, the game's own Continue may immediately
+        // show the next stone. Never send another Open; retain TOTAL budgets.
+        if phase == .continuing,attempts[.proceed,default:0]>0,observation.screen == .geode,stable>=2 {
+            phase = .breaking;resultSeen=false
+        }
         if phase == .continuing,attempts[.proceed,default:0]>0,unavailable {phase = .closing}
         // Available inventory after Continue is also closed; do not spend more
         // geodes from one notification without a fresh HUD notification.

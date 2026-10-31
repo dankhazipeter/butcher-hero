@@ -2,6 +2,13 @@
 
 ## 2026-10-31
 
+323: user belépett/égnek a kijelzők. KülsőFree19:42:33Z+575utóképpel;
+kristálypanel újx1/x2elrendezésén322scale elégtelen. SajátX-méret/különX1
+javítás, újteszt, saját-naplós felügyeltfolytatás19:47:46Z. ElsőContinue
+újOpen nélkül másodikgeodet hozott; új szűk átmenet/teszt és második saját
+folytatás19:50:34Z.19:50:52Zcompleted_ui;19:51:06Z+84RegenFreeigazolás.
+50020worker futva maradt. Ez javításos helyreállítás, új önálló kör még kell.
+
 322: usernincs-pöttykonfettis HUD-ját régi kód true-ra olvasta; külön
 piros/fehér régióösszeg volt az ok, képből reprodukálva. Strukturáltkör+gyűrű
 után false, régi valódi pozitívok true. Ürespanel felismerését a sajátX-hez

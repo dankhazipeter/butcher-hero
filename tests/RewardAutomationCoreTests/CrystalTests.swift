@@ -19,7 +19,8 @@ final class CrystalTests:XCTestCase {
             ("hud-notification-external-live",.hud,true),
             ("geode-cracked-live",.geode,false),("hud-without-notification-live",.hud,false),
             ("inventory-ready-live",.inventoryReady,false),("inventory-empty-live",.inventoryEmpty,false),
-            ("geode-first-live",.geode,false),("result-blue-live",.result,false)]
+            ("geode-first-live",.geode,false),("result-blue-live",.result,false),
+            ("inventory-unavailable-external-live",.inventoryUnavailable,false),("hud-no-dot-external-after",.hud,false)]
         for (name,screen,dot) in samples {
             let png=try image(name),reward=try free.observe(png)
             let actual=try vision.observe(png,hudVisible:reward.gameHUDVisible)
@@ -50,6 +51,42 @@ final class CrystalTests:XCTestCase {
         }
         XCTAssertFalse(CrystalInputPolicy.isManualPanel(screen:.hud,active:false))
         XCTAssertFalse(CrystalInputPolicy.isManualPanel(screen:.unknown,active:false))
+    }
+    func testRealExternalInventoryWithX1AndX2TargetsOnlyTheX1Button()throws {
+        let png=try image("inventory-ready-external-live")
+        let actual=try CrystalVision().observe(png,hudVisible:false)
+        XCTAssertEqual(actual.screen,.inventoryReady,actual.texts.joined(separator:";"))
+        let point=CrystalAction.openOne.point(in:actual)
+        XCTAssertTrue(CGRect(x:308,y:609,width:91,height:49).contains(.init(x:point.x*788,y:point.y*1083)))
+        let close=try XCTUnwrap(actual.closePoint)
+        XCTAssertTrue(CGRect(x:523,y:128,width:95,height:50).contains(.init(x:close.x*788,y:close.y*1083)))
+    }
+    func testContinueMayLeadToNextGeodeWithoutAnotherOpenOrResettingBudgets()throws {
+        var flow=begin()
+        _=flow.observe(observation(.inventoryReady),now:3,inputReady:true);flow.sent(.openOne,now:3)
+        _=flow.observe(observation(.geode),now:5,inputReady:true);flow.sent(.strike,now:5)
+        _=flow.observe(observation(.result),now:7,inputReady:true);flow.sent(.proceed,now:7)
+        let next=try CrystalVision().observe(image("geode-auto-next-external-live"),hudVisible:false)
+        XCTAssertEqual(next.screen,.geode)
+        XCTAssertNil(flow.observe(next,now:9,inputReady:true))
+        XCTAssertEqual(flow.observe(next,now:10,inputReady:true),.strike)
+        flow.sent(.strike,now:10);XCTAssertEqual(flow.strikes,2)
+        let result=try CrystalVision().observe(image("result-external-blue-live"),hudVisible:false)
+        XCTAssertEqual(result.screen,.result)
+        XCTAssertEqual(flow.observe(result,now:12,inputReady:true),.proceed)
+        flow.sent(.proceed,now:12)
+        let final=try CrystalVision().observe(image("inventory-unavailable-external-live"),hudVisible:false)
+        XCTAssertEqual(final.screen,.inventoryUnavailable)
+        XCTAssertEqual(flow.observe(final,now:14,inputReady:true),.closeInventory)
+        flow.sent(.closeInventory,now:14)
+        _=flow.observe(observation(.hud),now:16,inputReady:true);_=flow.observe(observation(.hud),now:17,inputReady:true)
+        XCTAssertEqual(flow.completed,1);XCTAssertFalse(flow.active)
+        var unownedContinue=begin()
+        _=unownedContinue.observe(observation(.inventoryReady),now:3,inputReady:true);unownedContinue.sent(.openOne,now:3)
+        _=unownedContinue.observe(observation(.geode),now:5,inputReady:true);unownedContinue.sent(.strike,now:5)
+        _=unownedContinue.observe(result,now:7,inputReady:true)
+        XCTAssertNil(unownedContinue.observe(next,now:9,inputReady:true))
+        XCTAssertNil(unownedContinue.observe(next,now:10,inputReady:true))
     }
     func testVanishedNotificationStopsOpeningAndReleasesInputWithoutInventingSuccess() {
         for sent in [false,true] {

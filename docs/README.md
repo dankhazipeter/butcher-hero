@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Külső kijelző élő igazolása, x1/x2 és automatikus következő geode](323-kulso-panel-es-automatikus-kovetkezo-geode.md)
 - [Kristály: konfetti ne legyen pötty, üres saját panel ne ragadjon be](322-kristaly-konfetti-es-ures-panel.md)
 - [Külső kijelző: ellenőrzött kattintás és koordinátanapló](321-kulso-kijelzo-inputgeometria.md)
 - [Külön játékállapot és kézi indítógomb](320-jatekallapot-es-inditogomb.md)

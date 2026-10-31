@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+323felülírja322külső bizonyítékhiányát: +575Freeutókép, sajátkétgeodés
+helyreállítás19:50:52Z és utána+84Regen19:51:06Z igazolt. Új önálló,
+megszakításmentes értesítéses kör még kell. X1/X2 és Continue→újgeode
+implementált/tesztelt. Pierce575előolvasásamountnil továbbra külön nyitott
+ügy, nem állítunk mindenjutalom hibátlan számszerű könyvelését.323.
+
 322: konfetti→hamispötty konkrét hiba javítva és userképre regresszióval
 ellenőrizve. Külön tényleges üres-panel screenshot a beragadás pillanatából
 nem áll rendelkezésre; ezért a korábbi konkrét bezáráshiba gyökérokát nem

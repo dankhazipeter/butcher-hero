@@ -1,5 +1,13 @@
 # Új verzió megfigyelései — 2026-10-29
 
+## Több várakozó geode — 2026-10-31 (323)
+
+Éles képi tény: külső788×1083 ablakon2/9készletnél különX1 ésX2 arany
+Open. SajátX1 utáni eredmény sajátContinue-ja rögtön új1/9geodelapot hozott,
+újOpeninput nélkül. MásodikContinue után főpanel, X ésHUD. Konkrét2darabos
+megfigyelés, nem minden kötegméret általános támogatása. Kristályeredmény
+nem azonnali karakterstatnyereség és nem Freeösszeg.
+
 ## Lejárt DiamondLeague két képernyője — 2026-10-31 (317)
 
 Felhasználói képi tény: a Time is over / DIAMOND LEAGUE panel alján

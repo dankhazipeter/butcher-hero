@@ -1,5 +1,22 @@
 # Butcher Hero — aktív projektutasítások
 
+## Külső kijelző élő igazolása és geodesor — 2026-10-31 (323)
+
+19:42:33Z537BAD04Freeigazolt, utóképen+575nyíl, Quartz/cursorcél egyezik
+−773.628/319.06967; előolvasásamountnil külön nyitott ügy. Ablak−828/−370/
+788/1083. KristályC1F57DA9 új x1+x2paneljén322ablakszélesség-scale hibás;
+most ténylegespinkX-méret adja a panelXYscale-t, külön aranykomponensben
+csak pontosX1 választható.19:47:49Zsaját friss naplós --recover-crystal,
+x1→ütések→kék40/PierceDefense140Kresult. SajátContinue automatikusan új
+1/9geodet hozott, újOpen nélkül. Szűk continuing→breaking csak saját
+Continue+kétgeodekép után; eredeti16ütés/3Continue/90s keret nem nullázódik.
+Második felügyelt sajátfolytatás19:50:34Z;19:50:47ZContinue→49.891ZX→
+52Zcompleted_ui. Javításokkal helyreállított kör, NEM megszakításmentes új
+önálló kör. Utána19:51:06.077Z16C91DCF+84RegenFreeigazolt! Worker50020/
+supervisor50014/session40809 futva marad; runtimeJSONelsődleges.
+2újteszt+5valódi képminta, teljes147teszt+7JSsyntax/releasePASS. Következő
+új önálló értesítéses kör még igazolandó. Részletek323.
+
 ## Kristály téves pötty és üres panel helyreállítása — 2026-10-31 (322)
 
 Userkonfettis HUD-ja régiCrystalVisionnel reprodukált false-positive:

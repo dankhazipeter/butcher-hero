@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+323felülírja322ablakszélesség-skáláját: pinkX78px-es referenciához mért
+tényleges szélessége adja a panelXYscale-t. Aranygombkomponensenként csak
+pontosX1címke, pont a kiválasztott gombközepén; X2 nem választott. Saját
+Continue→kétgeodekép után breaking, újOpen/büdzséreset nélkül.2újteszt,
+5valódi külsőminta. Élő helyreállítás és Freevisszatérés igazolt.323.
+
 322: CrystalNotificationMatcher összefüggőpiroskomponensből köralak,
 méret/teltség,24szögből18fehérgyűrű+16sötétperem ellenőrzése; alatta kékikon
 maradkötelező. InventoryCloseX komponenshorgony + két szövegcímke,

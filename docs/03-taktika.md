@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-31
 
+323: külsőn+575utókép és+84RegenFreeigazolás, Quartzpont/ténylegeskurzor
+egyezik. X1+X2panel csakX1célja után a játékContinueja következőgeodet
+hozhat; nincs újOpen. Helyreállított kétgeodés siker, következő új teljesen
+önálló kör még nem bizonyított. Ne írjunk megszakításmentes sikert.323.
+
 322: konfetti nem kristályértesítés. Két aktuális képi pöttyigazolás és
 preclick továbbra kötelező. Openbizonytalanság nem jogosít nyitásra;
 sajátismertpanel biztonságosX-e zárhat, kézi/unknownpanel nem. Ürespanel
