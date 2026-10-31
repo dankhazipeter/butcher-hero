@@ -142,6 +142,21 @@ final class CrystalTests:XCTestCase {
             XCTAssertFalse(flow.active)
         }
     }
+    func testUnsentOpeningRejectionReleasesCollectionButNeverAbandonsSentInput() {
+        var unsent=CrystalFlow()
+        _=unsent.observe(hud,now:0,inputReady:true)
+        XCTAssertEqual(unsent.observe(hud,now:1,inputReady:true),.openInventory)
+        XCTAssertTrue(unsent.abandonUnsentOpening(now:2))
+        XCTAssertFalse(unsent.active);XCTAssertEqual(unsent.completed,0)
+        XCTAssertNil(unsent.observe(hud,now:3,inputReady:true))
+        XCTAssertEqual(unsent.observe(hud,now:63,inputReady:true),.openInventory)
+        var sent=begin()
+        XCTAssertFalse(sent.abandonUnsentOpening(now:2))
+        XCTAssertTrue(sent.active)
+        XCTAssertEqual(sent.observe(observation(.inventoryReady),now:3,inputReady:true),.openOne)
+        sent.sent(.openOne,now:3)
+        XCTAssertFalse(sent.abandonUnsentOpening(now:4))
+    }
     func testExplicitOwnedRecoveryRetainsStrikeLimitAndDoesNotAssumeCompletion()throws {
         let encoded=[CrystalAction.openInventory,.openOne,.strike]
         var flow=CrystalFlow(recovering:encoded,now:100)

@@ -1,5 +1,19 @@
 # Butcher Hero — aktív projektutasítások
 
+## Kiegészítő gyűjtésvédelmi javítás — 2026-10-31 (318)
+
+317élesfigyelésekor677E54A4kristálynyitás ismételten preclickopenInventory/hud
+elutasításba futott: frissképen nincs jelzés, NEM történtinput, mégis az
+openingfázis90s-ig foglalta aFreegyűjtést. Most kizárólag a még egyáltalán
+el nem küldött elsőnyitás ilyen nem-egérhibájánál visszaadjuk az inputgazdát,
+60s kristálycooldownnal. Már elküldött input/feltörés sosem dobható el így;
+kézi húzás továbbra csak várakozás. Nincs új kártyaérték vagy modalinput.
+Új regresszió, teljes113teszt; éles újraellenőrzés318-ban. A317-es konkrét
+DiamondLeague NO,THANKS→CONTINUE kezelés és annak korlátai változatlanok.
+Végső318build18:24:10Zsupervisor21358/worker21386/session51821,
+--resume-run, frissHUD/idle. A konkrét régi preclickelutasítás új előfordulása
+még nincs igazolva ezzel a builddel; a szűk állapotátmenet unitból ellenőrzött.
+
 ## Aktív új engedély — eseményzáró képernyők, 2026-10-31 (317)
 
 A felhasználó két konkrét DiamondLeague záróképet adott: Time is over

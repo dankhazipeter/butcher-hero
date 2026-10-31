@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-31
 
+318: az aktiváláskor megszűnő/elutasított kristályjelzés nem indokol90s
+Freevárakozást, ha a legelső kattintás sem ment ki. Ilyenkor megszakítás és
+60s újrakeresési szünet, nem ismételt fókuszvillogtatás. Ez nem alkalmazható
+egy már nyitott vagy megütött kristályra; ott az ismert képernyősor kell.
+
 317: konkrét lejártDiamondLeague offernél NO,THANKS, külön összesítőn
 CONTINUE; a zöldáras+30m/+60m ajánlatok sosem célok. Másik league vagy
 ismeretlen modal nem kap automatikus elutasítást. A summary kéziNoThanks

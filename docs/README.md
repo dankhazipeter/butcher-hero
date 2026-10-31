@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [El nem küldött kristálynyitás ne foglalja a Free-gyűjtést](318-elutasitott-kristalynyitas-feloldasa.md)
+
 - [Esemény vége: NO,THANKS → CONTINUE → HUD](317-event-vege-kepernyok.md)
 
 - [Free- és kristálygyűjtés újraindítása, igazolt Health-átvétellel](316-gyujtes-ujrainditasa.md) — jelenleg aktív.

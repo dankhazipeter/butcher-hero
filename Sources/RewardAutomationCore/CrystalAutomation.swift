@@ -194,4 +194,11 @@ public struct CrystalFlow {
         lastSent=now;attempts[action,default:0]+=1
         if action == .strike {strikes+=1}
     }
+    /// The initial notification may disappear after activation. No inventory
+    /// click was sent, so don't monopolise collection for the full90s timeout.
+    @discardableResult public mutating func abandonUnsentOpening(now:Double)->Bool {
+        guard phase == .opening,attempts[.openInventory,default:0]==0 else{return false}
+        phase = .idle;cooldownUntil=now+60
+        return true
+    }
 }

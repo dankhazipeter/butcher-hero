@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+318: CrystalFlow.abandonUnsentOpening csak opening és0openInventoryküldés
+esetén enged idle-visszatérést,60scooldownnal. A nem-human preclickhiba
+ága hívja; HumanInputBusy nem. Különcrystal_opening_abandoned diagnosztika,
+a meglévő crystal_finished_no_reward terminál egyszer marad. Nem lesz
+pendingclaim/siker abból, hogy az inputot valójában nem küldtük el.
+
 317: EventEndVision+EventEndFlow külön, tesztelhető modul. Pink/goldgomb
 pixelkapu után négy szűkTesseractsáv igazolja a konkrétDiamondLeague
 offer/summary képernyőt. Ismert eventet aHUDszínheurisztika előtt kell

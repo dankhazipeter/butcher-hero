@@ -460,6 +460,11 @@ private final class Journal {
                             state.waitingForMouseRelease=true
                         } catch {
                             try crystalJournal.append("crystal_click_rejected",claimID:crystalID,message:error.localizedDescription)
+                            if crystal.abandonUnsentOpening(now:ProcessInfo.processInfo.systemUptime) {
+                                state.crystalPhase=crystal.phase.rawValue
+                                try crystalJournal.append("crystal_opening_abandoned",claimID:crystalID,
+                                    message:"Initial click rejected before any input; returning priority to collection with60s crystal cooldown")
+                            }
                         }
                     }
                     if crystal.completed>completed {

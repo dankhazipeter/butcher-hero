@@ -2,6 +2,12 @@
 
 ## 2026-10-31
 
+318:317betöltése utáni ellenőrzésben677E54A4openingfázis ismételt
+openInventory/hudpreclicke­lutasítás, nincs elküldött input. A régi90s
+keret mégis elzárta aFreegyűjtést. Szűk javítás: csak el nem küldött első
+nyitás nem-human hibájánál idle+60scooldown; valódi modal nem záródik vakon.
+Új tisztaállapot-regresszió, teljes113helyi teszt. Részletek318.
+
 317: új userkétkép és kért kezelés: DiamondLeague TimeisoverNO,THANKS,
 majd EVENTENDSösszesítőCONTINUE. Kiderült: az offer gameHUDVisible=true
 a saját pinkgomb/zöldcsík miatt, ezért önállóeventfelismerés aHUDdöntés
