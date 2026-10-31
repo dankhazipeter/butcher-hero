@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+313záró Free-naplóellenőrzés:09:25:06Z/09:28:19Z/09:30:28ZPierceDamage
+átvétel igazolt, de az összegnil. UtóbbiF8A1C9B4 előképe:
+data/free-rewards/evidence/F8A1C9B4-B70B-4D28-9F99-3AFA5C7F113A-validated-9902009E-0CE1-4EDE-A9F2-93A646B5899B.png.
+Ez külön számsor-felismerési ellenőrzést igényel; nem írunk helyette korábbi
+értéket vagy nullát. A kristályfunkció nem módosította aFree-számfelismerőt.
+09:29:05Zutáni első6igazolt tételből1összeg hiányzik; ez nem6hibátlanul
+számszerűsített átvétel. Nem általános regressziódiagnózis, csak konkrét
+naplótény; a jelen körben nem futott történeti reconcile vagy új kalibráció.
+
 313felülírás: a bemutatott kristályfolyamat implementált, a repedt köztes
 kővel is lefedett; első élő kör javítás+egyszeri helyreállítás után lezárult,
 aFreegyűjtés új igazolással visszatért. Teljes megszakításmentes új kör,
