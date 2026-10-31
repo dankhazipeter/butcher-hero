@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Felhasználói leállítás az esti folytatásig](314-felhasznaloi-stop-estig.md) — **jelenleg nincs gyűjtés vagy játékfigyelés**.
+
 - [Kristálynyitás, köztes repedt kő és közös inputvezérlés](313-kristalygyujtes-es-kozos-vezerles.md)
 
 - [Következő feladat: piros ponttal jelzett kristálytörés](312-kristalytorese-elokeszites.md)

@@ -2,6 +2,13 @@
 
 ## 2026-10-31
 
+314: felhasználó kérte a program és figyelés leállítását; a játékot maga
+kapcsolja ki, este folytatjuk.09:40:26Zutolsó feldolgozott kép és
+running=false;09:40:27Zsupervisor_stopped. Worker52120/supervisor52048
+kilépett, nincs élőbot vagy automatikus újraindítás. HeartbeatPAUSED.
+Nincs esti időzítés, csak új kifejezett kérésre indulhat újra. Naplók és
+képek megmaradnak; a statisztika read-only, nem játékfigyelő. Részletek314.
+
 313: felhasználó megadta a kristály képernyősorát és kérte a bevezetést.
 36820Freeworker a fejlesztés/teszt alatt végig futott; két előre fordított
 betöltés történt.09:18:49Z48660worker elindult,0D44E692tranzakcióban HUD

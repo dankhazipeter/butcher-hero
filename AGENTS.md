@@ -1,5 +1,16 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — FELHASZNÁLÓI STOP, 2026-10-31 11:40 Bucharest (314)
+
+A felhasználó leállította a programot és a figyelést, este folytatjuk.
+Free- és kristályinput/képernyőfigyelés LEÁLLÍTVA. Worker52120 és a saját
+felügyelő52048 kilépett; state.running=false, supervisor_stopped
+2026-10-31T09:40:27.872073Z. Nincs automatikus újraindítás vagy esti ütemezés;
+új kifejezett folytatási kérés kell. Heartbeat továbbraPAUSED. A read-only
+statisztika nem vezérel vagy figyel játékablakot. Naplók/képek/kód megmaradnak.
+Folytatáskor friss játékállapotból indulunk; a313-as runtimePID-k történetiek.
+Nyitott: külön PierceDamage-összegnil eset a06-os doksiban. Részletek314.
+
 ## Aktív — Free + kristálynyitás, 2026-10-31 (313)
 
 A felhasználó MOST engedélyezte a bemutatott kristályfolyamatot; ez felülírja
