@@ -2,6 +2,12 @@
 
 ## 2026-10-31
 
+326: user saját Terminalban látható, egyparancsos teljes indítást kért.
+Közös foregroundrunner+Make start/stop/status+opcionális globalnév készült.
+19offline unit/izolált valódi álfolyamat-teszt: Ctrl+C, külsőstop, duplazár,
+portkonfliktus, függőség, szolgáltatáshiba, leszármazotttakarítás, máscwd és
+symlink. Egyetlen teszt sem érinti a valódi játékot. Részletek326.
+
 324: user „mittegyek/vagytudodjavítani?”→Pierce567/575 baselineújtesztbukik.
 5/9glyph margin0.02286, küszöb0.035. Új5/6/7kalibráció a user567ből,
 575a/b független;148teljestesztPASS. Halott régi sajátfolyamatok észlelve,

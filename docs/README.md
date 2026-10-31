@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Közös Terminal-indító: make start, stop, status és bárhonnan használható parancs](326-kozos-terminal-indito.md)
 - [A gyűjtő és a dashboard újabb folyamatkiesése](325-gyujto-es-dashboard-folyamatkieses.md)
 - [Pierce 567/575: szigorú számolvasás új glyphmintával és élő igazolással](324-pierce-szamolvasas-es-elo-575.md)
 - [Külső kijelző élő igazolása, x1/x2 és automatikus következő geode](323-kulso-panel-es-automatikus-kovetkezo-geode.md)

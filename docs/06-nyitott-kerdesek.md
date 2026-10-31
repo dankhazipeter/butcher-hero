@@ -2,6 +2,18 @@
 
 ## Aktív — 2026-10-31
 
+326: közös foregroundrunner elérhető make start / opcionális butcher-hero
+paranccsal, saját Terminal normálüzemhez. Nem állítjuk a325ismeretlen
+folyamatkilépés gyökérokának javítását; másik életciklusú indítási mód.
+Új Terminalhost macOSjogosultsága és hosszú távú valódi gyűjtés ott még
+külön ellenőrzendő. Nincs automatikus login/startup, game-launch vagy
+sleep-prevention. A régi standaloneindítók aktív példányait nem veszi át.
+Új E5662CA8kristálykör20:56:44Z→20:57:04Z sajátindítás/ötütés/Continue/X/
+HUD, helyreállítás és workerrestart nélkül igazolt. Eredményképen zöld40,
+Lifesteal+10.5K; külön kristálynapló, nem Free-stat. Ezzel a323óta várt
+új teljes önálló kör megvan; nem általános hibamentesség vagy Terminalhost-
+jogosultságigazolás. Részletek326.
+
 325:20:36Z körül a57653supervisor/57658worker és dashboard sem élt;
 39912/86104execsession is megszűnt. Utolsó frisskép20:20:00.998Z,
 előtteHealth18600igazolt. Szabályosleállás/frisscrashreport nincs; pontos

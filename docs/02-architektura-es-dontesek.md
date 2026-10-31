@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+326: scripts/butcher-hero.py foregroundfolyamat kezeli a dashboardot és a
+meglévő gyűjtősupervisort, saját session/processgroupokban. A dashboard
+HTTP-készültsége előfeltétel; bármelyik szolgáltatáskilépés közös takarítás.
+Runnerlock és atomi local-app/state.json, stophoz PID+psparancs+indulásiidő
+és checkoutazonosság. Két meglévő gyűjtőlock/port foglaltsága elutasítás,
+nincs idegenfolyamat-átvétel. Terminalkimenet 10s frissképállapottal;
+nincs API-/napló-/vision-/inputváltozás. Make és opcionális user-local
+symlink ugyanazt az indítót hívja; útvonal nem a hívócwd-ből származik.
+
 324: csak a kalibrált számjegyadat bővült38→41glyphre,14képből. A kód,
 0.30hibaküszöb/0.035karakterkülönbség és szigorú parser változatlan.
 User567kalibráció mellett két független élő575held-out, különunit tiltja

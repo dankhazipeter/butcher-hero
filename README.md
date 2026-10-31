@@ -8,6 +8,28 @@ are in [AGENTS.md](AGENTS.md#setup-and-usage--for-users-contributors-and-their-a
 You can ask an AI coding assistant to read that guide and walk you through
 setup and what the tool does. Reading the guide does not start the program.
 
+After setup and the release build, run both services in your own Terminal:
+
+```sh
+make start
+```
+
+Leave that Terminal open. It shows the collector/dashboard output and
+progress; **Ctrl+C stops both**. From another terminal: `make status` or
+`make stop`. Existing statistics continue by default. The dashboard is at
+http://127.0.0.1:8765/; this does not launch the game automatically.
+
+For a short command from **any directory**, run `make install-cli` once,
+then `butcher-hero start`, `butcher-hero status` or `butcher-hero stop`.
+The command is a user-local symlink into this checkout. If `~/.local/bin`
+is not on PATH, use `~/.local/bin/butcher-hero start`; the installer prints
+an optional PATH command and never edits your shell configuration.
+Alternatively, without installation: `make -C /path/to/checkout start`
+(quote paths containing spaces). Use `make start PORT=8766` for another
+port. A separately running collector or occupied port must be stopped by
+its owner first; the launcher does not take over unrelated processes.
+Details: [Terminal launcher](docs/326-kozos-terminal-indito.md).
+
 FREE rewards require the game's **No Ads** purchase. According to the
 maintainer, those tasks do not appear without it, so the FREE branch stays
 idle while geode opening can still work in the same watcher. No separate

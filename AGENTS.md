@@ -1,5 +1,40 @@
 # Butcher Hero — aktív projektutasítások
 
+## Közös Terminal-indító — 2026-10-31 (326)
+
+A felhasználó saját Terminalból futtatható, közös indítót kért. Új
+`make start` / `make stop` / `make status`, illetve opcionális
+`make install-cli` → `~/.local/bin/butcher-hero start|stop|status`.
+Az indító a saját checkoutjára oldja fel az útvonalakat, más cwd-ből és
+symlinken át is működik. Alapból --resume-run; új statkezdés csak külön
+`butcher-hero start --new-run`. Nem indít játékot/böngészőt, nem fordít
+aktív release-re, nem módosít PATH/shellprofile/engedélyt/login/startupot.
+Előtérben marad, közös kimenet+10s állapot, Ctrl+C/TERM/HUP a saját két
+szolgáltatást és azok leszármazottait takarítja. Foglaltport/aktív régi
+gyűjtő esetén nincs átvétel vagy idegenfolyamat-kill. A dashboard indul és
+HTTP-egészségellenőrzésen átmegy a gyűjtő előtt; bármelyik szolgáltatás
+kilépése leállítja a másikat, nem marad csendes félüzem. Külön runnerlock,
+stophoz PID+eredeti parancs+indulásiidő+checkoutellenőrzés. Fejlesztéskor
+ugyanezt a runnerstopot használjuk, átadáskor nincs párhuzamos watcher.
+Új19offline unit/valódi álfolyamat-teszt a kötelezőkapuban; nem valódi
+játékinput. Játékos éles átvétel ettől nem tekinthető újraigazoltnak.
+Teljes használat lent és docs/326. A325execsession-tartóssági gondját nem
+állítjuk gyökérokában javítottnak: normál üzemben a felhasználó Terminalja
+tartja életben az indítót, nem a chatben indított futtatás.
+
+326helyi próba: user-local CLI telepítve, loginzsh is megtalálja.
+Régi saját standalonepéldányok ellenőrzötten leállítva. Másikcwd-ből
+stop→HTTPportzárás→új make -C start igazolt. A gyorsrestart közben talált
+TIME_WAIT-téves portfoglalást SO_REUSEADDR-próbával és külön regresszióval
+javítottuk; valódi foglaltport továbbra tiltott. Végső helyi runner70886,
+dashboard70890, supervisor70891/session2352,20:55:51Z; frissPID aJSONból.
+Az első próbakor a játék zárva volt, később a user újraindította:
+frissképek és E5662CA8 új, helyreállítás nélküli kristálykör20:56:44Z→
+20:57:04Zcompleted_ui. Eredményképen zöld40/Lifesteal+10.5K, utóképen HUD,
+nem Free-stat. Saját Terminalos átvétel: butcher-hero stop, majd ugyanott
+butcher-hero start; nincs duplaindítás. A sima make továbbra csak setup,
+sosem rejtett gyűjtőstart.
+
 ## Újabb folyamatkiesés — 2026-10-31 (325)
 
 20:36Z körüli ellenőrzéskor sem a57653felügyelő/57658worker, sem a8765
@@ -323,6 +358,75 @@ offline tests must not capture the current screen to "check" a stopped game.
 
 ### 3. Starting, resuming and stopping
 
+**Recommended: one foreground command for both services.** After the
+requirements, release build and permissions above are ready, and only when
+you intend to enable collection, run in your own Terminal at the repo root:
+
+```sh
+make start
+```
+
+This starts the dashboard, checks its local HTTP health, then starts the
+existing Free/geode/event collector supervisor. It keeps their output in
+this Terminal and reports collector progress every 10 seconds. Open the
+printed URL (`http://127.0.0.1:8765/` by default); the launcher does not open
+or focus a browser or launch the game. Keep the Terminal running. Ctrl+C
+stops **both** services and the owned worker; closing the Terminal normally
+requests the same cleanup via SIGHUP. There is no login/startup service,
+sleep prevention or guaranteed survival of SIGKILL/system shutdown.
+From another terminal in this checkout, use `make status` or `make stop`.
+The latter also works for this combined launcher started by an AI during
+development, after checking the current runner's identity. It never stops
+an unrelated server or separately started legacy service.
+
+`make start` **continues the existing logical statistics run** by default
+(`--resume-run`). For a deliberately new logical run, use
+`python3 scripts/butcher-hero.py start --new-run`; existing history is not
+deleted. Alternative port: `make start PORT=8766`.
+No automatic build/install happens during start: missing dependencies or
+binary/resources produce instructions instead of overwriting a live build.
+An already-running collector or occupied port is an error, not permission
+to take it over. Stop the original service in its own terminal first.
+If either managed service exits, the launcher prints an error, shuts down
+its other service and exits rather than leaving a silent partial setup.
+
+**Optional short command from any directory:** run once in this checkout:
+
+```sh
+make install-cli
+```
+
+This creates only a symlink `~/.local/bin/butcher-hero` to this checkout's
+`scripts/butcher-hero.py`; an unrelated existing command is never replaced.
+It does not install the game or enable collection. If that folder is on
+your PATH, use these from any directory:
+
+```sh
+butcher-hero start
+butcher-hero status
+butcher-hero stop
+```
+
+Otherwise `~/.local/bin/butcher-hero start` works directly; the installer
+also prints an optional PATH command for the current Terminal. No shell
+startup file is edited. `butcher-hero start --port 8766` selects another
+port. Paths are tied to this clone, not the caller's current directory;
+keep that clone and its release executable/resource bundle in place.
+Without installing anything, an absolute path works from any directory:
+`python3 /absolute/path/to/checkout/scripts/butcher-hero.py start` (quote
+paths containing spaces). Likewise `make -C /absolute/path/to/checkout start`.
+
+The native Terminal may need its own macOS Screen Recording/Accessibility
+permission even if the AI runner already has it. Check for a **fresh
+successful screen check and actual collection**, not just the runner's PID.
+Stopped/absent game and capture errors are not reported as successful
+collection. Journals stay in this checkout's existing data directories;
+the launcher adds only `data/local-app/state.json` and `runner.lock`.
+
+**Advanced: collector-only / dashboard-only development entry points.**
+Do not mix these with an active combined launcher. The older scripts below
+remain supported; they do not manage each other's services.
+
 Only after explicit permission to start, leave this command running in a
 terminal (or a persistent foreground AI execution session):
 
@@ -334,7 +438,9 @@ Despite the historical filename, it starts **both** current automations in
 one worker, under one supervisor. Do not start a second watcher. The lock
 rejects another live worker. Do not detach it from a short-lived execution
 session with `nohup` and assume it survived; the verified deployment method
-keeps the supervisor attached to a persistent foreground session.
+keeps the supervisor attached to a foreground session. The maintainer has
+observed AI execution sessions disappearing; for unattended use, prefer
+the user's own Terminal with the combined launcher above.
 
 To continue the existing logical statistics run after a technical restart:
 

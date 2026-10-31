@@ -2,6 +2,13 @@
 
 ## Aktív — 2026-10-31
 
+326: normálüzem saját Terminalból make start / butcher-hero start,
+fejlesztéskor make stop és ellenőrzött újraindítás. Egy inputgazda marad;
+foglalt régi worker/port nem jogosít párhuzamos futásra vagy idegenkillre.
+Alapindítás folytatja a logikai statfutást; újrun kizárólag --new-run.
+Közös runner élete nem képi siker: frissképidő és valódi átvétel kell,
+új Terminalhost esetén a capture/input engedély külön ellenőrzendő.
+
 324: bizonytalan számjegyre valódi címkézett minta, nem gyengébb küszöb
 vagy korábbi jutalomérték használata. Élő575input+UIigazolás lezárja a
 konkrétPiercehibát; különSmash692unknown továbbra nyitott. Múltat nem
