@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Pierce 567/575: szigorú számolvasás új glyphmintával és élő igazolással](324-pierce-szamolvasas-es-elo-575.md)
 - [Külső kijelző élő igazolása, x1/x2 és automatikus következő geode](323-kulso-panel-es-automatikus-kovetkezo-geode.md)
 - [Kristály: konfetti ne legyen pötty, üres saját panel ne ragadjon be](322-kristaly-konfetti-es-ures-panel.md)
 - [Külső kijelző: ellenőrzött kattintás és koordinátanapló](321-kulso-kijelzo-inputgeometria.md)

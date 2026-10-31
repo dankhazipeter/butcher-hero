@@ -2,6 +2,13 @@
 
 ## Aktív — 2026-10-31
 
+324: csak a kalibrált számjegyadat bővült38→41glyphre,14képből. A kód,
+0.30hibaküszöb/0.035karakterkülönbség és szigorú parser változatlan.
+User567kalibráció mellett két független élő575held-out, különunit tiltja
+a held-outnév felvételét a kalibrálóba.3új teljeskép-korpuszlabel;38összes.
+Aktív/stagingresourceJSON atomilag cserélve, a következő olvasás már új
+adatot tölt. Nincs kattintási/naplózási/főstatisztika-kódváltozás.324.
+
 323kiegészítés: continuePending minden újresultnál újraélesedik; csak az
 adott eredmény sajátproceed küldése oldja. KorábbiProceed nem átvihető a
 következő eredményhez, cleanup sem számolhat kéziContinue-t sikernek.

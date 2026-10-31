@@ -21,7 +21,9 @@ import ImageIO
             ("free-health-18-3k-misread.png","18.3K"),("free-smash-680-before.png","680"),
             ("corpus-smashdef802.png","802"),("free-smash-defense-809-green.png","809"),
             ("corpus-piercedef616.png","616"),("free-hp-18k-occluded.png","18K"),
-            ("corpus-regen83-current.png","83")]
+            ("corpus-regen83-current.png","83"),
+            // Visually reviewed user screenshot; the575live frames remain held out.
+            ("../2026-10-31/external-pierce567-user.png","567")]
         var templates=[DigitTemplate]()
         for (name,label) in samples {
             let url=URL(fileURLWithPath:"docs/references/2026-10-30/"+name)

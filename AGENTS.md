@@ -1,5 +1,23 @@
 # Butcher Hero — aktív projektutasítások
 
+## Pierce Damage összegolvasás javítva — 2026-10-31 (324)
+
+Konkrét567/575hibát reprodukáltunk: az új21pxmagas5 elsőhelyes hibája
+0.15440,9-é0.17727, különbség0.02286<0.035, ezért helyesen nem tippelt.
+Nem küszöblazítás:14ellenőrzött kalibrációs kép/41glyph (új5/6/7 a korábbi
+user567képből). Két különélő575kép held-out, nemkalibráció; mindhárom
+teljesHUD/Pierce/összeg új rögzítettkor­puszban (összes38kép). Újunit,
+teljes148teszt+7JSsyntaxPASS. A számolvasó kód/elfogadás/típusfüggetlenség
+változatlan, történeti napló/reconcile nem módosult. Aktív ésstagingbundle
+JSONatomi csere, NINCS gyűjtőleállás az adatbetöltéshez.20:13:26.963Z
+BDF9D157 új575Pierceinput→29.216Zclaim_confirmed_ui amount575: élesPASS.
+Induláskor a régi53842worker/saját53735supervisor már nem létezett, bár
+JSONtrue maradt; oka nem bizonyított. Új --resume-run57658worker/session39912,
+frissképek, folytatott statmunkamenet. Dashboard újsession86104. Nem
+állítunk tartós stabilitást pusztaPIDből. Új különnyitottC2B1DD70:
+képenSmashDamage692, olvasóunknown/összegnil; ezt nem nevezzük javítottnak.
+Piercekonkrét hiba lezárható, általánoshibamentesség nem. Részletek324.
+
 ## Külső kijelző élő igazolása és geodesor — 2026-10-31 (323)
 
 323kiegészítés: minden újresult új sajátContinue-t igényel, korábbi geode

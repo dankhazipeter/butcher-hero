@@ -2,6 +2,14 @@
 
 ## 2026-10-31
 
+324: user „mittegyek/vagytudodjavítani?”→Pierce567/575 baselineújtesztbukik.
+5/9glyph margin0.02286, küszöb0.035. Új5/6/7kalibráció a user567ből,
+575a/b független;148teljestesztPASS. Halott régi sajátfolyamatok észlelve,
+--resume-run új57658worker, utánaResourceJSONhotreload leállás nélkül.
+20:13:29.216ZújBDF9D157575PierceUIigazolt, összeg575naplózva. Régi
+naplót nem korrigáltuk. Ugyanebben a körben C2B1DD70képenSmash692,
+unknown/nil: külön hibajegy, nem aPiercejavítás eredménye.324.
+
 323: user belépett/égnek a kijelzők. KülsőFree19:42:33Z+575utóképpel;
 kristálypanel újx1/x2elrendezésén322scale elégtelen. SajátX-méret/különX1
 javítás, újteszt, saját-naplós felügyeltfolytatás19:47:46Z. ElsőContinue

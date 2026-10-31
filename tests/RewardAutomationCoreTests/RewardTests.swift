@@ -3,6 +3,22 @@ import ImageIO
 @testable import RewardAutomationCore
 
 final class RewardTests:XCTestCase {
+    func testReviewedExternalPierceFontAndIndependentLiveNumbers()throws {
+        let calibrator=try String(contentsOf:project.appendingPathComponent("tools/build-reward-digit-templates.swift"),encoding:.utf8)
+        XCTAssertFalse(calibrator.contains("pierce575-external-heldout"),"Independent live575frames must not be calibration sources")
+        for (path,expected) in [
+            ("docs/references/2026-10-31/external-pierce567-user.png","567"),
+            ("docs/references/2026-10-31/pierce575-external-heldout-a.png","575"),
+            ("docs/references/2026-10-31/pierce575-external-heldout-b.png","575")
+        ] {
+            let png=try image(path)
+            let read=try RewardNumberReader().read(png)
+            XCTAssertEqual(read?.text,expected)
+            let observed=try RewardVision().observe(png)
+            XCTAssertEqual(observed.reward?.kind,"piercing_damage")
+            XCTAssertEqual(observed.reward?.amount,expected)
+        }
+    }
     func testFreeBadgeTemplatesUseReviewedSourcesAndKeepRegenAsHeldOut()throws {
         let path=project.appendingPathComponent("Sources/RewardAutomationCore/Resources/FreeBadges/templates.json")
         let model=try XCTUnwrap(JSONSerialization.jsonObject(with:Data(contentsOf:path)) as? [String:Any])

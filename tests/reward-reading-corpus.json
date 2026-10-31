@@ -2,6 +2,9 @@
   "schemaVersion": 1,
   "review": "A címkék a valódi képernyőképek vizuális ellenőrzéséből származnak, nem a felismerő kimenetéből. Az amount a kijelzett, esetleg kerekített érték normalizálása.",
   "samples": [
+    {"id":"pierce-567-external-font-calibration","image":"docs/references/2026-10-31/external-pierce567-user.png","hud":true,"card":true,"kind":"piercing_damage","amount":"567","note":"Felhasználói788x1083kép: nyíl567. Új méretű5/6/7glyph kalibrációja; a575képek külön ellenőrzők."},
+    {"id":"pierce-575-external-heldout-a","image":"docs/references/2026-10-31/pierce575-external-heldout-a.png","hud":true,"card":true,"kind":"piercing_damage","amount":"575","note":"Képből ellenőrzött575, első független élő input-előkép. Nem kalibrációs forrás."},
+    {"id":"pierce-575-external-heldout-b","image":"docs/references/2026-10-31/pierce575-external-heldout-b.png","hud":true,"card":true,"kind":"piercing_damage","amount":"575","note":"Későbbi önálló élő575kép, más időpont/háttéreffektus; nem kalibrációs forrás."},
     {"id":"cut-550-rock","image":"docs/references/2026-10-30/corpus-cut550.png","hud":true,"card":true,"kind":"cutting_damage","amount":"550","note":"Világoskék fejsze, pajzs nélkül; sziklás háttér."},
     {"id":"cut-555-grass-tall","image":"docs/references/2026-10-30/corpus-cut555.png","hud":true,"card":true,"kind":"cutting_damage","amount":"555","note":"Fejsze pajzs nélkül, magasabb ablak, narancs sziklaháttér. Nem a kalibráláshoz használt kép."},
     {"id":"cut-555-calibration","image":"docs/references/2026-10-30/corpus-cut555-calibration.png","hud":true,"card":true,"kind":"cutting_damage","amount":"555","note":"Fejsze pajzs nélkül; a current sablon forrása. A cut-555-grass-tall külön ellenőrző kép."},

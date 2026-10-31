@@ -2,6 +2,19 @@
 
 ## Aktív — 2026-10-31
 
+324lezárás: user567 és két régi élő575 alapból nil, újkalibrációval
+mind helyes.20:13:29.216Zúj élő575 amounttal is igazolt. A323konkrét
+Pierce575hibája javítva, történeti sorok nem változtak. Más régi nil-esetek
+nem tekinthetők automatikusan javítottnak vizsgálat nélkül.
+Új külön: C2B1DD70,20:12:54Zinput,56Zigazolás; előkép
+data/free-rewards/evidence/C2B1DD70-411E-40E1-9043-0FBA63314703-validated-F3A4DFBA-CD21-4A75-B5DF-7E12D335D0D7.png.
+Képi tény: lila kalapács pajzs nélkül,692; olvasóunknown+amountnil.
+Ikon- és számváltozat külön javítandó, nem tippelünk statot/összeget.
+Futási nyitott: régi53842worker és53735supervisor nem élt a20:10:46Z
+folyamatellenőrzésben, JSONmégtrue volt. Leállás oka nem bizonyított;
+újraindítva --resume-run. A tartós végrehajtási környezetet külön vizsgáljuk,
+nem indítunk önkényesen login/startup szolgáltatást vagy új automatikát.
+
 323felülírja322külső bizonyítékhiányát: +575Freeutókép, sajátkétgeodés
 helyreállítás19:50:52Z és utána+84Regen19:51:06Z igazolt. Új önálló,
 megszakításmentes értesítéses kör még kell. X1/X2 és Continue→újgeode

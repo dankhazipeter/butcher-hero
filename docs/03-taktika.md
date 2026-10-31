@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+324: bizonytalan számjegyre valódi címkézett minta, nem gyengébb küszöb
+vagy korábbi jutalomérték használata. Élő575input+UIigazolás lezárja a
+konkrétPiercehibát; különSmash692unknown továbbra nyitott. Múltat nem
+írjuk át. RuntimeJSONt PIDélettel/frissképpel együtt ellenőrizzük: régi
+trueJSON mellett halott worker/supervisor volt, ok még nem ismert.324.
+
 323kiegészítés: geodesorban minden eredmény külön sajátContinue-t igényel;
 emberi közbelépést nem könyvelünk át korábbi robotContinue felhasználásával.
 
