@@ -59,6 +59,16 @@
       <h3 data-i18n="run">Mostani futás</h3>
       <p data-i18n="rangeHelpRun">A legutóbbi új gyűjtési munkamenet kezdete óta naplózott átvételek. Nem a jelenlegi programfolyamat életidejét jelenti: szüneteken és folytatásos újraindításokon át is megmarad.</p>
       <p data-i18n="rangeHelpReset">Új munkamenetként indított gyűjtőnél kezdődik újra ez a nézet. Nem nullázza az éjfél, az oldal frissítése, az időszakváltás, a játék újranyitása vagy az esemény vége. A korábbi adatok a Minden nézetben megmaradnak.</p>
+      <section class="session-start" aria-labelledby="session-start-title">
+        <h3 id="session-start-title" data-i18n="session.title">Új statisztikai munkamenet</h3>
+        <p data-i18n="session.description">Csak a Mostani futás kezdőpontját állítja mostanra. A Ma, Utolsó óra, 24 óra és Minden nézet adatai megmaradnak. A gyűjtő közben tovább fut.</p>
+        <button type="button" id="session-start" disabled data-i18n="session.start">Új munkamenet indítása</button>
+        <div id="session-confirm" hidden>
+          <p data-i18n="session.confirm">Biztosan mostantól szeretnéd számolni a Mostani futást? A korábbi átvételeket nem töröljük.</p>
+          <div class="session-buttons"><button type="button" id="session-confirm-start" disabled data-i18n="session.confirmStart">Igen, új munkamenet</button><button type="button" id="session-cancel" data-i18n="session.cancel">Mégse</button></div>
+        </div>
+        <p id="session-feedback" role="status" aria-live="polite"></p>
+      </section>
       <h3 data-i18n="rangeHelpOtherTitle">A többi időszak</h3>
       <p data-i18n="rangeHelpOther">Ma: a kijelzett időzóna szerinti éjféltől mostanáig. Utolsó óra és 24 óra: gördülő időablak. Minden: a teljes megőrzött napló. A Kezdet és Vége mezőkkel saját időszak választható.</p>
       <p class="subtle" data-i18n="rangeHelpScope">Csak a naplózott Free-átvételekről van szó. A kristályok és az eseményablakok kezelése külön naplóba kerül.</p>

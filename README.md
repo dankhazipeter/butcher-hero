@@ -57,6 +57,10 @@ Minden push és PR ugyanazt a tesztet futtatja GitHubon is.
 [Közreműködői útmutató](CONTRIBUTING.md).
 
 Élő statisztika: [helyi jutalomnézet](http://127.0.0.1:8765/).
+Az időszakgombok melletti **i → Új munkamenet indítása** külön megerősítéssel
+csak a **Mostani futás** kezdőpontját állítja mostanra. A többi időszak és
+a teljes jutalomnapló megmarad, a gyűjtő közben tovább fut. Az új kezdőpont
+oldal- és szerverújraindítás után is megmarad. [Működés és tesztek](docs/331-uj-statisztikai-munkamenet.md).
 A játék külön állapotsávot kapott: „A játék nem fut”, nem található,
 ablaka nem látható, fut vagy nem ellenőrizhető. Biztosan telepített, leállt
 játékhoz **Játék indítása** gomb jelenik meg. Csak kattintásra nyitja meg

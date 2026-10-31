@@ -4,6 +4,7 @@
   "timezone": "Europe/Budapest",
   "dashboardTimezonePolicy": "328: browser IANA timezone per poll/request; API fallback UTC; journal instants unchanged; HU/EN game stat names stay English",
   "mode": "free-rewards-and-crystal-opening",
+  "statisticsSessionPolicy": "331: Info dialog has explicit confirmed Start new session. Persisted dashboard-only stat-session.json boundary; Current run uses later of this and watcher_started. Other ranges and reward journal remain untouched; collector keeps running. CAS/idempotency/token protection, no auto POST retry.10Python+6Node new tests,193fulltests+7JSchecks. Isolated UI proved run4->0/Today4; live session was NOT reset.22:14:22Z runner4117/supervisor4142/worker4143/session8418 resume-run, old boundary retained; runtime authority remains JSON.",
   "ciStatus": "330: 7473696 / GitHub run41246121213 completed SUCCESS at2026-10-31T22:02:23Z:177tests+7JSchecks, all4prior launcher startup failures pass;19launcher tests2.944s. Numeric loopback bind no longer requires reverse DNS; real isolated dashboard tests forbid getfqdn, original6s/8s deadlines retained. No live restart; collection continues.325process disappearance remains separate.",
   "automaticGameplay": false,
   "automaticObservation": true,

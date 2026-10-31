@@ -194,7 +194,7 @@ class LocalAppProcessTests(unittest.TestCase):
         # Exercise the production loopback bind/health check, not a duplicate
         # HTTPServer fixture with different startup behaviour. /health never
         # invokes the native probe, and the fake collector cannot click.
-        for name in ("server.py", "game_control.py"):
+        for name in ("server.py", "game_control.py", "stat_sessions.py"):
             shutil.copy2(SOURCE.parent.parent / "dashboard" / name, self.root / "dashboard" / name)
         # A broken/offline reverse resolver must not prevent numeric-loopback
         # startup. The guard is inherited only by this isolated fixture tree.

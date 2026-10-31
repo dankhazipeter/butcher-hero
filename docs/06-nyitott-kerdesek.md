@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-31
 
+331: a Mostani futás kézi újrakezdése most a modal gombjával lehetséges,
+adatvesztés és gyűjtőrestart nélkül. Régi bizonytalan sorok a többi
+időszakban szándékosan megmaradnak. Ne nullázzunk valódi statot tesztből:
+az automatizált és böngészős nullázási teszt izolált könyvtárat használ.
+
 330: a korábbi CI-launcher időtúllépés javítása távol is igazolt:
 7473696 / GitHub-run 41246121213, 22:02:23Z success, 177 teszt és 7 JS-check.
 DNS-független loopback bind és tiltott reverz DNS-es, valódi dashboard

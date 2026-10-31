@@ -19,6 +19,7 @@
   let mode = "run", snapshot, sequence = 0, pollVersion = 0, timer, lastCount;
   let statusConnected=false,connectionError=null;
   let launchBusy=false,launchUntil=0,launchFeedback=null;
+  let sessionBusy=false,sessionExpected=null,sessionFeedback=null;
   let cards = new Map();
   const hiddenKinds=new Set();
   const frequencyButtons=new Map();
@@ -38,6 +39,7 @@
     hidden:()=>document.hidden,
   });
   function renderCollector() {
+    renderSessionControls();
     const now=Date.now();
     const game=RewardStatus.gameStatus(snapshot?.game,snapshot?.generatedAt,now,statusConnected,t);
     if(game.state==="running") {launchUntil=0;if(!launchBusy) launchFeedback=null;}
@@ -59,6 +61,50 @@
     $("collector-detail").textContent=status.detail;
     $("collector-frame").textContent=t("lastFrame",{time:status.checkedAt?clock.format(new Date(status.checkedAt)):t("noData")});
   }
+  function renderSessionControls() {
+    const age=Date.now()-Date.parse(snapshot?.generatedAt);
+    const available=statusConnected && age>=0 && age<=10000 && snapshot?.statisticsSessionToken && snapshot?.currentSession?.id;
+    $("session-start").hidden=sessionExpected!==null;
+    $("session-start").disabled=sessionBusy || !available;
+    $("session-confirm").hidden=sessionExpected===null;
+    $("session-confirm-start").disabled=sessionBusy || !available;
+    $("session-cancel").disabled=sessionBusy;
+    $("session-confirm-start").textContent=t(sessionBusy?"session.starting":"session.confirmStart");
+    $("session-feedback").textContent=sessionFeedback?t(sessionFeedback):"";
+  }
+  $("session-start").addEventListener("click",()=>{
+    renderSessionControls();
+    if($("session-start").disabled || sessionExpected!==null) return;
+    sessionExpected=snapshot.currentSession.id;sessionFeedback=null;renderSessionControls();
+    $("session-cancel").focus({preventScroll:true});
+  });
+  $("session-cancel").addEventListener("click",()=>{
+    if(sessionBusy) return;
+    sessionExpected=null;renderSessionControls();$("session-start").focus({preventScroll:true});
+  });
+  $("session-confirm-start").addEventListener("click",async()=>{
+    renderSessionControls();
+    if(sessionBusy || sessionExpected===null || $("session-confirm-start").disabled) return;
+    sessionBusy=true;sessionFeedback=null;renderSessionControls();
+    try {
+      const response=await fetch("/api/statistics/session",{method:"POST",cache:"no-store",
+        headers:{"Content-Type":"application/json","X-Statistics-Session-Token":snapshot.statisticsSessionToken},
+        body:JSON.stringify({expectedSessionID:sessionExpected}),signal:AbortSignal.timeout(6000)});
+      const data=await response.json();
+      if(!response.ok || data.status!=="started" || !data.currentSession?.id) {
+        sessionFeedback=data.error==="session_changed"?"session.changed":"session.failed";
+      } else {
+        sessionFeedback="session.success";sessionExpected=null;
+        // Reject pre-reset polls still in flight and explicitly show the new run.
+        sequence++;choose("run",false);
+      }
+    } catch {sessionFeedback="session.failed";}
+    finally {
+      sessionBusy=false;sessionExpected=null;renderSessionControls();
+      if($("range-help").open) $("session-start").focus({preventScroll:true});
+      refresh();
+    }
+  });
   $("game-launch").addEventListener("click",async()=>{
     const game=RewardStatus.gameStatus(snapshot?.game,snapshot?.generatedAt,Date.now(),statusConnected,t);
     if(launchBusy || Date.now()<launchUntil || !game.canLaunch || !snapshot?.gameLaunchToken) return;
@@ -242,7 +288,7 @@
       card.querySelector("h3").textContent=labelOf(row);
       card.querySelector("svg").setAttribute("aria-label",t("statChartAria",{label:labelOf(row)}));
       const value=card.querySelector(".stat-value");
-      animateValue(value,row.total,`${i18n.language}:${mode==="custom"?`${mode}:${$("from").value}:${$("to").value}`:mode}`);
+      animateValue(value,row.total,`${i18n.language}:${mode==="custom"?`${mode}:${$("from").value}:${$("to").value}`:mode}:${mode==="run"?data.currentSession?.id||"":""}`);
       value.title=t("exact",{amount:decimal(row.total)});
       value.setAttribute("aria-label",`${labelOf(row)}: +${decimal(row.total)}`);
       card.querySelector(".stat-count").textContent=t("confirmedCount",{count:decimal(data.collectionCounts[row.kind])});
@@ -294,16 +340,19 @@
       $("notice").hidden=false;$("notice").textContent=connectionMessage();
     }
   }
-  function choose(value) {
+  function choose(value,reload=true) {
     mode=value;
     for(const button of document.querySelectorAll("[data-range]")) button.setAttribute("aria-pressed",String(button.dataset.range===mode));
-    refresh();
+    if(reload) refresh();
   }
   for(const button of document.querySelectorAll("[data-range]")) button.addEventListener("click",()=>choose(button.dataset.range));
   const rangeHelp=$("range-help");
   $("range-help-open").addEventListener("click",()=>{if(!rangeHelp.open) rangeHelp.showModal();});
   $("range-help-close").addEventListener("click",()=>rangeHelp.close());
-  rangeHelp.addEventListener("close",()=>$("range-help-open").focus({preventScroll:true}));
+  rangeHelp.addEventListener("close",()=>{
+    if(!sessionBusy) {sessionExpected=null;renderSessionControls();}
+    $("range-help-open").focus({preventScroll:true});
+  });
   rangeHelp.addEventListener("click",event=>{
     if(event.target!==rangeHelp) return;
     const box=rangeHelp.getBoundingClientRect();

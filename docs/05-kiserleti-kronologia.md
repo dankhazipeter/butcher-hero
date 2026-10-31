@@ -2,6 +2,13 @@
 
 ## 2026-10-31
 
+331: kérésre új munkamenet-gomb került az időszaksúgóba. Külön statkezdőpont,
+nem naplótörlés/gyűjtőrestart. 10 Python + 6 Node új teszt, izolált valódi
+UI-n 4→0 run, Ma=4. Éles lapon a gomb elérhető, valódi reset nem történt.
+Betöltéskor rövid közös runnerstop/resume: 22:14:22Z új4117/4142/4143,
+session8418; frissképek és utána CutDefense631 igazolt. Megmaradt a kezdés
+2026-10-30T16:50:44.381Z, betöltés előtt/után1462 átvétel. Részletek331.
+
 330 távoli eredmény: 7473696 / 41246121213, 22:02:23Z success.
 Teljes 177 teszt + 7 JS-check; mind a négy korábbi startup-folyamatteszt
 sikeres, teljes launcher-suite 2.944 s. A gyűjtő tovább futott.

@@ -7,6 +7,7 @@ command -v tesseract >/dev/null || { printf 'Missing OCR engine: install with br
 swift test --filter '(Reward(Corpus|InputGeometry)?|Crystal|EventEnd)Tests'
 python3 -m unittest discover -s tests -p 'test_reward_dashboard.py'
 python3 -m unittest discover -s tests -p 'test_game_control.py'
+python3 -m unittest discover -s tests -p 'test_stat_sessions.py'
 python3 -m unittest discover -s tests -p 'test_git_test_gate.py'
 python3 -m unittest discover -s tests -p 'test_free_supervisor.py'
 python3 -m unittest discover -s tests -p 'test_local_app.py' -v

@@ -1,5 +1,30 @@
 # Butcher Hero — aktív projektutasítások
 
+## Dashboard: új statisztikai munkamenet — 2026-10-31 (331)
+
+Új felhasználói engedély: az időszaksúgó modalban „Új munkamenet indítása”,
+külön Igen/Mégse megerősítéssel. Csak a dashboard Mostani futás nézetének
+kezdetét menti; nem töröl/módosít jutalomnaplót, nem indít/állít le gyűjtőt,
+nem küld játékinputot. A Ma/Utolsó óra/24 óra/Minden/custom továbbra minden
+saját időszakbeli adatot tartalmaz. Frissítés, szerverrestart és --resume-run
+megőrzi a kézi kezdőpontot; egy későbbi watcher_started új kezdet lehet.
+A kezdőpont a kettő közül a későbbi. Kattintási idő szerint sorolunk, nem
+későbbi igazolási idő szerint. Új fájl: data/free-rewards/stat-session.json;
+nem kerül Gitbe. Atomi csere, külön flock + threadlock, expectedSessionID
+CAS és az előző kérés idempotens ismétlése védi a több lap/duplakattintás
+helyzetet. Sérült/írhatatlan metadata nem hallgatólagos reset vagy régi
+nézet: hiba. POST /api/statistics/session csak loopback/azonos Origin/
+Host/Sec-Fetch-Site + külön szerverenkénti token és szűk JSONtest mellett.
+Ez a 320/315 korábbi „csak játékindítás az íróhatás” leírás SZŰK új kivétele;
+a jutalomnapló továbbra csak olvasható. Nem általános fájlíró/reset/game API.
+UI csak friss kapcsolattal engedélyez, nincs automatikus POST-újrapróba,
+siker után run nézet, régi függő poll nem írhatja vissza a számlálókat.
+HU/EN külön nyelvi fájl, biztonságos Mégse kezdeti fókusz, modalzárás törli
+a még el nem küldött megerősítést. A tényleges munkamenetet fejlesztési
+tesztből NEM nullázzuk: izolált adatokon 4→0 run és Ma=4 igazolt.
+10 új Python + 6 Node regresszió, teljes 193 teszt + 7 JS-check.
+Részletek docs/331-uj-statisztikai-munkamenet.md; friss runtime mindig JSON.
+
 ## CI-indulás: DNS-független loopback szerver — 2026-10-31 (330)
 
 A felhasználó kérte a CI javítását. A 41241697382 futásban mind a négy
@@ -578,7 +603,7 @@ In a **second** terminal at the repository root:
 Open `http://127.0.0.1:8765/`. If that port is occupied, use
 `./scripts/start-reward-dashboard.sh --port 8766` and open that port instead;
 do not kill an unrelated server. Ctrl+C in this terminal stops only the
-dashboard. Statistics remain read-only and the server is bound to loopback.
+dashboard. Reward journals remain read-only and the server is bound to loopback.
 It checks native game process/window metadata without capturing screenshots.
 The only game-control action is the explicit **Launch game** button: it
 opens the fixed installed Butcher Hero app only when it is not running.
@@ -599,11 +624,16 @@ Invalid time zones and nonexistent spring-DST custom times are rejected.
 The eight game stat names stay in English even on the Hungarian page,
 matching the game; surrounding explanations and number formats still switch.
 The small info button next to the time-range buttons explains their meaning
-in a keyboard-accessible dialog. Current run is the logical session since
-the latest `watcher_started`, not a single process or calendar day.
-`--resume-run` preserves it across pauses/restarts; a new non-resumed launch
-starts a new view without deleting All time history. Refreshing this page
-or changing ranges does not reset anything. See docs/319.
+in a keyboard-accessible dialog. Inside that dialog, **Start new session**
+asks for confirmation and saves a separate statistics boundary without
+stopping collection or changing the reward journal. Only **Current run**
+starts over; Today, Last hour, 24 hours, All time and custom ranges preserve
+their existing data. It then selects Current run. The effective start is
+the later of the latest `watcher_started` and this saved manual boundary,
+not a single process or calendar day. `--resume-run`, server restarts and
+page reloads preserve it; a new non-resumed collector launch starts a new
+view too. Rewards belong to a range by click time, not confirmation time.
+Merely refreshing or selecting a range never resets anything. See docs/331.
 A process PID alone is not proof of successful collection.
 Game status is separate: not running, not installed, running with no usable
 visible window, running, or unknown. An unavailable/stale probe is not proof
@@ -619,6 +649,8 @@ Local files (not committed to Git):
 - `data/free-rewards/events.jsonl`: append-only FREE attempts/confirmations.
 - `data/free-rewards/evidence/`: original before/validated/after screenshots.
 - `data/free-rewards/state.json`: worker status and crystal phase.
+- `data/free-rewards/stat-session.json`: dashboard-only manual statistics
+  boundary, written only after explicit confirmation; never reward data.
 - `data/free-rewards/supervisor.json` and `supervisor-events.jsonl`: supervision.
 - `data/crystal-rewards/events.jsonl` and `evidence/`: crystal flow and images.
 - `data/event-dismissals/events.jsonl` and `evidence/`: known event-popup

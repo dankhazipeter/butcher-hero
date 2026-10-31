@@ -228,6 +228,98 @@ function helpData() {
     collectionCounts:{},collectionSeries:{},confirmedClaims:3,pendingClaims:0,clickAttempts:3,logExists:true,recent:[]};
 }
 
+function sessionData() {
+  return {...helpData(),statisticsSessionToken:"session-token",currentSession:{id:"old-session",startedAt:"2026-10-30T16:50:44.381Z"}};
+}
+test("new-session action requires confirmation; cancel, modal close and language changes never POST",async()=>{
+  const elements=await renderDashboard(sessionData());
+  const begin=elements.get("session-start"),confirm=elements.get("session-confirm");
+  assert.equal(begin.disabled,false);assert.equal(confirm.hidden,true);
+  begin.listeners.click();assert.equal(confirm.hidden,false);
+  assert.equal(elements.get("session-cancel").focused,true,"safe cancel receives initial focus");
+  assert.equal(elements.requests(),1);
+  const picker=elements.get("language");picker.value="en";picker.listeners.change();
+  assert.equal(elements.get("session-confirm-start").textContent,"Yes, start new session");
+  assert.equal(confirm.hidden,false);
+  elements.get("session-cancel").listeners.click();assert.equal(confirm.hidden,true);
+  begin.listeners.click();elements.get("range-help").close();assert.equal(confirm.hidden,true);
+  await elements.get("session-confirm-start").listeners.click();
+  assert.equal(elements.requests(),1);assert.equal(elements.get("confirmed").textContent,"3");
+});
+test("confirmed session start sends its own token once and switches to Current run after acknowledgement",async()=>{
+  let data=sessionData(),ack;
+  const reply=new Promise(resolve=>ack=resolve);
+  const elements=await renderDashboard(data,0,{fetchReply:async(url)=>url==="/api/statistics/session"?reply:{ok:true,json:async()=>data}});
+  const today=elements.staticNodes.find(node=>node.dataset.range==="today");today.listeners.click();
+  await new Promise(resolve=>setImmediate(resolve));
+  elements.get("session-start").listeners.click();
+  const pending=elements.get("session-confirm-start").listeners.click();
+  await elements.get("session-confirm-start").listeners.click();
+  assert.equal(elements.get("session-confirm-start").disabled,true);
+  assert.equal(elements.get("confirmed").textContent,"3","never fabricate a reset before server acknowledgement");
+  data={...data,currentSession:{id:"new-session"},confirmedClaims:0};
+  ack({ok:true,json:async()=>({status:"started",currentSession:data.currentSession})});
+  await pending;await new Promise(resolve=>setImmediate(resolve));
+  const posts=elements.requestLog.filter(row=>row.options.method==="POST");assert.equal(posts.length,1);
+  assert.equal(posts[0].options.headers["X-Statistics-Session-Token"],"session-token");
+  assert.deepEqual(JSON.parse(posts[0].options.body),{expectedSessionID:"old-session"});
+  assert.equal(new URL(elements.requestLog.at(-1).url,"http://localhost").searchParams.get("range"),"run");
+  assert.equal(elements.get("confirmed").textContent,"0");
+  assert.ok(elements.get("session-feedback").textContent.includes("elindult"));
+});
+test("session error never auto-retries POST and another attempt requires fresh confirmation",async()=>{
+  const elements=await renderDashboard(sessionData(),0,{savedLanguage:"en",fetchReply:async(url)=>url==="/api/statistics/session"
+    ?{ok:false,json:async()=>({error:"session_changed"})}:{ok:true,json:async()=>sessionData()}});
+  elements.get("session-start").listeners.click();await elements.get("session-confirm-start").listeners.click();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.ok(elements.get("session-feedback").textContent.includes("Another session"));
+  await elements.get("session-confirm-start").listeners.click();elements.poll();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.requestLog.filter(row=>row.options.method==="POST").length,1);
+  assert.equal(elements.get("confirmed").textContent,"3");
+  assert.equal(elements.get("session-confirm").hidden,true);
+});
+test("session start stays disabled for stale, disconnected or unsupported server state",async()=>{
+  for(const data of [helpData(),{...sessionData(),generatedAt:"2020-01-01T00:00:00Z"}]) {
+    const elements=await renderDashboard(data);
+    assert.equal(elements.get("session-start").disabled,true);
+    elements.get("session-start").listeners.click();await elements.get("session-confirm-start").listeners.click();
+    assert.equal(elements.requests(),1);
+  }
+  const elements=await renderDashboard(sessionData(),0,{failFetch:count=>count>1});
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.get("session-start").disabled,true);
+});
+test("an armed confirmation retains its original session ID while other tabs update the poll",async()=>{
+  let data=sessionData();
+  const elements=await renderDashboard(data,0,{fetchReply:async(url)=>url==="/api/statistics/session"
+    ?{ok:false,json:async()=>({error:"session_changed"})}:{ok:true,json:async()=>data}});
+  elements.get("session-start").listeners.click();data={...data,currentSession:{id:"other-tab-session"}};
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  await elements.get("session-confirm-start").listeners.click();
+  const post=elements.requestLog.find(row=>row.options.method==="POST");
+  assert.equal(JSON.parse(post.options.body).expectedSessionID,"old-session");
+});
+test("a pre-reset poll arriving late cannot replace the new-session counters",async()=>{
+  let data=sessionData(),release,reads=0;
+  const stale=new Promise(resolve=>release=resolve);
+  const elements=await renderDashboard(data,0,{fetchReply:async(url)=>{
+    if(url==="/api/statistics/session") {
+      data={...data,currentSession:{id:"new-session"},confirmedClaims:0};
+      return {ok:true,json:async()=>({status:"started",currentSession:data.currentSession})};
+    }
+    if(++reads===2) return stale;
+    return {ok:true,json:async()=>data};
+  }});
+  elements.poll();
+  elements.get("session-start").listeners.click();
+  await elements.get("session-confirm-start").listeners.click();
+  await new Promise(resolve=>setImmediate(resolve));
+  release({ok:true,json:async()=>sessionData()});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.get("confirmed").textContent,"0");
+});
+
 test("all displayed dates and request filters use the browser zone, not the UI language or Romania",async()=>{
   const at="2026-10-31T20:00:00Z";
   const data={...helpData(),generatedAt:at,lastConfirmedAt:at,recent:[{at,kind:"hp",label:"Health",amount:"18100",confirmed:true}]};

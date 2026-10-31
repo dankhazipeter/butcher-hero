@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Loopback-only reward statistics with one explicit, fixed-target game-launch action."""
+"""Loopback statistics; explicit session boundary and fixed-target game launch."""
 from __future__ import annotations
 
 import argparse
@@ -20,8 +20,10 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 if __package__:
     from .game_control import GameControl, GameControlError
+    from .stat_sessions import StatSessions, SessionError, public_session
 else:
     from game_control import GameControl, GameControlError
+    from stat_sessions import StatSessions, SessionError, public_session
 
 ROOT = Path(__file__).resolve().parents[1]
 UTC = timezone.utc
@@ -138,7 +140,7 @@ class Journal:
             return list(self.events), self.malformed, True
 
 
-def time_window(query: dict, events: list, now: datetime):
+def time_window(query: dict, events: list, now: datetime, session_start=None):
     zone = query_zone(query)
     mode = query.get("range", ["run"])[0]
     end = parse_time(query["to"][0], zone) if query.get("to") else now
@@ -155,7 +157,7 @@ def time_window(query: dict, events: list, now: datetime):
         start = min((event["at"] for event in events), default=now)
     elif mode == "run":
         starts = [event["at"] for event in events if event["event"] == "watcher_started"]
-        start = starts[-1] if starts else min((event["at"] for event in events), default=now)
+        start = session_start if session_start is not None else starts[-1] if starts else min((event["at"] for event in events), default=now)
     else:
         raise ValueError("Ismeretlen időszak.")
     if start > end:
@@ -163,8 +165,8 @@ def time_window(query: dict, events: list, now: datetime):
     return mode, start, end
 
 
-def aggregate(events, malformed, log_exists, query, now):
-    mode, start, end = time_window(query, events, now)
+def aggregate(events, malformed, log_exists, query, now, session_start=None):
+    mode, start, end = time_window(query, events, now, session_start)
     clicks, corrections, confirmed = {}, {}, set()
     attempts = 0
     for event in events:
@@ -295,11 +297,13 @@ def watcher_state(path: Path, now: datetime):
 
 def make_server(root: Path, port: int, *, game_control=None):
     journal = Journal(root / "data/free-rewards/events.jsonl")
+    sessions = StatSessions(root)
     static = root / "dashboard"
     # UI-only cutouts. Recognition templates are deliberately untouched.
     icons = static / "icons"
     game = game_control if game_control is not None else GameControl(root)
     launch_token = secrets.token_urlsafe(32)
+    session_token = secrets.token_urlsafe(32)
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
@@ -336,13 +340,17 @@ def make_server(root: Path, port: int, *, game_control=None):
             try:
                 if url.path == "/health":
                     self.send_json(200, {"app": "butcher-reward-dashboard", "statisticsReadOnly": True,
-                                         "readOnly": False, "explicitGameLaunch": True})
+                                         "readOnly": False, "explicitGameLaunch": True,
+                                         "explicitStatisticsSession": True})
                 elif url.path == "/api/rewards":
                     now = datetime.now(UTC)
                     events, malformed, exists = journal.snapshot()
+                    session = sessions.current(events)
                     with localcontext() as context:
                         context.prec = 90
-                        payload = aggregate(events, malformed, exists, parse_qs(url.query, keep_blank_values=True), now)
+                        payload = aggregate(events, malformed, exists, parse_qs(url.query, keep_blank_values=True), now, session["at"])
+                    payload["currentSession"] = public_session(session)
+                    payload["statisticsSessionToken"] = session_token
                     payload["watcher"] = watcher_state(root / "data/free-rewards/state.json", now)
                     payload["game"] = game.snapshot()
                     payload["gameLaunchToken"] = launch_token
@@ -361,14 +369,19 @@ def make_server(root: Path, port: int, *, game_control=None):
                     self.send_bytes(200, (icons / url.path[7:]).read_bytes(), "image/png", "private, max-age=3600")
                 else:
                     self.send_json(404, {"error": "Nincs ilyen oldal."})
+            except SessionError as error:
+                self.send_json(error.status, {"error": error.code})
             except (ValueError, OverflowError) as error:
                 self.send_json(400, {"error": "Hibás időszak: " + str(error)})
             except OSError:
                 self.send_json(503, {"error": "A helyi adatfájl most nem olvasható."})
 
         def do_POST(self):
+            if urlsplit(self.path).path == "/api/statistics/session":
+                self.start_statistics_session()
+                return
             if urlsplit(self.path).path != "/api/game/launch":
-                self.send_json(405, {"error": "Only explicit game launch is supported; statistics are read-only."})
+                self.send_json(405, {"error": "Unsupported action; reward journals are read-only."})
                 return
             allowed = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
             host = self.headers.get("Host")
@@ -392,6 +405,34 @@ def make_server(root: Path, port: int, *, game_control=None):
             try:
                 self.send_json(200, {"status": game.launch()})
             except GameControlError as error:
+                self.send_json(error.status, {"error": error.code})
+
+        def start_statistics_session(self):
+            host = self.headers.get("Host")
+            allowed = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
+            if (host not in allowed or self.headers.get("Origin") != "http://" + host
+                    or self.headers.get("Sec-Fetch-Site") not in (None, "same-origin")
+                    or not secrets.compare_digest(self.headers.get("X-Statistics-Session-Token", "").encode("utf-8"), session_token.encode("ascii"))):
+                self.send_json(403, {"error": "session_forbidden"})
+                return
+            try:
+                length = int(self.headers.get("Content-Length", "-1"))
+                if (not 0 < length <= 256 or self.headers.get("Transfer-Encoding")
+                        or self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json"):
+                    raise ValueError("Invalid body")
+                self.connection.settimeout(3)
+                body = json.loads(self.rfile.read(length))
+                if (not isinstance(body, dict) or set(body) != {"expectedSessionID"}
+                        or not isinstance(body["expectedSessionID"], str)
+                        or not 1 <= len(body["expectedSessionID"]) <= 128):
+                    raise ValueError("Invalid session ID")
+            except (ValueError, OSError):
+                self.send_json(400, {"error": "invalid_session_request"})
+                return
+            try:
+                session = sessions.start(body["expectedSessionID"], lambda: journal.snapshot()[0], datetime.now(UTC))
+                self.send_json(200, {"status": "started", "currentSession": public_session(session)})
+            except SessionError as error:
                 self.send_json(error.status, {"error": error.code})
 
     server = LoopbackHTTPServer(("127.0.0.1", port), Handler)

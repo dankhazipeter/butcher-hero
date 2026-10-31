@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-31
 
+331: a dashboardnak külön statisztikai kezdőpontja lehet. A jutalomnapló
+egyetlen írója továbbra a gyűjtő; a UI kizárólag stat-session.json-t ment.
+Run-kezdés=max(legutóbbi watcher_started, kézi határ), más időszak számítása
+változatlan. Atomi fájlcsere, külön folyamat-/szálzár, expectedSessionID CAS
+és előző-kérés idempotencia; új tokennel védett, explicit POST. Sérült
+metadata hibát ad, nem csöndben korábbi statnézetet. A gyűjtő nem újul meg
+resetkor, a függő régi kattintás a régi időszakban marad. Részletek331.
+
 330: a numerikus loopback HTTP-bind nem végez reverz DNS-feloldást.
 LoopbackHTTPServer megtartja a ThreadingHTTPServer működését, de a bindot
 közvetlen TCPServer.server_bind végzi; server_name a kötött IP, server_port
