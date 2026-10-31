@@ -2,7 +2,9 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
-- [Felhasználói leállítás az esti folytatásig](314-felhasznaloi-stop-estig.md) — **jelenleg nincs gyűjtés vagy játékfigyelés**.
+- [Free- és kristálygyűjtés újraindítása, igazolt Health-átvétellel](316-gyujtes-ujrainditasa.md) — jelenleg aktív.
+
+- [Korábbi felhasználói leállítás](314-felhasznaloi-stop-estig.md) — a316-os új kérés feloldotta a gyűjtésre.
 
 - [Teljes beüzemelés az AGENTS-ben, AI-segítség és No Ads](315-beuzemeles-es-ai-utmutato.md)
 

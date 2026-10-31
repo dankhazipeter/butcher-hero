@@ -1,5 +1,18 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — GYŰJTÉS ÚJRA ENGEDÉLYEZVE, 2026-10-31 (316)
+
+Új kifejezett felhasználói kérés: „indítsd el a programot, hadd szedje a
+jutalmakat”. Ez felülírja314STOP-ját kizárólag a jelenlegi Free+kristály
+automatizációra. Nincs mozgás/harc/bolt/eladás/fejlesztés/vásárlás/reklám.
+12:22:09Zsupervisor95036/worker95041, tartóssession91364, --resume-run,
+1s figyelés, meglévő statfutás megtartva.12:22:31.699ZHealth18100igazolt;
+37F08443utóképen explicit+18.1Kszív. Frissstate.running=true és képidő.
+Kristályág is aktív, új kristálynyitást ebben a körben még nem igazoltunk.
+Régi bot és heartbeatPAUSED; nem indul második watcher. Runtime mindig
+data/free-rewards/state.jsonból, nem a történetiPID-kből. PierceDamage-
+összegnil külön nyitott kérdés marad. Részletek316; az alábbiSTOP történeti.
+
 ## ELSŐBBSÉG — FELHASZNÁLÓI STOP, 2026-10-31 11:40 Bucharest (314)
 
 A felhasználó leállította a programot és a figyelést, este folytatjuk.

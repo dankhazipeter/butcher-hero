@@ -2,11 +2,11 @@
   "session": "updated-game-2026-10-29",
   "date": "2026-10-31",
   "timezone": "Europe/Bucharest",
-  "mode": "paused-by-user",
+  "mode": "free-rewards-and-crystal-opening",
   "automaticGameplay": false,
-  "automaticObservation": false,
+  "automaticObservation": true,
   "observationIntervalSeconds": 1,
-  "allowedAutomaticActions": [],
+  "allowedAutomaticActions": ["claim left event FREE reward", "red-dot crystal icon -> x1 Open -> geode strikes -> Continue -> inventory X -> HUD"],
   "crystalLog": "data/crystal-rewards/events.jsonl",
   "rewardLog": "data/free-rewards/events.jsonl",
   "watcherStatus": "data/free-rewards/state.json",
@@ -17,6 +17,7 @@
   "visualLabels": { "portal": "BOSS TOWER", "counter": "0/9", "playerHealthLabel": "473M" },
   "verifiedCombatStats": null,
   "stoppedAt": "2026-10-31T11:40:27.872073+02:00",
+  "resumedAt": "2026-10-31T14:22:09.780+02:00",
   "dashboardURL": "http://127.0.0.1:8765/",
-  "nextStep": "STOP requested by user2026-10-31. Worker52120 and supervisor52048 exited; state.running=false and supervisor_stopped09:40:27Z. No screenshot observation, game input, automatic restart or scheduled evening resume. Heartbeat PAUSED. Await an explicit user continuation, then inspect fresh state. Free+crystal implementation and its live recovery are documented in313; separate PierceDamage amount=nil observations remain in06. Read-only dashboard may display saved data but never controls or captures the game. Logs, evidence and code preserved; stop documented in314."
+  "nextStep": "Explicit user restart request overrides314STOP for Free+crystal collection only. Supervisor95036/worker95041/persistent session91364 started2026-10-31T12:22:09Z with --resume-run; existing logical statistics run preserved. First Health18100claim37F08443 confirmed12:22:31.699Z, explicit+18.1Kheart afterimage reviewed. Fresh state and PID authority remain data/free-rewards/state.json. Crystal branch active but no new crystal completion verified in this restart yet. Legacy bot and heartbeat remain PAUSED. Separate PierceDamage amount=nil issue remains in06. No movement/combat/shop/sell/upgrade/purchases/ads. Restart documented in316."
 }

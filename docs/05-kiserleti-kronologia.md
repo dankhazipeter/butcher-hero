@@ -2,6 +2,13 @@
 
 ## 2026-10-31
 
+316: kifejezett újraindítási kérés. Régiworker/felügyelő nem futott,
+12:22:09Z95036supervisor+95041worker/session91364 --resume-run módban
+elindult. FrissHUD és1s képidő.12:22:28ZHealth18100észlelés,
+29Zvalidáltkattintás,31.699ZUIigazolás;37F08443utóképen+18.1Kszív.
+Nincs kódcsere vagy statnullázás; kristályág aktív, új nyitás még nem
+igazolt. Régi bot/heartbeatPAUSED.316felülírja314gyűjtésiSTOP-ját.
+
 315: felhasználó teljes beüzemelést/használatot kért azAGENTS.md-be és
 feltöltést, valamint AI-val történő beüzemelést említő angol Discordszöveget.
 A beüzemelési rész a ténylegesPackage.swift/parancsok/scriptkapuk alapján
