@@ -2,6 +2,12 @@
 
 ## Aktív — 2026-10-31
 
+321: félrekattintási jelentésnél nem ismétlünk vakon inputot. Előbb
+aktuálisablak/Quartzpont/aktívkijelző ellenőrzés, warp után ténylegeskurzor
+egyezés. Sikert csak továbbra is utóképek igazolnak, a helyes kurzorpont
+nem jutalom. Monitorra húzást frissképpel kell követni; képernyőalvás alatt
+várunk, nem ébresztjük a gépet. Külsőn teljes élőpróba még szükséges.321.
+
 320: hiányzó frisskép nem egyenlő leállt játékkal. Játékfolyamat és gyűjtő
 külön ellenőrzendő; most streamhiba mellett a játék ténylegesen fut.
 Játékot csak a felhasználó új gombnyomása indít, nem poll/heartbeat/teszt.

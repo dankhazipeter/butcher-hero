@@ -48,6 +48,7 @@ private enum HumanInput {
 
 @MainActor private final class Capture {
     func frame()async throws->Frame {
+        guard !WindowInputGeometry.displays().isEmpty else{throw AutomationError("Nincs aktív kijelző; a képernyők alvó vagy lekapcsolt állapotára várakozom.")}
         let content=try await SCShareableContent.excludingDesktopWindows(false,onScreenWindowsOnly:true)
         let windows=content.windows.filter {
             $0.owningApplication?.bundleIdentifier=="com.multicastgames.butcher" ||
@@ -62,6 +63,7 @@ private enum HumanInput {
         return Frame(image:image,window:window,capturedAt:Date())
     }
     func click(_ reward:FreeReward,frame:Frame,cancellation:Cancellation,
+               diagnostic:(String)throws->Void,
                rejected:(Frame,RewardObservation,String)throws->Void,
                validated:(Frame,FreeReward)throws->String)async throws->(sentAt:Date,reward:FreeReward,evidence:String) {
         guard HumanInput.ready else{throw HumanInputBusy()}
@@ -99,15 +101,25 @@ private enum HumanInput {
         }
         guard let (fresh,current)=accepted else{throw AutomationError("Free reward missing after validation")}
         let evidence=try validated(fresh,current)
-        let point=CGPoint(x:fresh.window.frame.minX+current.tapX*fresh.window.frame.width,
-                          y:fresh.window.frame.minY+current.tapY*fresh.window.frame.height)
+        let normalized=CGPoint(x:current.tapX,y:current.tapY)
+        let point=try WindowInputGeometry.target(normalized:normalized,image:fresh.image,
+            capturedWindow:fresh.window.frame,windowID:fresh.window.windowID,pid:pid)
         guard let source=CGEventSource(stateID:.hidSystemState),
               let down=CGEvent(mouseEventSource:source,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),
               let up=CGEvent(mouseEventSource:source,mouseType:.leftMouseUp,mouseCursorPosition:point,mouseButton:.left) else{throw AutomationError("Kattintási esemény nem hozható létre.")}
         guard !cancellation.requested else{throw AutomationError("Leállítás kérve; nincs kattintás.")}
         guard HumanInput.ready else{throw HumanInputBusy()}
         cursor=CGEvent(source:nil)?.location
-        CGWarpMouseCursorPosition(point);warped=true
+        let warpResult=CGWarpMouseCursorPosition(point);warped=true
+        guard warpResult == .success else{throw AutomationError("Mouse warp failed; no click sent")}
+        // Catalyst needs a real location update too; warping alone posts no event.
+        CGEvent(mouseEventSource:source,mouseType:.mouseMoved,mouseCursorPosition:point,mouseButton:.left)?.post(tap:.cghidEventTap)
+        try await Task.sleep(nanoseconds:25_000_000)
+        try WindowInputGeometry.verifyCursor(point:point)
+        _=try WindowInputGeometry.target(normalized:normalized,image:fresh.image,
+            capturedWindow:fresh.window.frame,windowID:fresh.window.windowID,pid:pid)
+        try diagnostic(WindowInputGeometry.diagnostic(point:point,image:fresh.image,frame:fresh.window.frame,windowID:fresh.window.windowID))
+        guard !cancellation.requested,HumanInput.ready else{throw HumanInputBusy()}
         let sentAt=Date()
         down.post(tap:.cghidEventTap)
         // Always release the mouse, including on task cancellation.
@@ -116,6 +128,7 @@ private enum HumanInput {
         return (sentAt,current,evidence)
     }
     func crystalClick(_ action:CrystalAction,frame:Frame,cancellation:Cancellation,
+                      diagnostic:(String)throws->Void,
                       validated:(Frame,CrystalObservation)throws->Void)async throws {
         guard HumanInput.ready else{throw HumanInputBusy()}
         guard AXIsProcessTrusted(),let pid=frame.window.owningApplication?.processID,
@@ -137,19 +150,29 @@ private enum HumanInput {
         let observation=try CrystalVision().observe(fresh.image,hudVisible:hud)
         guard action.permits(observation) else{throw AutomationError("Crystal preclick rejected: \(action.rawValue)/\(observation.screen.rawValue)")}
         try validated(fresh,observation)
-        let point=CGPoint(x:fresh.window.frame.minX+action.point.x*fresh.window.frame.width,
-                          y:fresh.window.frame.minY+action.point.y*fresh.window.frame.height)
+        let point=try WindowInputGeometry.target(normalized:action.point,image:fresh.image,
+            capturedWindow:fresh.window.frame,windowID:fresh.window.windowID,pid:pid)
         guard !cancellation.requested,HumanInput.ready,
               let source=CGEventSource(stateID:.hidSystemState),
               let down=CGEvent(mouseEventSource:source,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),
               let up=CGEvent(mouseEventSource:source,mouseType:.leftMouseUp,mouseCursorPosition:point,mouseButton:.left)
         else{throw HumanInputBusy()}
-        cursor=CGEvent(source:nil)?.location;CGWarpMouseCursorPosition(point);warped=true
+        cursor=CGEvent(source:nil)?.location
+        let warpResult=CGWarpMouseCursorPosition(point);warped=true
+        guard warpResult == .success else{throw AutomationError("Mouse warp failed; no click sent")}
+        CGEvent(mouseEventSource:source,mouseType:.mouseMoved,mouseCursorPosition:point,mouseButton:.left)?.post(tap:.cghidEventTap)
+        try await Task.sleep(nanoseconds:25_000_000)
+        try WindowInputGeometry.verifyCursor(point:point)
+        _=try WindowInputGeometry.target(normalized:action.point,image:fresh.image,
+            capturedWindow:fresh.window.frame,windowID:fresh.window.windowID,pid:pid)
+        try diagnostic(WindowInputGeometry.diagnostic(point:point,image:fresh.image,frame:fresh.window.frame,windowID:fresh.window.windowID))
+        guard !cancellation.requested,HumanInput.ready else{throw HumanInputBusy()}
         down.post(tap:.cghidEventTap)
         try? await Task.sleep(nanoseconds:70_000_000)
         up.post(tap:.cghidEventTap)
     }
     func eventEndClick(_ action:EventEndAction,frame:Frame,cancellation:Cancellation,
+                       diagnostic:(String)throws->Void,
                        validated:(Frame,EventEndObservation)throws->Void)async throws {
         guard HumanInput.ready else{throw HumanInputBusy()}
         guard AXIsProcessTrusted(),let pid=frame.window.owningApplication?.processID,
@@ -174,14 +197,23 @@ private enum HumanInput {
                              cancelled:cancellation.requested,elapsed:age)
         else{throw AutomationError("Event preclick rejected: \(action.rawValue)/\(observation.screen.rawValue); age=\(age);cancelled=\(cancellation.requested)")}
         try validated(fresh,observation)
-        let point=CGPoint(x:fresh.window.frame.minX+action.point.x*fresh.window.frame.width,
-                          y:fresh.window.frame.minY+action.point.y*fresh.window.frame.height)
+        let point=try WindowInputGeometry.target(normalized:action.point,image:fresh.image,
+            capturedWindow:fresh.window.frame,windowID:fresh.window.windowID,pid:pid)
         guard !cancellation.requested,HumanInput.ready,
               let source=CGEventSource(stateID:.hidSystemState),
               let down=CGEvent(mouseEventSource:source,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),
               let up=CGEvent(mouseEventSource:source,mouseType:.leftMouseUp,mouseCursorPosition:point,mouseButton:.left)
         else{throw HumanInputBusy()}
-        cursor=CGEvent(source:nil)?.location;CGWarpMouseCursorPosition(point);warped=true
+        cursor=CGEvent(source:nil)?.location
+        let warpResult=CGWarpMouseCursorPosition(point);warped=true
+        guard warpResult == .success else{throw AutomationError("Mouse warp failed; no click sent")}
+        CGEvent(mouseEventSource:source,mouseType:.mouseMoved,mouseCursorPosition:point,mouseButton:.left)?.post(tap:.cghidEventTap)
+        try await Task.sleep(nanoseconds:25_000_000)
+        try WindowInputGeometry.verifyCursor(point:point)
+        _=try WindowInputGeometry.target(normalized:action.point,image:fresh.image,
+            capturedWindow:fresh.window.frame,windowID:fresh.window.windowID,pid:pid)
+        try diagnostic(WindowInputGeometry.diagnostic(point:point,image:fresh.image,frame:fresh.window.frame,windowID:fresh.window.windowID))
+        guard !cancellation.requested,HumanInput.ready else{throw HumanInputBusy()}
         down.post(tap:.cghidEventTap)
         try? await Task.sleep(nanoseconds:70_000_000)
         up.post(tap:.cghidEventTap)
@@ -408,7 +440,9 @@ private final class Journal {
                         }
                         if let action=eventAction,!dryRun {
                             do {
-                                try await capture.eventEndClick(action,frame:frame,cancellation:cancel) {fresh,current in
+                                try await capture.eventEndClick(action,frame:frame,cancellation:cancel,diagnostic:{message in
+                                    try eventJournal.append("input_geometry",claimID:eventID,message:message)
+                                }) {fresh,current in
                                     let proof=try eventJournal.image(fresh.image,id:eventID ?? eventJournal.runID,suffix:"before-\(action.rawValue)-\(UUID().uuidString)")
                                     try eventJournal.append("event_click_validated",claimID:eventID,evidence:proof,message:"\(action.rawValue); \(current.texts)")
                                 }
@@ -454,7 +488,9 @@ private final class Journal {
                     }
                     if let action,!dryRun {
                         do {
-                            try await capture.crystalClick(action,frame:frame,cancellation:cancel) {fresh,current in
+                            try await capture.crystalClick(action,frame:frame,cancellation:cancel,diagnostic:{message in
+                                try crystalJournal.append("input_geometry",claimID:crystalID,message:message)
+                            }) {fresh,current in
                                 let proof=try crystalJournal.image(fresh.image,id:crystalID ?? crystalJournal.runID,suffix:"before-\(action.rawValue)-\(UUID().uuidString)")
                                 try crystalJournal.append("crystal_click_validated",claimID:crystalID,evidence:proof,message:"\(action.rawValue); \(current.texts)")
                             }
@@ -541,7 +577,9 @@ private final class Journal {
                             if cancel.requested {break}
                             var receipt:(sentAt:Date,reward:FreeReward,evidence:String)?
                             do {
-                                receipt=try await capture.click(reward,frame:frame,cancellation:cancel,rejected:{fresh,observation,reason in
+                                receipt=try await capture.click(reward,frame:frame,cancellation:cancel,diagnostic:{message in
+                                    try journal.append("input_geometry",claimID:id,message:message)
+                                },rejected:{fresh,observation,reason in
                                     try diagnostic(fresh,observation,"preclick_rejected",id,"reason=\(reason);expected=\(reward.fingerprint)")
                                 },validated:{fresh,current in
                                     let proof=try journal.image(fresh.image,id:id,suffix:"validated-\(UUID().uuidString)")

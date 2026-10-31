@@ -1,5 +1,26 @@
 # Butcher Hero — aktív projektutasítások
 
+## Külső kijelző kattintásvédelme és diagnózisa — 2026-10-31 (321)
+
+User külső monitoron rossz helyre menő inputot jelzett. Pontos történeti
+félrekattintás NEM reprodukált: régi log nem tárolt célpontot. Két külső
+Quartz kijelzőeredet−5120/−553 és−2560/−553, laptop1512×982/2x;
+a negatív koordináta szabályos, nem vágjuk nullára és nem szorozzukRetinával.
+Most minden Free/kristály/event input friss CGWindowID+PID szerintiQuartz
+ablakkeretből indul, összevetve a képkerettel; aktívkijelző+azonosarány+
+előtér kell. Warp hiba/2pontnál nagyobbkurzoreltérés/ablakmozgás esetén
+nincs mouse-down. MouseMoved esemény is frissíti aCatalyst kurzorhelyét;
+ennek valódi külsőmonitoros hatása még NEM igazolt. input_geometry napló
+cél/kurzor/ablak/képméret/aktívkijelző adatokkal, külön a jutalomkönyveléstől.
+6új offline geometriai teszt, user567Pierce-kép kártyánbelüli célponttal;
+teljes138teszt+7JSsyntaxPASS. A kép összegét a jelenlegi olvasó nilként
+adja: külön nyitott számolvasási eset, nem írunk be567-et bizonyíték nélkül.
+Alvó kijelzőn a program vár és nem próbál streamet indítani. A320hibája
+idején most mindhárom kijelző asleep; ez nem minden régi streamhiba oka.
+--resume-run új build betöltve; frissPID/data/free-rewards/state.json.
+Éles külsőmonitoros siker még kell; felhasználótól ébren hagyott, azon a
+kijelzőn lévő játékot kértünk. Részletek321. Régi bot/heartbeatPAUSED.
+
 ## Külön játékállapot és kézi indítógomb — 2026-10-31 (320)
 
 A dashboard külön jelzi a játékot és a gyűjtőt. game-status csak natív
@@ -203,6 +224,13 @@ the Mac during unattended collection. Screenshots are window-relative and
 clicks re-read the window geometry, but arbitrary new layouts/resolutions
 have not all been validated. Moving a window is not a promise of support
 for hidden/minimized windows or every resize.
+For multiple monitors,321 validates Quartz global logical points against
+the fresh window and active displays, including negative monitor origins
+and1x/2x backing scales. Before mouse-down it verifies the actual cursor
+position and that the window has not moved. It waits with no active display.
+This is guarded input, not yet a claim of live verification on every monitor.
+`input_geometry` journal records show the target/cursor/window coordinates;
+they are diagnostics, never extra rewards. See docs/321.
 Recognition currently uses the game's English labels (FREE, CRYSTAL STATS,
 TAP TO OPEN GEODE, NO THANKS, EVENT ENDS, CONTINUE); keep that game UI available. The dashboard's
 HU/EN selector changes only the dashboard, not the supported game labels.

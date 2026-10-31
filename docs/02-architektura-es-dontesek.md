@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+321: közös RewardInputGeometry tiszta ponttranszformáció+védelmek, natív
+WindowInputGeometry CGWindowID/PID szerinti aktuálisQuartzkeret és aktív
+CGDisplayBounds. AppKitframe/backingpixel nem bemenet. Free/kristály/event
+mind ezt használja; warpreturn+kurzorpozíció+új geometriaiellenőrzés
+mouse-down előtt, mouseMoved aCatalystnak. input_geometry a megfelelő
+naplóban, nem click_sent és nem jutalom. Képarány1%/ablakkeret1pont/
+kurzor2pont tolerancia; eltérésnél elutasítás, nincs régi koordinátafallback.
+6új Swiftregresszió a kötelezőkapu bővített szűrőjében.321.
+
 320: külön natív game-status CLI, AppKit/CGWindow metaadat képrögzítés nélkül.
 GameControl 5s cache, szigorú boolvalidálás, hiba UNKNOWN. Külön game panel;
 gyűjtő csak friss ismert hiányzó játék/ablak esetén vár arra. Új explicit,

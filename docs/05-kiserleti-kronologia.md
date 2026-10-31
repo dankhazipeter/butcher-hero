@@ -2,6 +2,16 @@
 
 ## 2026-10-31
 
+321: user külsőmonitoros rosszkattintást jelzett. Saját supervisor leállítva
+a hibásinput elkerülésére; read-only CG/SC/AppKit metadataellenőrzés.
+Két külső negatívQuartzeredettel, három kijelző asleep, aktívlistában0.
+Ez a jelenlegi streamhiba konkrét körülménye; nincs kijelzőébresztés.
+SC/CGlaptopablakkeret azonos874/33/637/882, tehát általánosY-flip nem
+indokolt. FrissCGkeret+kurzor+aktívdisplayvédelem ésmouseMoved,6újteszt,
+teljes138PASS. Az első, futás közben módosított shellteszt megszakadt;
+új teljes változatlan futásPASS, nem kapumegkerülés. Új build --resume-run
+betöltve, nincs új logikai statkezdet. Külső sikeresátvétel még nem igazolt.
+
 320: user külön „játék nem fut” jelzést és indítógombot kért. Natív
 metadatahelper+5scache, külön HU/EN panel, explicit tokenes indítás.
 Teljes132teszt+7JSsyntaxPASS; valódi helyi API futó/látható játékot adott,

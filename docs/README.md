@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Külső kijelző: ellenőrzött kattintás és koordinátanapló](321-kulso-kijelzo-inputgeometria.md)
 - [Külön játékállapot és kézi indítógomb](320-jatekallapot-es-inditogomb.md)
 - [Current run jelentése és időszakszűrő infóablak](319-current-run-es-idoszak-info.md)
 

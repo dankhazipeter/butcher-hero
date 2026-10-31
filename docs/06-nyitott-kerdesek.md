@@ -2,6 +2,16 @@
 
 ## Aktív — 2026-10-31
 
+321: külsőmonitoros félrekattintás konkrét hibás pontja régi logból nem
+azonosítható. Új Quartz/kurzorvédelmek+input_geometry napló elkészült,
+6geometriatesztPASS; ébren tartott külsőmonitoros játék+valódi átvétel kell
+a teljes javítás igazolásához. Mindhárom kijelző asleep/0active volt a
+mostani metadataellenőrzéskor: a korábbi320streamhiba enélkül nem ítélhető
+engedélyhibának. Nem ébresztettük a kijelzőket és nem indítottuk újra a játékot.
+Új userkép external-pierce567-user.png: kézzel láthatóPierceDamage567,
+felismerő típust/célpontot ad, de összegnil. Ez külön számmintajavítási
+feladat; a koordinátateszt nem állít teljes számszerű olvasást.
+
 320: 18:45utántól ScreenCaptureKit „Nem sikerült elindítani a streamet
 audió-/videórögzítési hiba miatt”; játékfolyamat/ablak natívpróba szerint
 fut/látható. Supervisor újraindítja a saját workert, de frisskép nincs.

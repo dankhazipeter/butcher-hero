@@ -66,6 +66,10 @@ ha kattintás után megmaradt a kártya,1másodperc múlva újrapróbálja.
 Csak a két friss játékképen eltűnt kártyát könyveli, claimenként egyszer.
 [Húzásvédelem és újrapróba részletei](docs/286-kezi-huzasvedelem-es-free-ujraproba.md).
 
+Több kijelzőn a friss Quartz-ablakkeretet és a kurzor tényleges célbaérését
+is ellenőrzi; alvó/hiányzó kijelző vagy elmozdult ablak mellett nem kattint.
+A külsőmonitoros teljes élő ellenőrzés még nyitott; [koordinátavédelem és napló](docs/321-kulso-kijelzo-inputgeometria.md).
+
 Indítás: `./scripts/start-free-rewards.sh`, leállítás: `./scripts/stop-free-rewards.sh`.
 Az indítót tartós terminálmunkamenetben hagyjuk futni: felügyeli és elakadáskor
 újraindítja a saját gyűjtőjét. Technikai folytatás: `--resume-run`.
