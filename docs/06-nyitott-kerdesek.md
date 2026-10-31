@@ -2,6 +2,11 @@
 
 ## Aktív — 2026-10-31
 
+312következő funkció: kristálytörés a piros pontos kék ikonnál. Még fel
+kell tárni a képernyősort, elérhetőséget, garantált költségmentességet,
+eredményképet/értékeket, könyvelést és a visszatérést aFreegyűjtéshez.
+Egyelőre nincs automatikus kattintás vagy bevezetett kristályfigyelő.
+
 311felülírás: konkrét HealthFREE→FRE ésRegen*REEhiba frissképpel azonosítva,
 pixel-first felismerés, OCRtartalék és frissújrapróba javítva. Régiguardhiba
 már nem pusztán ismeretlen;35kép+élőHealth18100utókép igazolja a javítást.

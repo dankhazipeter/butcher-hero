@@ -2,6 +2,8 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Következő feladat: piros ponttal jelzett kristálytörés](312-kristalytorese-elokeszites.md)
+
 - [Healthkimaradások: bizonyított okok, képi FREE és friss könyvelés](311-free-kepi-felismeres-es-ujraproba.md)
 
 - [Magyar–angol felület és bővíthető nyelvi fájlok](310-magyar-angol-felulet.md)

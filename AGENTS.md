@@ -1,5 +1,11 @@
 # Butcher Hero — aktív projektutasítások
 
+312következő feladat: a jobb oldali kék kristályikon piros pontja a felhasználó
+szerint törhető kristályt jelez. Referenciakép elmentve. A belső folyamat,
+költségmentesség, eredmény és ismétlési feltételek még nincsenek feltárva.
+Ez előjegyzett következő automatizáció, NEM bekapcsolt kristálykattintó;
+Free-only engedély változatlan. Vásárlás/gemköltés/reklám nem engedélyezett.
+
 ## Aktuális Free-javítás — 2026-10-31 (311)
 
 A Healthkimaradás frissképpel bizonyított oka: FREE→FRE OCRtévesztés,

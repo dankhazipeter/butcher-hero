@@ -1,5 +1,15 @@
 # Új verzió megfigyelései — 2026-10-29
 
+## Következő: kristálytörés — 2026-10-31 (312)
+
+Felhasználói közlés: a jobb oldali kék kristályikon piros jelzése azt
+jelenti, hogy kristály törhető. A csatolt képen kék kristályok és fehér
+szegélyű piros pötty látszanak; a funkciót most nem nyitottuk meg.
+Minta: references/2026-10-31/crystal-red-dot-user.png.
+A további képernyők, költségek, jutalom és a siker feltétele még ismeretlen.
+Ez nem általános bolti vagy pénzköltési engedély, hanem a következő tervezett
+automatizáció megfigyelése. A jelenlegi gyűjtő továbbra csak a bal oldaliFree.
+
 ## Free-jutalmak — 2026-10-30
 
 Felhasználói képekkel azonosított8típus:Health,HealthRegen,Pierce/Cut/Smash

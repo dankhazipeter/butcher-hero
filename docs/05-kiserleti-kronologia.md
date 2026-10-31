@@ -2,6 +2,10 @@
 
 ## 2026-10-31
 
+312: felhasználó előjegyezte a következő, bonyolultabb átvételt: kristályikon
+piros ponttal = törhető kristály. A kis ikonképet elmentettük, belső panelt
+nem nyitottunk meg. Nincs kristályinput/kódváltozás, aFreegyűjtő fut tovább.
+
 311: felhasználó jóváhagyta a javítást és sok kihagyásra figyelmeztetett.
 Napróaudit869Health/303Regen/160CutDefensehibás próbát talált, nem ennyi
 külön ajándékot. Előbb szűk diagnosztikai build28206, majd30323képiikon-
