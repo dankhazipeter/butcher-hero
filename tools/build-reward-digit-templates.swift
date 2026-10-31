@@ -23,7 +23,14 @@ import ImageIO
             ("corpus-piercedef616.png","616"),("free-hp-18k-occluded.png","18K"),
             ("corpus-regen83-current.png","83"),
             // Visually reviewed user screenshot; the575live frames remain held out.
-            ("../2026-10-31/external-pierce567-user.png","567")]
+            ("../2026-10-31/external-pierce567-user.png","567"),
+            // Five visually reviewed calibrations at the observed font sizes;
+            // separate grass/snow521 and large692 frames remain held out.
+            ("../2026-10-31/reward-audit/pierce521-calibration.png","521"),
+            ("../2026-10-31/reward-audit/smash692-small-calibration.png","692"),
+            ("../2026-10-31/reward-audit/smash692-large-calibration.png","692"),
+            ("../2026-10-31/reward-audit/health18100-font-calibration.png","18.1K"),
+            ("../2026-10-31/reward-audit/health18600-font-calibration.png","18.6K")]
         var templates=[DigitTemplate]()
         for (name,label) in samples {
             let url=URL(fileURLWithPath:"docs/references/2026-10-30/"+name)

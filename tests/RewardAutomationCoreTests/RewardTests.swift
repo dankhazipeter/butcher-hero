@@ -3,6 +3,48 @@ import ImageIO
 @testable import RewardAutomationCore
 
 final class RewardTests:XCTestCase {
+    func testReviewedExternalIconAlignmentAcrossDamageAndDefense()throws {
+        for (name,kind) in [
+            ("smash-defense823","smash_defense"),("smash692-large-calibration","smash_damage"),
+            ("cut-damage567","cutting_damage"),("smash692-large-heldout","smash_damage"),
+            ("smash-defense811","smash_defense"),("smash-defense805-a","smash_defense"),
+            ("smash-damage683-a","smash_damage"),("smash-defense805-b","smash_defense"),
+            ("smash-damage683-b","smash_damage")
+        ] {
+            let observed=try RewardVision().observe(image("docs/references/2026-10-31/reward-audit/\(name).png"))
+            XCTAssertEqual(observed.reward?.kind,kind,name)
+        }
+    }
+    func testReviewed521And692GlyphVariantsWithHeldOutFrames()throws {
+        for (name,kind,amount) in [
+            ("pierce521-calibration","piercing_damage","521"),
+            ("pierce521-grass-heldout","piercing_damage","521"),
+            ("pierce521-snow-heldout","piercing_damage","521"),
+            ("smash692-small-calibration","smash_damage","692"),
+            ("smash692-large-calibration","smash_damage","692"),
+            ("smash692-large-heldout","smash_damage","692")
+        ] {
+            let png=try image("docs/references/2026-10-31/reward-audit/\(name).png")
+            XCTAssertEqual(try RewardNumberReader().read(png)?.text,amount,name)
+            let result=try RewardVision().observe(png)
+            XCTAssertEqual(result.reward?.kind,kind,name);XCTAssertEqual(result.reward?.amount,amount,name)
+        }
+        let calibrator=try String(contentsOf:project.appendingPathComponent("tools/build-reward-digit-templates.swift"),encoding:.utf8)
+        for heldout in ["pierce521-grass-heldout","pierce521-snow-heldout","smash692-large-heldout"] {
+            XCTAssertFalse(calibrator.contains(heldout),"Held-out images must never become calibration inputs")
+        }
+    }
+    func testNumberBaselineExcludesBrightSceneryAfterHealthSuffix()throws {
+        let png=try image("docs/references/2026-10-31/reward-audit/health18400-bright-background.png")
+        let shapes=try RewardNumberReader.shapes(png)
+        XCTAssertEqual(shapes.count,5,"18.4K includes the decimal, not a sixth background component")
+        XCTAssertTrue(shapes.allSatisfy{$0.rect.maxX<0.125},"Bright scenery beyond K is not a numeral")
+        XCTAssertEqual(try RewardNumberReader().read(png)?.text,"18.4K")
+        let result=try RewardVision().observe(png)
+        XCTAssertEqual(result.reward?.kind,"hp");XCTAssertEqual(result.reward?.amount,"18400")
+        let calibrator=try String(contentsOf:project.appendingPathComponent("tools/build-reward-digit-templates.swift"),encoding:.utf8)
+        XCTAssertFalse(calibrator.contains("health18400-bright-background"),"Scenery case stays held out of digit calibration")
+    }
     func testReviewedExternalPierceFontAndIndependentLiveNumbers()throws {
         let calibrator=try String(contentsOf:project.appendingPathComponent("tools/build-reward-digit-templates.swift"),encoding:.utf8)
         XCTAssertFalse(calibrator.contains("pierce575-external-heldout"),"Independent live575frames must not be calibration sources")

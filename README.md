@@ -50,7 +50,7 @@ Python3.10+, Node18+). Új klón után egyszer: `make setup`.
 Szükséges OCR-függőség: Tesseract5 + angol modell (`brew install tesseract`).
 Ezután commit ÉS push előtt automatikus tesztkapu fut; bármely hiba megállítja
 a műveletet. A kapu az index/feltöltendő commit külön másolatát ellenőrzi,
-nem a futó játékot. A35valódi mintakép elvárt eredménye:
+nem a futó játékot. Az54valódi mintakép elvárt eredménye:
 [`tests/reward-reading-corpus.json`](tests/reward-reading-corpus.json).
 [Mintabővítés és működés](docs/297-kepi-regresszios-korpusz-es-tesztkapu.md).
 Minden push és PR ugyanazt a tesztet futtatja GitHubon is.

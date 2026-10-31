@@ -36,7 +36,7 @@ Közvetlenül, Make nélkül is elérhető: `./scripts/check-rewards.sh`.
 
 ## Képfelismerő változtatása
 
-A35valódi minta elvárásai: `tests/reward-reading-corpus.json`.
+Az54valódi minta elvárásai: `tests/reward-reading-corpus.json`.
 Mind a8jutalomtípusból legalább két külön kép maradjon. Új esethez
 vizuálisan ellenőrzött valódi kép és rögzített címke kell. Nem írjuk át
 az elvárt eredményt az aktuális programválaszhoz. Hibajavításnál előbb

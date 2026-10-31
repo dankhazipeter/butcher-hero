@@ -2,6 +2,14 @@
 
 ## 2026-10-31
 
+329: userunknownok visszanézését kérte, majd külön jóváhagyta a jövőbeli
+javítást.46eredeti bizonytalanclaim vizuálisan auditálva; régi kóddal13jó,
+9frissikon4pxfeljebb vágva mind jó.22darab521nél2/8margó kevés;692és
+Health18.4K különhiba.3újunit előbb27állítással piros, majd19kalibráció/
+58glyph+baseline+dy=-4 után minden54képes elvárás és176tesztPASS.
+Stagingkülönbuild; saját közös runner rövidresume,21:42:27ZújPierce575
+UIigazolt. Nincs történeti reconcile vagy bizonytalan összeg kitalálása.329.
+
 328: user egyórával későbbi dátumot és nem kívánt magyar statneveket
 jelzett. FixBucharest a JSben és Pythonban bizonyított; rendszerzóna
 Europe/Budapest. Újtesztek előbb hibáztak, utána browserzone/APIzone/

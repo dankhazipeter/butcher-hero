@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+329felülírja324különSmash692nyitottját a vizsgált képekre: C2B1DD70,
+5C50309D és250B3491 már helyesSmashDamage692, újkeretes4pxikonillesztés
+és új9-esfontkalibráció után. A21:23Z-ig lefagyasztott46bizonytalan kép
+mind helyes újraolvasásban; a történeti napló a userkérésre változatlan,
+ezért a dashboard régi unknown/nil számai nem tűnnek el automatikusan.
+Élesúj329buildPierce575igazolt; külön újSmash/Cut/Healthsceneryeset teljes
+önálló ismétlése még nem következik ebből. Aktuális régiCI4launcher-startup
+timeout külön ismert ügy, nem gyűjtőhiba és nem javítva ebben.329.
+
 326: közös foregroundrunner elérhető make start / opcionális butcher-hero
 paranccsal, saját Terminal normálüzemhez. Nem állítjuk a325ismeretlen
 folyamatkilépés gyökérokának javítását; másik életciklusú indítási mód.

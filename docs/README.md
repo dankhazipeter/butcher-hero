@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Ismeretlen jutalmak: 46 kép auditja, ikonvágás, számfont és Health-háttérfolt javítása](329-ismeretlen-jutalmak-audit-es-javitas.md)
 - [Böngésző szerinti helyi idő és angol játékbeli statnevek magyar felületen is](328-helyi-idozona-es-jatekbeli-statnevek.md)
 - [Üres dashboardlap: futó gyűjtő, változatlan cím, reload utáni helyreállás](327-dashboard-ures-lap-ujratoltes.md)
 - [Közös Terminal-indító: make start, stop, status és bárhonnan használható parancs](326-kozos-terminal-indito.md)

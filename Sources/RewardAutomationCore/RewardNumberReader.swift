@@ -50,9 +50,14 @@ final class RewardNumberReader {
         let maxHeight=components.map{$0.3-$0.1+1}.max() ?? 0
         let tops=components.filter{Double($0.3-$0.1+1)>=Double(maxHeight)*0.8}.map{$0.1}.sorted()
         let rowTop=tops.isEmpty ? 0:tops[tops.count/2]
+        let bottoms=components.filter{Double($0.3-$0.1+1)>=Double(maxHeight)*0.8}.map{$0.3}.sorted()
+        let rowBottom=bottoms.isEmpty ? 0:bottoms[bottoms.count/2]
         return components.filter {
             let height=$0.3-$0.1+1,width=$0.2-$0.0+1
-            return (Double(height)>=Double(maxHeight)*0.8 && abs($0.1-rowTop)<=max(2,maxHeight/4)) ||
+            // Bright world scenery beyond the card can be as tall as a glyph
+            // but is not on the numeral baseline (reviewed18.4K+snow case).
+            return (Double(height)>=Double(maxHeight)*0.8 && abs($0.1-rowTop)<=max(2,maxHeight/4) &&
+                abs($0.3-rowBottom)<=max(2,maxHeight/10)) ||
                 (height<=max(3,Int(Double(maxHeight)*0.3)) && width<=max(4,Int(Double(maxHeight)*0.4)) && $0.1>=rowTop+maxHeight/2 && $0.3<=rowTop+maxHeight+2)
         }.sorted{$0.0<$1.0}.map {x0,y0,x1,y1,count in
             let width=x1-x0+1,height=y1-y0+1

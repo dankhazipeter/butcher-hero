@@ -2,6 +2,13 @@
 
 ## Aktív — 2026-10-31
 
+329: unknown nem feltétlen új jutalom. Szétválasztjuk a típust és összeget;
+eredeti click_sentképek kézi ellenőrzése és jelenlegi kóddal replay követi.
+A jelen esetben9ikonfüggőlegesvágás,22azonos2/8számfont,3darab692eset
+és1Health-háttérkomponens volt (az ikon/számcsoportok átfednek). Küszöböt
+nem lazítunk, régi naplót nem írunk újra.46képre új kód helyes, de új élő
+variánst ettől még bizonyítani kell. Igazolás továbbra két eltűnéses HUD.
+
 328: utazásnál a megjelenítés és Ma/customszűrő a böngésző helyi zónáját
 követi, nem mozgatjuk a múltbeli UTCnaplóidőket. MagyarUI-ban is a játék
 Health/HealthRegen/Pierce/Cut/Smash statnevei maradnak azonosíthatók.

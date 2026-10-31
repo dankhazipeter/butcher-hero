@@ -22,10 +22,11 @@ public final class RewardIconClassifier {
     }
     public func match(_ image:CGImage,rect:CGRect)->RewardIconMatch {
         let pixels=CGRect(x:rect.minX*Double(image.width),y:rect.minY*Double(image.height),width:rect.width*Double(image.width),height:rect.height*Double(image.height)).integral
-        // Vision versions differ by a few pixels in the FREE word's bounding
-        // box. Compare a bounded alignment neighbourhood, not a looser score.
+        // Reviewed external-display cards need an upward correction beyond the
+        // old +/-2px window. Keep the existing score/margin thresholds: search
+        // only this bounded alignment neighbourhood, not a looser match.
         var signatures=[[UInt8]]()
-        for dy in [-2,0,2] {for dx in [-1,0,1] {
+        for dy in [-4,-2,0,2] {for dx in [-1,0,1] {
             let shifted=pixels.offsetBy(dx:CGFloat(dx),dy:CGFloat(dy))
             guard shifted.minX>=0,shifted.minY>=0,
                   shifted.maxX<=CGFloat(image.width),shifted.maxY<=CGFloat(image.height),

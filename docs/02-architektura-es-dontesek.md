@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-31
 
+329: ikonnál9→12fix igazítás, egyetlen újdy=-4, változatlan0.48/0.035
+kapuk. Számkomponensek a felső sor mellett medián alsóbaseline-t is követnek,
+eltérés<=max(2,height/10), decimalpont külön korábbiága megmarad.
+19valós kalibráció/58glyph,41régi bitazonos. A korpusz54teljes kép,
+ebből16újellenőrzött, a18.4Kés háromnévvel tiltott heldout nem kalibráció.
+Nem jutalomtípus/előzőösszeg alapján olvasunk. Aktív kód+adat koherens
+csere csak saját runnerstop után; offline audit nem képrögzítő és nem input.
+
 328: eltávolítva a dashboard fixBucharestzone. JS IntlresolvedOptions
 mindenpollnál, APItimezoneparaméter ZoneInfo-validálással. Ma/custom és
 visszaadottmetadata ugyanaz a zóna; querynélkülUTC. parse_time explicit

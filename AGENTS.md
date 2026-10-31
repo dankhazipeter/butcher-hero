@@ -1,5 +1,35 @@
 # Butcher Hero — aktív projektutasítások
 
+## Ismeretlen jutalmak feltárása és javítása — 2026-10-31 (329)
+
+User előbb visszanézést, majd kifejezetten a további felismerés javítását
+engedélyezte, régi napló átírása nélkül.21:23Z-ig a logikai futás46bizonytalan
+claimjének eredeti képét ellenőriztük:14típusunknown+32ismerttípus/összegnil.
+Ebből13már a régi aktuális kóddal is jó volt (5CutDefense593+8szám), de a
+történeti napló nem változott magától. Új javítás után46/46 típus+érték jó
+offline replayben, vizuális címkékkel; nem könyveltük őket újra.
+9külső788x1083ikon vágása4px-szel túl alacsony volt. Matchdy most
+[-4,-2,0,2], dx[-1,0,1], nem küszöblazítás (error<0.48, margin>0.035).
+22régi521nyílnál a2/8különbség0.03177<0.035;692nél9/8fontütközés.
+Új5ellenőrzött kalibrációval19forrás/58glyph, régi41glyph változatlan.
+Health18.4K-nál a K mögötti háttérfolt hatodik komponens volt: numerikus
+baseline-konszenzus szűri, nem parserből tippelt prefix. Új9minta8-konfliktusát
+két külön18.1K/18.6Kforrással fogtuk meg;18.4K különheldout maradt.
+16eredetiPNG+fixképi elvárás, korpusz38→54,3újSwiftunit; teljes176teszt és
+7JSsyntaxPASS, stagingreleasePASS. Régi elvárás/összeg/napló nem változott.
+Betöltés21:42:17Zközösrunner90106/dashboard90117/supervisor90118/worker90119,
+session2092, resume-run; frissPID mindigJSONból.21:42:27.450Zúj575Pierce
+UIigazolt, frissképek. Ez nem élő9Smash/Cut-eset igazolása: azokat a
+mentett valódi képek igazolják. Kalibrációs képből nem csinálunk heldoutot;
+ismeretlenből nem lesz kitalált összeg. Részletek329. KorábbiCI4launcher-
+startuptimeout külön nyitott, ebben a körben nem módosítottuk a launchert.
+
+329új éles normálkörök:21:42:59.394ZCutDamage557/ADC2067F,
+21:43:32.949ZHealth18600/F4FC302F,21:44:37.344ZCutDefense631/8F07BA21.
+Cut557ésHealth18.6Kvalidált előkép külön vizuálisan is egyezik a naplóval;
+nem567helyett félreolvasott557. A játék közben637x882ablakra változott,
+ez friss másméretű siker, nem az összes újkülső788hiba éles ismétlése.
+
 ## Helyi időzóna és játékbeli statnevek — 2026-10-31 (328)
 
 A user már nem Romániában van. Dashboardidő nem rögzítettBucharest:
