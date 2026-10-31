@@ -1,5 +1,20 @@
 # Butcher Hero — aktív projektutasítások
 
+## Újabb folyamatkiesés — 2026-10-31 (325)
+
+20:36Z körüli ellenőrzéskor sem a57653felügyelő/57658worker, sem a8765
+dashboard-listener nem élt. A39912/86104execsession sem volt elérhető.
+Utolsó frisskép20:20:00.998Z; előtte BFC40697Health18600kattintás
+20:19:57.751Z és igazolás20:20:00.003Z. Nincs szabályos supervisor_stopped
+vagy friss releváns crashreport; a kilépés gyökéroka NEM bizonyított.
+Ez nem új Healthfelismerési bizonyíték, és a kimaradt kézi jutalmat nem
+könyveljük. Dashboard17574session újraindítva, /healthPASS. Gyűjtő12456
+session --resume-run, indulóworker65067; a felhasználó bezárt játékára vár,
+nem indítja azt el. Friss runtime mindig JSON+valódiPID+képidő alapján.
+Külön Terminal-futtatásra kérdés elküldve; válasz nélkül nincs új launchd,
+login/startup szolgáltatás vagy engedélymódosítás. A foregroundexecsession
+önmagában most már NEM igazolt tartós megoldás. Részletek325.
+
 ## Pierce Damage összegolvasás javítva — 2026-10-31 (324)
 
 Konkrét567/575hibát reprodukáltunk: az új21pxmagas5 elsőhelyes hibája

@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-31
 
+325:20:36Z körül a57653supervisor/57658worker és dashboard sem élt;
+39912/86104execsession is megszűnt. Utolsó frisskép20:20:00.998Z,
+előtteHealth18600igazolt. Szabályosleállás/frisscrashreport nincs; pontos
+gyökérok nem bizonyított. Dashboard és --resume-run gyűjtő újraindítva,
+játékbezárás miatt egyelőre ablakra vár. Külön Terminal-futtatásra kérdés
+elküldve; nincs önkényes login/startup szolgáltatás. A foregroundexecsession
+nem nevezhető igazolt tartós megoldásnak. Részletek325.
+
 324lezárás: user567 és két régi élő575 alapból nil, újkalibrációval
 mind helyes.20:13:29.216Zúj élő575 amounttal is igazolt. A323konkrét
 Pierce575hibája javítva, történeti sorok nem változtak. Más régi nil-esetek
