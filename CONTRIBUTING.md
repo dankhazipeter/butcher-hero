@@ -8,8 +8,10 @@ kell sikeresen teljesíteni, nem elegendő a main egy korábbi zöld futása.
 macOS14+, Swift5.9+, Python3.10+, Node18+ szükséges. A felismerés Apple
 képi keretrendszereit használja, ezért ez a csomag nem Linuxon fut. Nem kell hozzá elindítani
 a játékot, és a tesztek soha nem kattintanak vagy írnak éles jutalomnaplóba.
-Az aktívFreefelismerés nem AppleVisionOCR: Tesseract5olvassa aFREEfeliratot,
-a számokat verziózott játékbeli számjegyminták olvassák. Függőség:
+Az aktívFreefelismerés nem AppleVisionOCR: képiFREEsablon az elsődleges,
+Tesseract5szigorú tartalék, a számokat verziózott játékbeli számjegyminták
+olvassák. A jelvénykalibráció forrásait és a külön ellenőrző képeket
+őrizzük meg; automatikus teszt nem írhat új maszkot vagy elvárt címkét. Függőség:
 `brew install tesseract` (angol modell is szükséges; a Homebrewcsomag része).
 
 Klónozás után egyszer:
@@ -34,7 +36,7 @@ Közvetlenül, Make nélkül is elérhető: `./scripts/check-rewards.sh`.
 
 ## Képfelismerő változtatása
 
-A29valódi minta elvárásai: `tests/reward-reading-corpus.json`.
+A35valódi minta elvárásai: `tests/reward-reading-corpus.json`.
 Mind a8jutalomtípusból legalább két külön kép maradjon. Új esethez
 vizuálisan ellenőrzött valódi kép és rögzített címke kell. Nem írjuk át
 az elvárt eredményt az aktuális programválaszhoz. Hibajavításnál előbb

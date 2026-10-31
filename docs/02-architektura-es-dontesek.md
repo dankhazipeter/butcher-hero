@@ -1,6 +1,16 @@
 # Architektúra és döntések — 2026-10-29
 
-## Aktív — 2026-10-30 (282)
+## Aktív — 2026-10-31
+
+311: FreeBadgeMatcher elsődleges,3képből kalibrált48×24fehér/zöld/egyéb
+maszk. FehérglyphDice>=0.82 és0.85fehér+0.15zöld súlyozottpont>=0.82;
+±1pixeles környezet. Ez hasonlóság, nem valószínűség. Szűk belsőTesseract
+ROI és régiROI csak tartalék. Strukturális zöldbadge+magas sötétkártyaszegély
+a jelenlét külön pixelvédelme; ikonhorgony badgeRegion.maxY, nem OCRmagasság.
+RewardPreclickValidation max3frissminta/1.2s, változásnál failclosed.
+click_validated friss PNGt ment; click_sent e képet és aktuálisrewardot kapja.
+Diagnosztikában konkrét ok, HUD/card/fingerprint és frissképminta,40kép/process.
+Rövid olvasási hézag áthidalásakor sem kattinthat olvashatatlan aktuális képre.
 
 310: két helyi, előre betöltött nyelvi katalógus + createI18n fordító.
 data-i18n jelöli a statikus szövegeket/ARIA-t, dinamikus UI t(kulcs,értékek).

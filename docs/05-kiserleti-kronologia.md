@@ -1,5 +1,19 @@
 # Kísérleti kronológia — új verzió
 
+## 2026-10-31
+
+311: felhasználó jóváhagyta a javítást és sok kihagyásra figyelmeztetett.
+Napróaudit869Health/303Regen/160CutDefensehibás próbát talált, nem ennyi
+külön ajándékot. Előbb szűk diagnosztikai build28206, majd30323képiikon-
+javítás és idle képek.08:22:56ZvalódiHealth18300frissképe:FRE+ms,
+08:30–31Regen81: *+REE. UserHealth18100kézzel felszedve, nem botjutalom.
+KépiFREE elsődleges lett,3kalibrációs forrással,35képes regresszióval.
+Végső36820worker08:35:01Z,1s/resume-run; első3perc6átvétel/3Health.
+08:35:21Zutóképen+18.1K. A végső kivágás/könyvelés különképet ment.
+Teljes88tesztPASS; a korábbi futófolyamat nem a fejlesztés miatt állt órákig.
+Betöltési szünetek: elsődiagnosztika30s (javítandó munkamenetkésleltetés),
+következő kettő~1–2s az egyben vezérelt előre fordított cserével.
+
 ## 2026-10-30
 
 309diagnóziskiegészítés: felhasználói takaróablak/felvillanás megfelel

@@ -1,6 +1,14 @@
 # Nyitott kérdések — 2026-10-29
 
-## Aktív — 2026-10-30
+## Aktív — 2026-10-31
+
+311felülírás: konkrét HealthFREE→FRE ésRegen*REEhiba frissképpel azonosítva,
+pixel-first felismerés, OCRtartalék és frissújrapróba javítva. Régiguardhiba
+már nem pusztán ismeretlen;35kép+élőHealth18100utókép igazolja a javítást.
+További ablakméret/pulzálás/fontvarianst új valódi mintával fedünk, nem
+küszöblazítással. Hosszútávú hibamentesség, új M/B/Tszámjegyminták és
+az általános takartablak-támogatás továbbra nem bizonyított. Kézi átvétel
+nem kerül utólag a bot összegébe; a régi ranking nem javítható kitalált adattal.
 
 310: a magyar/angol UI készen, a nyers napló-/rendszerhiba szövege szándékosan
 eredeti marad. Több nyelv fájlból bővíthető, regisztrációját/kulcsait teszt

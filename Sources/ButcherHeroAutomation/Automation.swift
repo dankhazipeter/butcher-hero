@@ -61,7 +61,9 @@ private enum HumanInput {
         let image=try await SCScreenshotManager.captureImage(contentFilter:SCContentFilter(desktopIndependentWindow:window),configuration:config)
         return Frame(image:image,window:window,capturedAt:Date())
     }
-    func click(_ reward:FreeReward,frame:Frame,cancellation:Cancellation)async throws->Date {
+    func click(_ reward:FreeReward,frame:Frame,cancellation:Cancellation,
+               rejected:(Frame,RewardObservation,String)throws->Void,
+               validated:(Frame,FreeReward)throws->String)async throws->(sentAt:Date,reward:FreeReward,evidence:String) {
         guard HumanInput.ready else{throw HumanInputBusy()}
         guard AXIsProcessTrusted() else{throw AutomationError("A kattintáshoz Accessibility-engedély szükséges.")}
         guard let pid=frame.window.owningApplication?.processID,let app=NSRunningApplication(processIdentifier:pid) else{throw AutomationError("A játékfolyamat eltűnt.")}
@@ -79,10 +81,24 @@ private enum HumanInput {
         try await Task.sleep(nanoseconds:180_000_000)
         guard HumanInput.ready else{throw HumanInputBusy()}
         // Revalidate after activation: no click from a stale screenshot or moved window.
-        let fresh=try await self.frame()
-        guard !cancellation.requested,fresh.window.windowID==frame.window.windowID,
-              let current=try RewardVision().observe(fresh.image).reward,
-              current.fingerprint==reward.fingerprint else{throw AutomationError("A Free jutalom megváltozott a kattintás előtt.")}
+        let validationStarted=ProcessInfo.processInfo.systemUptime
+        var validation=RewardPreclickValidation(expectedFingerprint:reward.fingerprint)
+        var accepted:(Frame,FreeReward)?
+        while accepted==nil {
+            guard HumanInput.ready else{throw HumanInputBusy()}
+            let fresh=try await self.frame(),observation=try RewardVision().observe(fresh.image)
+            let elapsed=ProcessInfo.processInfo.systemUptime-validationStarted
+            let decision=validation.observe(fingerprint:observation.reward?.fingerprint,
+                sameWindow:fresh.window.windowID==frame.window.windowID,cancelled:cancellation.requested,elapsed:elapsed)
+            if decision == .accept,let current=observation.reward {accepted=(fresh,current);break}
+            let reason=cancellation.requested ? "cancelled":fresh.window.windowID != frame.window.windowID ? "window_changed":
+                elapsed>1.2 ? "validation_timeout":observation.reward == nil ? observation.diagnosticReason ?? "reward_unreadable":"fingerprint_changed"
+            try rejected(fresh,observation,"\(reason);decision=\(decision)")
+            guard decision == .retry else{throw AutomationError("Free preclick rejected: \(reason)")}
+            try await Task.sleep(nanoseconds:150_000_000)
+        }
+        guard let (fresh,current)=accepted else{throw AutomationError("Free reward missing after validation")}
+        let evidence=try validated(fresh,current)
         let point=CGPoint(x:fresh.window.frame.minX+current.tapX*fresh.window.frame.width,
                           y:fresh.window.frame.minY+current.tapY*fresh.window.frame.height)
         guard let source=CGEventSource(stateID:.hidSystemState),
@@ -97,7 +113,7 @@ private enum HumanInput {
         // Always release the mouse, including on task cancellation.
         try? await Task.sleep(nanoseconds:70_000_000)
         up.post(tap:.cghidEventTap)
-        return sentAt
+        return (sentAt,current,evidence)
     }
 }
 
@@ -165,6 +181,12 @@ private final class Journal {
     }
     @MainActor static func run(_ args:[String])async throws {
         guard let command=args.first else{print(usage);return}
+        if command=="badge-signature" {
+            guard args.count==2,let source=CGImageSourceCreateWithURL(URL(fileURLWithPath:args[1]) as CFURL,nil),
+                  let image=CGImageSourceCreateImageAtIndex(source,0,nil),let signature=try FreeBadgeMatcher.calibrationSignature(image)
+            else{throw AutomationError("badge-signature <visually-reviewed-FREE.png>")}
+            print(String(decoding:try JSONEncoder().encode(signature),as:UTF8.self));return
+        }
         if command=="inspect" {
             guard args.count==2,let source=CGImageSourceCreateWithURL(URL(fileURLWithPath:args[1]) as CFURL,nil),let image=CGImageSourceCreateImageAtIndex(source,0,nil) else{throw AutomationError("inspect <frame.png>")}
             let encoder=JSONEncoder();encoder.outputFormatting=[.prettyPrinted,.sortedKeys]
@@ -200,15 +222,15 @@ private final class Journal {
         // restart. Every new attempt still needs stable, freshly validated UI.
         var dryGate=RewardGate()
         var state=WatchState(blockedFingerprint:nil,pid:getpid(),running:true,intervalSeconds:interval)
-        state.verificationMode="vision3: structured badge; complete magnitude; two HUD frames without card; 1s retry"
-        state.ocrBackend="tesseract-free+pixel-digits-v1"
+        state.verificationMode="vision3: pixel-first FREE; fresh same-offer validation; two HUD frames without card; 1s retry"
+        state.ocrBackend="pixel-free+pixel-digits-v2; tesseract fallback"
         let oldLines=(try? String(contentsOf:root.appendingPathComponent("events.jsonl"),encoding:.utf8)) ?? ""
         let hasPriorRun=oldLines.split(separator:"\n").contains {line in
             (try? JSONDecoder().decode(JournalEvent.self,from:Data(line.utf8)))?.event=="watcher_started"
         }
         try journal.state(state)
         try journal.append(resumeRun && hasPriorRun ? "watcher_resumed":"watcher_started",
-            message:dryRun ? "dry run; no clicks":"left event Free only; vision3 verification; Tesseract FREE badge; labelled pixel digits")
+            message:dryRun ? "dry run; no clicks":"left event Free only; vision3 verification; pixel FREE first, Tesseract fallback; labelled pixel digits")
         defer {state.running=false;try? journal.state(state);try? journal.append("watcher_stopped")}
         print("Free-figyelő: \(interval)s; napló: \(root.appendingPathComponent("events.jsonl").path); PID \(getpid())\(dryRun ? " (csak megfigyelés)":"")")
         fflush(stdout)
@@ -216,10 +238,30 @@ private final class Journal {
         var stableKey:String?,candidateID:String?,stableCount=0,lastError:String?
         var pending:(id:String,reward:FreeReward,verification:RewardClaimVerification,blockedProofSaved:Bool)?
         var mouseDeferred=false
+        var diagnosticSaves=0
+        var lastReadableAt=started,lastIdleDiagnosticAt=started
+        var lastCandidateReadableAt:TimeInterval?,lastLostFingerprint:String?
+        func diagnostic(_ frame:Frame,_ observation:RewardObservation,_ event:String,_ id:String?,_ message:String)throws {
+            guard diagnosticSaves<40 else{return};diagnosticSaves+=1
+            let proof=try journal.image(frame.image,id:id ?? journal.runID,suffix:"diagnostic-\(diagnosticSaves)")
+            let detail="\(message); reason=\(observation.diagnosticReason ?? "readable");HUD=\(observation.gameHUDVisible);card=\(observation.freeCardVisible);fingerprint=\(observation.reward?.fingerprint ?? "nil");texts=\(observation.texts.map(\.text))"
+            try journal.append(event,claimID:id,reward:observation.reward,evidence:proof,message:detail)
+        }
         while !cancel.requested && ProcessInfo.processInfo.systemUptime-started<seconds {
             let tick=ProcessInfo.processInfo.systemUptime
             do {
                 let frame=try await capture.frame(),observation=try vision.observe(frame.image)
+                if diagnosticSaves==0 {try diagnostic(frame,observation,"observation_diagnostic",nil,"startup")}
+                if observation.reward != nil {lastReadableAt=tick}
+                else if tick-lastReadableAt>=35 && tick-lastIdleDiagnosticAt>=30 {
+                    try diagnostic(frame,observation,"idle_observation",nil,"no readable reward for \(Int(tick-lastReadableAt))s")
+                    lastIdleDiagnosticAt=tick
+                }
+                if observation.reward != nil {lastLostFingerprint=nil}
+                if observation.reward==nil && stableKey != nil && pending==nil && lastLostFingerprint != stableKey {
+                    try diagnostic(frame,observation,"candidate_lost",candidateID,"previous=\(stableKey ?? "nil")")
+                    lastLostFingerprint=stableKey
+                }
                 state.lastCheckedAt=Journal.stamp(frame.capturedAt)
                 if lastError != nil {try journal.append("capture_recovered");lastError=nil}
                 dryGate.observe(observation.reward)
@@ -255,6 +297,7 @@ private final class Journal {
                     }
                 }
                 if let reward=observation.reward {
+                    lastCandidateReadableAt=tick
                     if stableKey==reward.fingerprint {stableCount+=1}else{
                         stableKey=reward.fingerprint;stableCount=1;candidateID=UUID().uuidString
                         try journal.append("reward_detected",claimID:candidateID,reward:reward,at:frame.capturedAt)
@@ -279,9 +322,15 @@ private final class Journal {
                             let before=try journal.image(frame.image,id:id,suffix:attempt)
                             try journal.append("click_intent",claimID:id,reward:reward,evidence:before)
                             if cancel.requested {break}
-                            var sentAt:Date?
+                            var receipt:(sentAt:Date,reward:FreeReward,evidence:String)?
                             do {
-                                sentAt=try await capture.click(reward,frame:frame,cancellation:cancel)
+                                receipt=try await capture.click(reward,frame:frame,cancellation:cancel,rejected:{fresh,observation,reason in
+                                    try diagnostic(fresh,observation,"preclick_rejected",id,"reason=\(reason);expected=\(reward.fingerprint)")
+                                },validated:{fresh,current in
+                                    let proof=try journal.image(fresh.image,id:id,suffix:"validated-\(UUID().uuidString)")
+                                    try journal.append("click_validated",claimID:id,reward:current,evidence:proof)
+                                    return proof
+                                })
                             } catch is HumanInputBusy {
                                 try journal.append("input_deferred",claimID:id,reward:reward,evidence:before,message:HumanInputBusy().localizedDescription)
                                 mouseDeferred=true
@@ -289,13 +338,16 @@ private final class Journal {
                                 try journal.append("click_failed",claimID:id,reward:reward,evidence:before,message:error.localizedDescription)
                                 stableCount=0
                             }
-                            if let sent=sentAt {
-                                try journal.append("click_sent",claimID:id,reward:reward,evidence:before,at:sent)
-                                pending=(id,reward,RewardClaimVerification(sentAt:ProcessInfo.processInfo.systemUptime),false)
+                            if let receipt {
+                                try journal.append("click_sent",claimID:id,reward:receipt.reward,evidence:receipt.evidence,at:receipt.sentAt)
+                                pending=(id,receipt.reward,RewardClaimVerification(sentAt:ProcessInfo.processInfo.systemUptime),false)
                             }
                         }
                     }
-                } else{stableKey=nil;stableCount=0;if pending==nil {candidateID=nil;mouseDeferred=false}}
+                } else if !RewardStabilityPolicy.bridgeUnreadable(gameHUDVisible:observation.gameHUDVisible,
+                    cardVisible:observation.freeCardVisible,lastReadableAt:lastCandidateReadableAt,now:tick) {
+                    stableKey=nil;stableCount=0;if pending==nil {candidateID=nil;mouseDeferred=false}
+                }
                 state.waitingForMouseRelease=mouseDeferred
                 state.pendingClaimID=pending?.id
                 try journal.state(state)

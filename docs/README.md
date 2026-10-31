@@ -1,6 +1,8 @@
 # Kutatási napló
 
-## Aktuális: Free-gyűjtés újraindítva, 2026-10-30
+## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
+
+- [Healthkimaradások: bizonyított okok, képi FREE és friss könyvelés](311-free-kepi-felismeres-es-ujraproba.md)
 
 - [Magyar–angol felület és bővíthető nyelvi fájlok](310-magyar-angol-felulet.md)
 

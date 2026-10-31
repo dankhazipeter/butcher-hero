@@ -45,6 +45,21 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(next(row["total"] for row in result["kinds"] if row["kind"] == "cutting_defense"), "591")
         self.assertEqual(result["series"]["cutting_defense"][-1]["value"], "591")
 
+    def test_validation_and_diagnostic_events_never_count_as_claims_or_replace_sent_reward(self):
+        self.write([event("click_intent", 0, value="999", reward_kind="unknown"),
+                    event("preclick_rejected", 1, value="999", reward_kind="unknown"),
+                    event("candidate_lost", 2, value="999", reward_kind="unknown"),
+                    event("click_validated", 3, value="18300", reward_kind="hp")])
+        self.assertEqual(self.result()["confirmedClaims"], 0)
+        self.assertEqual(self.result()["clickAttempts"], 0)
+        self.write([event("click_validated", 3, value="18300", reward_kind="hp"),
+                    event("click_sent", 4, value="18300", reward_kind="hp"),
+                    event("claim_confirmed_ui", 6, value="18300", reward_kind="hp")])
+        result=self.result()
+        self.assertEqual(result["confirmedClaims"], 1)
+        self.assertEqual(result["clickAttempts"], 1)
+        self.assertEqual(result["series"]["hp"][-1]["value"], "18300")
+
     def test_final_attempt_time_and_confirmation_after_range_end(self):
         self.write([event("click_sent", 0), event("click_sent", 2), event("claim_confirmed_ui", 4)])
         early = self.result({"from": ["2026-10-30T10:00:00Z"], "to": ["2026-10-30T10:00:01Z"]})

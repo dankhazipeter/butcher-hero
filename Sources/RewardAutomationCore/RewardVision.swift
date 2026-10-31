@@ -6,28 +6,46 @@ public struct RewardObservation: Codable {
     public let texts: [RewardText]
     public let gameHUDVisible: Bool
     public let freeCardVisible: Bool
+    public var diagnosticReason: String? = nil
+    public var badgeReader: String? = nil
 }
 
 public final class RewardVision {
     private let icons=RewardIconClassifier()
+    private let badges=FreeBadgeMatcher()
     public init(){}
     public func observe(_ image:CGImage)throws->RewardObservation {
         // Only the left reward panel below the event. Never inspect shop buttons.
         let pixels=try Pixels(image)
         let hud=hudVisible(pixels)
-        guard hud else{return .init(reward:nil,texts:[],gameHUDVisible:false,freeCardVisible:false)}
+        guard hud else{return .init(reward:nil,texts:[],gameHUDVisible:false,freeCardVisible:false,diagnosticReason:"hud_rejected")}
         // Independent, conservative presence check: OCR missing the word FREE
         // must not by itself turn a still-visible card into a successful claim.
-        guard let badgeRegion=pixels.freeBadgeRect() else{return .init(reward:nil,texts:[],gameHUDVisible:true,freeCardVisible:false)}
+        guard let badgeRegion=pixels.freeBadgeRect() else{return .init(reward:nil,texts:[],gameHUDVisible:true,freeCardVisible:false,diagnosticReason:"badge_shape_missing")}
         let cardVisible=true
-        var texts=try recognize(image,roi:badgeRegion.insetBy(dx:-0.003,dy:-0.003),highContrast:true)
-        guard hud,let badge=texts.first(where:{
+        func freeWord(_ words:[RewardText])->RewardText? {words.first(where:{
             $0.text.trimmingCharacters(in:.whitespacesAndNewlines).uppercased()=="FREE" &&
             $0.confidence>=0.45 && $0.x<0.12 && $0.y>=0.46 && $0.y<0.68 &&
             $0.height>=0.007 && $0.height<0.05
-        }) else{return .init(reward:nil,texts:texts,gameHUDVisible:hud,freeCardVisible:cardVisible)}
+        })}
+        // Exclude the white outer border and neighbouring timer fragments.
+        // Never accept FRE/approximate text; retry the original crop only if needed.
+        let similarity=try badges.similarity(image,rect:badgeRegion)
+        let badgeReader:String
+        var texts:[RewardText]
+        if similarity>=FreeBadgeMatcher.threshold {
+            badgeReader="pixels"
+            texts=[RewardText("FREE",confidence:Float(similarity),rect:badgeRegion.insetBy(dx:0.004,dy:0.004))]
+        } else {
+            badgeReader="tesseract"
+            texts=try recognize(image,roi:badgeRegion.insetBy(dx:0.002,dy:0.002),highContrast:true)
+            if freeWord(texts)==nil {
+                texts=try recognize(image,roi:badgeRegion.insetBy(dx:-0.003,dy:-0.003),highContrast:true)
+            }
+        }
+        guard let badge=freeWord(texts) else{return .init(reward:nil,texts:texts,gameHUDVisible:hud,freeCardVisible:cardVisible,diagnosticReason:"free_text_missing")}
         let green=pixels.count(in:badge.rect.insetBy(dx:-0.006,dy:-0.004)) {r,g,b in g>140 && g>r+25 && g>b+15}
-        guard green>=12 else{return .init(reward:nil,texts:texts,gameHUDVisible:hud,freeCardVisible:cardVisible)}
+        guard green>=12 else{return .init(reward:nil,texts:texts,gameHUDVisible:hud,freeCardVisible:cardVisible,diagnosticReason:"badge_green_missing")}
         func amountCandidates()->[RewardText] { texts.filter {
             $0.confidence>=0.45 && $0.y>=badge.y+0.040 && $0.y<badge.y+0.073 &&
             $0.x>=0.035 && $0.x<0.15 && !$0.text.contains("m") && !$0.text.contains("h") && RewardAmount.parse($0.text) != nil
@@ -42,13 +60,15 @@ public final class RewardVision {
         } }
         if let number=try RewardNumberReader().read(image) {texts.append(number)}
         let amount=amountCandidates().first
-        let icon=CGRect(x:0.025,y:badge.y+badge.height+0.001,width:0.100,height:0.052)
+        // OCR sometimes includes the badge's white outline and doubles the word
+        // height. Geometry comes from the green widget, not that text bounding box.
+        let icon=CGRect(x:0.025,y:badgeRegion.maxY+0.001,width:0.100,height:0.052)
         let match=icons.match(image,rect:icon),kind=match.kind
         let reward=FreeReward(kind:kind,amount:amount.flatMap{RewardAmount.parse($0.text)},
             rawAmount:amount?.text,classification:kind=="unknown" ? "unclassified icon; review evidence":"eight labelled stats icons; shape and colour; v2",
             texts:texts,tapX:0.069,tapY:min(0.74,badge.y+badge.height+0.041),
             badgeX:badge.x,badgeY:badge.y,iconFeatures:["templateErrorPermille":Int(match.error*1000),"templateMarginPermille":Int(match.margin*1000)])
-        return .init(reward:reward,texts:texts,gameHUDVisible:hud,freeCardVisible:true)
+        return .init(reward:reward,texts:texts,gameHUDVisible:hud,freeCardVisible:true,badgeReader:badgeReader)
     }
     private func hudVisible(_ pixels:Pixels)->Bool {
         // Active game's fixed bottom equipment strip, with repeated small red badges.
@@ -132,8 +152,21 @@ struct Pixels {
                 width:Double(bw+2)/Double(w),height:Double(bh+2)/Double(h))
             let white=count(in:rect){r,g,b in min(r,min(g,b))>190 && max(r,max(g,b))-min(r,min(g,b))<65}
             let dark=count(in:rect){r,g,b in max(r,max(g,b))<90}
-            if Double(white)>=Double(w*h)*0.000020 && Double(dark)>=Double(w*h)*0.000025 {return rect}
+            if Double(white)>=Double(w*h)*0.000020 && Double(dark)>=Double(w*h)*0.000025 && hasCardBorder(below:rect) {return rect}
         }
         return nil
+    }
+    private func hasCardBorder(below badge:CGRect)->Bool {
+        // The actual reward has a tall near-black right outline below FREE.
+        // A green leaf with a few white pixels is not a remaining reward card.
+        let x0=max(0,Int(Double(w)*0.105)),x1=min(w,Int(Double(w)*0.145))
+        let y0=max(0,Int((badge.maxY+0.003)*Double(h))),y1=min(h,Int((badge.maxY+0.065)*Double(h)))
+        guard x0<x1,y0<y1 else{return false}
+        var run=0,best=0
+        for y in y0..<y1 {
+            let dark=(x0..<x1).contains {x in let i=(y*w+x)*4;return max(data[i],max(data[i+1],data[i+2]))<75}
+            run=dark ? run+1:0;best=max(best,run)
+        }
+        return Double(best)>=Double(h)*0.018
     }
 }

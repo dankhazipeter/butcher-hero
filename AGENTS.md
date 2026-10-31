@@ -1,5 +1,26 @@
 # Butcher Hero — aktív projektutasítások
 
+## Aktuális Free-javítás — 2026-10-31 (311)
+
+A Healthkimaradás frissképpel bizonyított oka: FREE→FRE OCRtévesztés,
+Regen81nél *+REE. Elsőként képi jelvénysablon dolgozik (3kézből ellenőrzött
+forrás,48×24maszk,0.82küszöb), aTesseract csak szűkített tartalék.
+Ikonvágás a zöld jelvényhez kötött, nem az ingadozó OCRszókerethez.
+Külön kártyaszegély-védelem szűri a fű téves card=true jelenlétét.
+Max3friss preclickkép/1.2s; hiányzó olvasás csak új képet enged, régi
+adatból nincs kattintás. Másablak/összegváltozás/STOP azonnali elutasítás.
+Rövid szövegkiesés csak láthatóHUD+kártya mellett2.5s-ig hidalható át.
+click_sent és könyvelés a végső validált kép/reward alapján, kézi jutalom
+és puszta click_validated/diagnosztika nem számolható sikernek.
+
+Élesworker36820,supervisor36813,session21801; backendpixel-free+pixel-digits-v2,
+--resume-run,1s.08:35:01Zindulás, első3perc6igazolt ebből3Health18100;
+utóképen+18.1Kszív is igazolt.35rögzítettkép,27pozitív/8negatív;
+3jelvénykalibrációs és24további pozitív.88helyi tesztPASS. A309/310
+„Healthjavítás még nincs” állapotát ez felülírja; nem örökhibamentesség-ígéret.
+Diagnosztika friss elutasítási/idle képpel és konkrét okkal (folyamatonként40
+extra képre korlátozva). Részletek311; friss runtime mindigstate.jsonból.
+
 310: fejlécbeli HU/EN nyelvválasztó, külön dashboard/locales/hu.js és en.js,
 közös i18n.js. Magyar alapértelmezés, helyi választás megjegyezve; élő váltás
 megtartja az időszakot és elrejtett görbéket. Dátum/szám/tooltipek/állapotok

@@ -1,6 +1,13 @@
 # Új taktika — 2026-10-29
 
-## Aktív — 2026-10-30
+## Aktív — 2026-10-31
+
+311: a félperces ajándékvárakozás nem sikerkritérium; input+eltűnés+helyes
+könyvelés kell. Folyamat-PID/friss képidő önmagában nem bizonyít gyűjtést.
+Nincs FRE/REE elfogadása, összeg kitalálása vagy végtelenrégi cél megtartása.
+A képi minták a tényleges fixFREEgrafikát hasonlítják; új ablakméretet külön
+valódi mintával tesztelünk. Kimaradt/kézi ajándékot utólag nem gyártunk be.
+Gyűjtő fut a külön fordítás/teszt alatt; csak előre kész bináris rövid betöltése.
 
 310: fordítás csak megjelenítési réteg; sem a napló, sem a játék nyelve,
 sem a jutalomtípus belső neve nem változik. HU18,3K / EN18.3K ugyanaz a

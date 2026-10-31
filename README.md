@@ -8,14 +8,14 @@ automatikus commit és `git push origin main` készül, külön kérés nélkül
 Nyers futások, naplók és buildfájlok helyben maradnak; a kód, tesztek és
 dokumentáció követve vannak. [Bekötési jegyzet](docs/290-github-main-elso-feltoltes.md).
 
-## Free-jutalom figyelő — 2026-10-30
+## Free-jutalom figyelő — 2026-10-31
 
 Fejlesztési ellenőrzés: `make test` (macOS14+, Swift5.9+,
 Python3.10+, Node18+). Új klón után egyszer: `make setup`.
 Szükséges OCR-függőség: Tesseract5 + angol modell (`brew install tesseract`).
 Ezután commit ÉS push előtt automatikus tesztkapu fut; bármely hiba megállítja
 a műveletet. A kapu az index/feltöltendő commit külön másolatát ellenőrzi,
-nem a futó játékot. A29valódi mintakép elvárt eredménye:
+nem a futó játékot. A35valódi mintakép elvárt eredménye:
 [`tests/reward-reading-corpus.json`](tests/reward-reading-corpus.json).
 [Mintabővítés és működés](docs/297-kepi-regresszios-korpusz-es-tesztkapu.md).
 Minden push és PR ugyanazt a tesztet futtatja GitHubon is.
@@ -45,8 +45,11 @@ Az indítót tartós terminálmunkamenetben hagyjuk futni: felügyeli és elakad
 újraindítja a saját gyűjtőjét. Technikai folytatás: `--resume-run`.
 A tesztek közben nem állítjuk le; a kéziSTOPa felügyelőt is leállítja.
 [Felügyelet és kiesések tanulságai](docs/300-gyujtes-helyreallitasa-es-felugyelete.md).
-Az aktív képolvasó Tesseracttal ellenőrzi aFREEszót, a számokat saját
-játékbeli glyphmintákból olvassa; nincs AppleVisionOCRhívás ebben a körben.
+Az aktív képolvasó elsőként képiFREEsablonokat használ, aTesseract
+szűkített tartalék; a számokat saját játékbeli glyphmintákból olvassa.
+Friss, korlátozott újrapróba és végsőképből könyvelés védi a Health-átvételt.
+[A kimaradások javítása és bizonyítékai](docs/311-free-kepi-felismeres-es-ujraproba.md).
+Nincs AppleVisionOCRhívás ebben a körben.
 [A fagyó képolvasó kiváltása](docs/303-vision-kivaltasa-es-szamjegymintak.md).
 Terminálban közvetlenül: `.build/release/ButcherHeroAutomation watch-free --interval 1`.
 Összesítés: `.build/release/ButcherHeroAutomation stats --from <ISO8601> --to <ISO8601>`.
