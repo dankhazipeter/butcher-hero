@@ -2,6 +2,10 @@
 
 ## 2026-10-31
 
+330 távoli eredmény: 7473696 / 41246121213, 22:02:23Z success.
+Teljes 177 teszt + 7 JS-check; mind a négy korábbi startup-folyamatteszt
+sikeres, teljes launcher-suite 2.944 s. A gyűjtő tovább futott.
+
 330: a felhasználó a CI javítását kérte. A régi run négy launcher
 setUp-timeoutját visszanéztük. Új piros→zöld regresszió mutatja a standard
 HTTPServer felesleges getfqdn-függőségét; a loopback bind ezt kihagyja.

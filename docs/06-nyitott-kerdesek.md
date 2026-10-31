@@ -2,12 +2,12 @@
 
 ## Aktív — 2026-10-31
 
-330: a korábbi CI-launcher időtúllépéshez DNS-független loopback bind
-és tiltott reverz DNS-es, valódi dashboard-folyamatteszt készült. Helyben
-177 teszt sikeres; a távoli eredmény az adott commit GitHub-runja szerint
-értékelendő. A régi CI-log csak készültségi timeoutot tartalmazott, DNS-stack
-nélkül, ezért a történeti pontos blokkolási hely nem állítható bizonyosan.
-A 325-ös végrehajtási környezetből eltűnt folyamatok oka külön kérdés marad.
+330: a korábbi CI-launcher időtúllépés javítása távol is igazolt:
+7473696 / GitHub-run 41246121213, 22:02:23Z success, 177 teszt és 7 JS-check.
+DNS-független loopback bind és tiltott reverz DNS-es, valódi dashboard
+folyamatteszt; a négy régi startup-hiba megszűnt. A konkrét CI-ügy lezárt.
+A régi DNS-stack hiánya miatt a történeti pontos blokkolási hely továbbra
+nem állítható bizonyosan; a 325-ös processzeltűnés oka külön nyitott kérdés.
 
 329felülírja324különSmash692nyitottját a vizsgált képekre: C2B1DD70,
 5C50309D és250B3491 már helyesSmashDamage692, újkeretes4pxikonillesztés

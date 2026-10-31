@@ -54,3 +54,23 @@ Nem módosult a gyűjtő binárisa vagy a felismerési modell. A már futó
 szervert és a gyűjtést nem indítottuk újra; az új bindkód a következő
 szerverindításkor lép életbe. A statnapló, képek és logikai futás megmaradnak.
 A korábbi folyamateltűnés (325) ettől nem válik bizonyítottan megjavítottá.
+
+## Távoli eredmény
+
+A `747369625b5130b7a07c3445213162f442c557d1` commit
+[41246121213 GitHub-futása](https://github.com/dankhazipeter/butcher-hero/actions/runs/41246121213)
+2026-10-31 22:02:23Z-kor **completed / success** eredménnyel zárult.
+Mind a 177 teszt és 7 JS-szintaxis ellenőrzés átment, kihagyás és
+újrafuttatás nélkül. A négy korábban bukó launcher-folyamatteszt külön
+`ok` eredményt kapott. A CI macOS 15 / Python 3.13 környezete nem változott.
+
+| Python suite | Előző, 9936a32 CI | Javított, 7473696 CI |
+| --- | --- | --- |
+| Dashboard | 22 teszt, 35.679 s | 23 teszt, 0.576 s |
+| Game control | 7 teszt, 36.579 s | 7 teszt, 1.537 s |
+| Launcher | 19 teszt, 26.192 s, 4 hiba | 19 teszt, 2.944 s, 0 hiba |
+
+Ez a konkrét CI-hiba javításának távoli igazolása, nem általános
+hibamentesség-ígéret vagy a 325-ös folyamatvesztés javítása. A régi DNS-stack
+hiányára vonatkozó korlát megmarad. Az eredményt rögzítő későbbi commit
+csak dokumentációt módosít, nem az igazolt szerver- vagy tesztkódot.

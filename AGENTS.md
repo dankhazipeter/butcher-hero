@@ -21,6 +21,12 @@ A gyűjtő és a már futó dashboard ehhez nem áll le, nincs capture/input/
 napló- vagy statmódosítás. Az új bindkód következő szerverindításkor töltődik.
 Részletek: docs/330-ci-loopback-dns.md.
 
+330 távoli igazolás: 7473696 commit, GitHub-run 41246121213, 22:02:23Z
+completed/success, teljes 177 teszt + 7 JS-szintaxis. Mind a négy korábban
+bukó folyamatteszt ok; 19 launcher 2.944 s, 23 dashboard 0.576 s, 7 game
+1.537 s. A korábbi 35.679/36.579/26.192 s + négy hiba helyett sikeres kör.
+A launcher-CI ügy lezárt e konkrét javításra; a 325-ös processzeltűnés nem.
+
 ## Ismeretlen jutalmak feltárása és javítása — 2026-10-31 (329)
 
 User előbb visszanézést, majd kifejezetten a további felismerés javítását
