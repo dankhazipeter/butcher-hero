@@ -1,5 +1,18 @@
 # Butcher Hero — új kezdet, 2026-10-29
 
+## Setup / Getting started
+
+Full English installation and usage instructions, including prerequisites,
+permissions, build/start/stop commands, the dashboard, logs and troubleshooting,
+are in [AGENTS.md](AGENTS.md#setup-and-usage--for-users-contributors-and-their-ai-assistants-315).
+You can ask an AI coding assistant to read that guide and walk you through
+setup and what the tool does. Reading the guide does not start the program.
+
+FREE rewards require the game's **No Ads** purchase. According to the
+maintainer, those tasks do not appear without it, so the FREE branch stays
+idle while geode opening can still work in the same watcher. No separate
+crystal-only flag or purchase-receipt detector is needed for that behaviour.
+
 ## Verziókezelés
 
 GitHub: [dankhazipeter/butcher-hero](https://github.com/dankhazipeter/butcher-hero).

@@ -2,6 +2,16 @@
 
 ## 2026-10-31
 
+315: felhasználó teljes beüzemelést/használatot kért azAGENTS.md-be és
+feltöltést, valamint AI-val történő beüzemelést említő angol Discordszöveget.
+A beüzemelési rész a ténylegesPackage.swift/parancsok/scriptkapuk alapján
+angolul bekerült;README közvetlenül odamutat. Felhasználói pontosítás:
+No Ads nélkül nincsFreefeladat, ezért közösfigyelő mellett sem kell külön
+kristálymód. Kódtény és közlés külön jelölve, nem adtunk hozzá kapcsolót vagy
+vásárlást. Maintainer automatikusmain-push és külsőfork/PR jogköre elkülönítve.
+Csak dokumentáció és offlineellenőrzés, nincs játékindítás/képrögzítés/input;
+314STOP és heartbeatPAUSED változatlan. Részletek315.
+
 314: felhasználó kérte a program és figyelés leállítását; a játékot maga
 kapcsolja ki, este folytatjuk.09:40:26Zutolsó feldolgozott kép és
 running=false;09:40:27Zsupervisor_stopped. Worker52120/supervisor52048

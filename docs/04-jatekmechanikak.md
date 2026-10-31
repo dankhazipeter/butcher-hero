@@ -1,5 +1,16 @@
 # Új verzió megfigyelései — 2026-10-29
 
+## No Ads és a feladatok megjelenése — 2026-10-31 (315)
+
+Felhasználói pontosítás: No Ads nélkül egyáltalán nem jelenik meg aFree-
+feladat. Így a közösfigyelő Freeága nem talál kattintható kártyát, miközben
+a kristálynyitás önállóan elérhető maradhat. Nincs szükség külön kristály-only
+kapcsolóra ehhez a játékműködéshez. Kódtény: a figyelő ténylegesen felismert
+Freekártyára reagál, nem vásárlási nyugtát ellenőriz; nincs automatikus No Ads
+vétel, reklámkezelés vagy fizetős fallback. A No Ads nélküli játékállapot
+jelentése most felhasználói közlés, nem ezen a vásárolt fiókon megismételt
+kísérlet. A telepítési segítségkérés nem oldja fel a314-es STOP-ot.
+
 ## Kristálynyitás — 2026-10-31 (313, felülírja312 ismeretlen képernyősorát)
 
 Felhasználói négykép: főpanel aranyx1Open, kezdeti geodelap, változó színű/

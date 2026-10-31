@@ -4,6 +4,8 @@
 
 - [Felhasználói leállítás az esti folytatásig](314-felhasznaloi-stop-estig.md) — **jelenleg nincs gyűjtés vagy játékfigyelés**.
 
+- [Teljes beüzemelés az AGENTS-ben, AI-segítség és No Ads](315-beuzemeles-es-ai-utmutato.md)
+
 - [Kristálynyitás, köztes repedt kő és közös inputvezérlés](313-kristalygyujtes-es-kozos-vezerles.md)
 
 - [Következő feladat: piros ponttal jelzett kristálytörés](312-kristalytorese-elokeszites.md)

@@ -11,6 +11,272 @@ statisztika nem vezérel vagy figyel játékablakot. Naplók/képek/kód megmara
 Folytatáskor friss játékállapotból indulunk; a313-as runtimePID-k történetiek.
 Nyitott: külön PierceDamage-összegnil eset a06-os doksiban. Részletek314.
 
+## Setup and usage — for users, contributors and their AI assistants (315)
+
+This is the complete current setup guide. The dated STOP above is the
+maintainer's local session state, not a reason to modify someone else's
+checkout. On **any** machine, reading these instructions or asking for setup
+does not authorize screen capture, game input, purchases or starting a bot.
+Explain the steps first and start collection only when that user asks.
+Never reuse historical PIDs or launch the legacy `ButcherHeroBot` executable.
+
+### What this tool does
+
+- Runs locally on **macOS**, against the **iPad version of Butcher Hero
+  installed and running on the Mac**. This is not an iPad-side app, a cloud
+  service, iPad mirroring driver, Windows build or autonomous combat bot.
+- Checks approximately once per second for the left event **FREE** stat
+  reward, clicks it when safe, and confirms collection only after its card
+  is absent on two subsequent game-HUD frames. It logs the displayed type
+  and amount; this is not an independently measured character-stat increase.
+- Opens geodes when the right-hand blue crystal icon has its red dot:
+  inventory → active gold x1 Open → repeated, visually checked strikes →
+  Continue → inventory's red X → HUD. No selling, upgrading or equipping.
+- Supplies a local, automatically refreshing **HU/EN statistics dashboard**
+  for FREE rewards. Crystal transactions have a separate journal and images;
+  crystal stats are not added to FREE-reward totals.
+- Uses local image matching and Tesseract, not a hosted AI API. The collector
+  needs no AI API key. An AI assistant can help explain/install/develop it,
+  but is not required for each runtime image check.
+
+**No Ads:** the maintainer reports that the game's FREE tasks appear only
+after purchasing the in-game **No Ads** item. Without that purchase those
+tasks do not appear, so the FREE branch has nothing to click; geode opening
+can still run in the same watcher. There is no separate crystal-only flag
+and no purchase-receipt detector: actions are gated by the actual visible UI.
+Do not purchase No Ads for the user, start an ad or bypass a purchase. A
+missing FREE task without No Ads is expected, not an installation failure.
+The No Ads rule is a game-behaviour statement supplied by the maintainer;
+it was not retested by removing a purchase from this account.
+
+### 1. Requirements and installation
+
+Use an **Apple silicon Mac capable of running the game's iPad app** and
+macOS **14+**. Current CI runs on macOS 15. Other systems/game layouts are
+not claimed to be supported. Required tools:
+
+- Git, Make and Swift **5.9+** with a compatible macOS SDK (Xcode Command
+  Line Tools or Xcode). If absent, install Apple's tools with
+  `xcode-select --install` and complete any interactive installation first.
+- Python **3.10+** for the supervisor and dashboard.
+- Tesseract **5** with its **English (`eng`) model** for local OCR.
+- Node.js **18+** for development/tests, not for the running dashboard.
+
+With Homebrew already installed, dependencies can be installed using:
+
+```sh
+brew install python node tesseract
+```
+
+Do not run an unreviewed remote installer or change the user's system/tool
+configuration silently. If Homebrew or Apple tools are missing, explain that
+prerequisite and let the user approve/complete the installation. Check tools:
+
+```sh
+git --version
+swift --version
+python3 --version
+node --version
+tesseract --version
+tesseract --list-langs
+```
+
+`eng` must be listed. Install/repair that model if missing; do not weaken OCR
+checks to compensate. All following commands run from the repository root.
+For a new checkout (do not clone over an existing project):
+
+```sh
+git clone https://github.com/dankhazipeter/butcher-hero.git
+cd butcher-hero
+make setup
+make test
+swift build -c release --product ButcherHeroAutomation
+```
+
+`make setup` installs this clone's mandatory pre-commit/pre-push test hooks.
+It deliberately refuses to overwrite a different existing hook setup;
+integrate those hooks rather than bypassing them. `make test` is offline:
+it uses saved fixtures, does not need the game and never sends game input.
+It also enables the hooks. Keep the generated release binary **and its Swift
+resource bundle** together in `.build/release/`; copying only the executable
+to another machine is not a supported installation method. There is no
+versioned downloadable app/release yet; this is a source checkout.
+
+### 2. Permissions and game preparation
+
+The user must grant macOS **Screen Recording** (the setting's name varies
+by macOS version) and **Accessibility** access to the terminal/app/runner
+macOS identifies as requesting capture/input. Find these under System
+Settings → Privacy & Security. Permissions cannot be bypassed by the AI.
+If macOS requests relaunching the host, do so with the user's approval.
+
+The user should launch the iPad game on the Mac, reach the normal gameplay
+HUD, and leave the portrait game window visible and unminimized. Avoid
+covering it, leaving menus open, changing its aspect ratio or locking/sleeping
+the Mac during unattended collection. Screenshots are window-relative and
+clicks re-read the window geometry, but arbitrary new layouts/resolutions
+have not all been validated. Moving a window is not a promise of support
+for hidden/minimized windows or every resize.
+Recognition currently uses the game's English labels (FREE, CRYSTAL STATS,
+TAP TO OPEN GEODE, CONTINUE); keep that game UI available. The dashboard's
+HU/EN selector changes only the dashboard, not the supported game labels.
+
+The current input path briefly activates the game and moves/restores the
+cursor and focus; **it is not a completely non-intrusive background input
+solution**. A held mouse button or a recent drag defers automatic clicks;
+after release, the next fresh check can retry. An AI doing documentation or
+offline tests must not capture the current screen to "check" a stopped game.
+
+### 3. Starting, resuming and stopping
+
+Only after explicit permission to start, leave this command running in a
+terminal (or a persistent foreground AI execution session):
+
+```sh
+./scripts/start-free-rewards.sh
+```
+
+Despite the historical filename, it starts **both** current automations in
+one worker, under one supervisor. Do not start a second watcher. The lock
+rejects another live worker. Do not detach it from a short-lived execution
+session with `nohup` and assume it survived; the verified deployment method
+keeps the supervisor attached to a persistent foreground session.
+
+To continue the existing logical statistics run after a technical restart:
+
+```sh
+./scripts/start-free-rewards.sh --resume-run
+```
+
+Without `--resume-run`, starting a watcher begins a new logical run in the
+journal (previous data is preserved). Do not reset/delete logs to fix a
+display. The supervisor restarts only its own crashed/stalled worker; it
+does not launch the game. A manual STOP must stop the supervisor as well:
+
+```sh
+./scripts/stop-free-rewards.sh
+```
+
+Alternatively Ctrl+C in the supervisor's terminal requests a complete stop.
+Verify `running: false` in both `data/free-rewards/state.json` and
+`data/free-rewards/supervisor.json`, and verify the identified worker and
+supervisor exited. Do not kill arbitrary Python/game processes. No automatic
+evening resume or scheduling is implied by "we'll continue later".
+
+An optional **live, capture-only** test, with separate user approval, is:
+
+```sh
+.build/release/ButcherHeroAutomation watch-free --dry-run --seconds 15 --resume-run
+```
+
+It observes but never clicks; it still writes local journal/diagnostic data
+and needs screen-capture permission. It is NOT an offline test and must not
+be run while another watcher is active or while the user requested STOP.
+
+### 4. Dashboard, logs and inspecting results
+
+In a **second** terminal at the repository root:
+
+```sh
+./scripts/start-reward-dashboard.sh
+```
+
+Open `http://127.0.0.1:8765/`. If that port is occupied, use
+`./scripts/start-reward-dashboard.sh --port 8766` and open that port instead;
+do not kill an unrelated server. Ctrl+C in this terminal stops only the
+dashboard. It is read-only, bound to loopback and does not control/capture
+the game; stopping collection does not require deleting or closing it.
+Do not expose it publicly without a separate security review.
+
+The page supports HU/EN, period/run filters, per-stat growth, a shared chart
+of **collection counts**, and recent reward rows. It reads the journal
+automatically; the status indicator distinguishes a fresh live worker,
+mouse-related waiting, stopped/stale state and an unreachable backend.
+A process PID alone is not proof of successful collection.
+
+Local files (not committed to Git):
+
+- `data/free-rewards/events.jsonl`: append-only FREE attempts/confirmations.
+- `data/free-rewards/evidence/`: original before/validated/after screenshots.
+- `data/free-rewards/state.json`: worker status and crystal phase.
+- `data/free-rewards/supervisor.json` and `supervisor-events.jsonl`: supervision.
+- `data/crystal-rewards/events.jsonl` and `evidence/`: crystal flow and images.
+
+An offline CLI summary is available without starting capture or input:
+
+```sh
+.build/release/ButcherHeroAutomation stats --from 2026-10-31T00:00:00+02:00 --to 2026-11-01T00:00:00+02:00
+```
+
+Use explicit time-zone offsets matching the desired period. Journal times
+are UTC; the dashboard formats them for its browser/user locale. Amounts
+are the rounded values shown by the game (18.1K ≈ 18100), not exact hidden
+internal stats. Unknown amounts stay unknown; they must not become invented
+zeros or values copied from another reward. Pending/failed attempts are not
+confirmed rewards, and manual collections are not attributed to the bot.
+
+### 5. Troubleshooting and updating
+
+- Missing binary: run the release build above. Build errors: check Swift/SDK
+  and macOS versions; do not start the legacy bot as a fallback.
+- Missing window: the watcher waits; check that the game is open on this
+  Mac and unminimized. It does not launch the game automatically.
+- No input: check Accessibility, mouse-release waiting and the last successful
+  frame time. Missing/denied Screen Recording is not solved by relaxing
+  recognition thresholds. Relaunch a permission-granted runner if required.
+- No FREE tasks without No Ads: expected according to the maintainer. Geode
+  availability is independent; it waits for an actual red-dot notification.
+- Unexpected modal, layout or blocked crystal flow: stop, preserve evidence,
+  inspect it and add a reviewed regression fixture. Do not click unknown
+  buttons, ads or purchase confirmations. The bounded crystal flow can block;
+  `--recover-crystal` is an **operator-only** recovery for a recent unfinished
+  transaction in its own journal, not a normal startup flag. See docs/313.
+- A known open issue is a Pierce Damage reward collected with an unreadable
+  amount; evidence and current limitations are in `docs/06-nyitott-kerdesek.md`.
+  Do not advertise perfect recognition, every layout, or fully general
+  unattended recovery. Do not run `reconcile` casually to rewrite history.
+- Logs/screenshots grow on disk. Preserve evidence and agree on a retention
+  policy before deleting anything; never automatically wipe the data folder.
+
+For a user-managed update: stop the worker/supervisor first, inspect dirty
+files and preserve them, then `git pull --ff-only`, `make test`, and rebuild
+the release target. Restart only with current user authorization. Do not
+force-pull/reset, overwrite user changes or rebuild over a running release
+binary. During active authorized development, use a separate staging build
+and only a short verified deployment pause (see docs/300 and docs/313).
+
+### 6. Working with an AI and contributing
+
+Suggested prompt after opening/cloning this repository in an AI coding tool:
+
+> Read AGENTS.md's setup guide. Explain what the tool does, check my Mac's
+> prerequisites, and walk me through installation and permissions. Do not
+> start screen capture or click the game until I explicitly ask. Explain
+> No Ads versus geode opening, show me the dashboard, and explain how to stop.
+
+No particular AI vendor or paid AI integration is required by this program.
+When advising, an assistant must inspect the current scripts rather than
+invent flags. Keep the guide and the magyar `docs/` knowledge base current
+with changes to dependencies, permissions, actions, UI or supported commands.
+Do not purchase anything, change global credentials or push to upstream
+merely because a newcomer asks for installation help.
+
+For **external contributors**, fork the repository, work on a feature branch,
+run `make setup` and `make test`, include reviewed screenshot fixtures for
+recognition changes, and submit a PR to `dankhazipeter/butcher-hero`. Push
+only to a remote/branch the contributor has authorized. The dated automatic
+`origin/main` commit/push rule below is the **maintainer's own working
+arrangement**, not authority for another user's AI to push upstream/main.
+The maintainer reviews and merges suitable PRs; the PR's own fresh GitHub
+`Reward tests (macOS)` check must pass. Do not bypass hooks or rewrite fixed
+expected outputs to fit broken code. See `CONTRIBUTING.md` for the PR process.
+
+There are no versioned releases yet; main is evolving. Check back for changes
+and record the tested commit when reporting a bug. No project-wide license
+has been selected in this checkout; do not claim an MIT/Apache license based
+on the separate third-party CountUp license. Do not add a license without
+the owner's choice. This guide does not lift the maintainer's current STOP.
+
 ## Aktív — Free + kristálynyitás, 2026-10-31 (313)
 
 A felhasználó MOST engedélyezte a bemutatott kristályfolyamatot; ez felülírja
