@@ -298,7 +298,7 @@
     for(const row of orderedKinds(data.kinds)) {
       let card=cards.get(row.kind);
       if(!card) {
-        card=field("article","","stat"); card.dataset.kind=row.kind;
+        card=field("article","",`stat frequency-${row.kind}`); card.dataset.kind=row.kind;
         const heading=field("div","","stat-head"),icon=document.createElement("img");
         icon.src=`/icons/${row.kind}.png`;icon.alt="";
         heading.append(icon,field("h3",labelOf(row)));

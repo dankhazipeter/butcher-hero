@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Azonos típusszínek az összesített és a statonkénti grafikonokon](339-egyseges-statgrafikon-szinek.md)
 - [Statonkénti átlagos egység/perc a teljes kiválasztott időszakra](338-statonkenti-percenkenti-atlag.md)
 - [Látható kiválasztott időszak: név, teljes kezdet/vég és intervallumhossz](337-lathato-kivalasztott-idoszak.md)
 - [Safari helyett csak igazolt játékablak; a „Fut” jelzés forrás- és képernyőellenőrzése](336-kepforras-es-gyujtoallapot.md)

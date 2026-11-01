@@ -89,7 +89,7 @@ test("reward icons remain transparent on cards, ledger and frequency legend",()=
   }
 });
 
-async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFetch=false,fetchReply=null,timeZone="UTC"}={}) {
+async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFetch=false,fetchReply=null,timeZone="UTC",statWidth=0}={}) {
   const vm=require("node:vm");
   class Element {
     constructor(tagName="") {this.tagName=tagName;this.children=[];this.dataset={};this.attributes={};this.listeners={};this.style={};this.classList={add(){},remove(){}};}
@@ -117,7 +117,7 @@ async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFet
       if(!elements.has(id)) {const element=new Element();if(id==="frequency-chart") element.width=frequencyWidth;elements.set(id,element);}
       return elements.get(id);
     },
-    createElement(tag) {return new Element(tag);},createElementNS(ns,tag) {return new Element(tag);},
+    createElement(tag) {return new Element(tag);},createElementNS(ns,tag) {const node=new Element(tag);if(tag==="svg") node.width=statWidth;return node;},
     createTextNode(text) {return {textContent:text};},
     querySelectorAll(selector) {
       if(selector==="[data-range]") return staticNodes.filter(node=>node.dataset.range);
@@ -206,6 +206,44 @@ test("cards, legend and chart share the requested order without reordering sourc
   for(const [,body] of css.matchAll(/\.(?:stats-grid|frequency-legend)\{([^}]+)\}/g)) {
     const columns=/grid-template-columns:([^;]+)/.exec(body);
     if(columns) assert.equal(columns[1],"repeat(2,minmax(0,1fr))","four rows of two cards at every breakpoint");
+  }
+});
+
+test("all growth lines, dots and areas inherit the same kind palette as the combined chart and legend",async()=>{
+  const kinds=["hp","regeneration","piercing_damage","cutting_damage","smash_damage","piercing_defense","cutting_defense","smash_defense"];
+  const from="2026-11-01T00:00:00Z",to="2026-11-01T01:00:00Z";
+  const data={...helpData(),range:{mode:"run",from,to,bucketSeconds:60},
+    kinds:kinds.map(kind=>({kind,label:kind,total:"100",count:1})),
+    collectionCounts:Object.fromEntries(kinds.map(kind=>[kind,1])),
+    collectionSeries:Object.fromEntries(kinds.map(kind=>[kind,[{at:from,count:0},{at:to,count:1}]])),
+    series:Object.fromEntries(kinds.map(kind=>[kind,[{at:from,value:"0"},{at:to,value:"100"}]]))};
+  const elements=await renderDashboard(data,600,{statWidth:300});
+  const frequency=elements.get("frequency-svg");
+  for(const card of elements.get("stats-grid").children) {
+    const palette=`frequency-${card.dataset.kind}`;
+    assert.ok(card.className.split(" ").includes(palette),palette);
+    assert.ok(card.querySelector(".series"));assert.ok(card.querySelector(".endpoint"));assert.ok(card.querySelector(".area"));
+    assert.ok(frequency.children.some(group=>group.className?.split(" ").includes(palette)),palette);
+    assert.ok(elements.get("frequency-legend").children.some(button=>button.className.split(" ").includes(palette)),palette);
+    assert.equal(card.querySelector(".stat-value").textContent,"+100");
+  }
+  const first=elements.get("stats-grid").children[0];
+  elements.get("frequency-legend").children[0].listeners.click();
+  assert.ok(first.querySelector(".series"),"Hiding a count series must not hide or recolor its growth card");
+});
+
+test("growth graphs use the shared palette variable and translucent area in both themes",()=>{
+  const css=fs.readFileSync(path.join(__dirname,"../dashboard/style.css"),"utf8");
+  const rules=[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+  const body=selector=>rules.find(([,selectors])=>selectors.trim()===selector)?.[2]||"";
+  assert.match(body(".stat .spark .series"),/stroke:var\(--series-color,var\(--chart\)\)/);
+  assert.match(body(".stat .spark .endpoint"),/fill:var\(--series-color,var\(--chart\)\)/);
+  assert.match(body(".stat .spark .area"),/fill:var\(--series-color,var\(--chart\)\)/);
+  assert.match(body(".stat .spark .area"),/fill-opacity:\.12/);
+  for(const kind of ["hp","regeneration","piercing_damage","cutting_damage","smash_damage","piercing_defense","cutting_defense","smash_defense"]) {
+    const definitions=rules.filter(([,selectors])=>selectors.trim()===`.frequency-${kind}`);
+    assert.equal(definitions.length,2,`${kind}: one shared dark and one shared light definition`);
+    assert.ok(definitions.every(([, ,value])=>/--series-color:#[0-9a-f]{6}/.test(value)));
   }
 });
 

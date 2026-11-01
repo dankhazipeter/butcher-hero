@@ -1,5 +1,18 @@
 # Butcher Hero — aktív projektutasítások
 
+## Egységes típusszínek a statonkénti grafikonokon — 2026-11-01 (339)
+
+User kéri az összesített grafikon nyolc típusszínét a Növekedés kártyáin is.
+A statkártyák ugyanazt a frequency-{kind} palettaosztályt kapják, mint a
+közös görbék és a legenda; nincs másolt vagy külön új paletta. Sparkvonal/
+végpont/terület ugyanazt a --series-color változót örökli, kitöltés12%.
+Meglévő világos/sötét színpárok és neutrális tengelyek változatlanok.
+2újNode DOM/CSS-regresszió, teljes223teszt+7JSkapu. Élő böngészőben mind
+a8vonal/végpont/kitöltés RGB-je megegyezett a közös diagram megfelelő
+vonalával, mindegyikareaopacity.12. Helyi proof339-stat-colours.png,
+saját tesztlap bezárva. Frontend-only, nincs gyűjtőrestart/reset/logírás.
+Részletek docs/339-egyseges-statgrafikon-szinek.md; userlap reloadkell.
+
 ## Statonkénti átlagos egység/perc — 2026-11-01 (338)
 
 User kéri a Növekedés kártyák összegéhez az átlagot. Minden kártyán a nagy
