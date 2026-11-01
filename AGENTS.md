@@ -1,5 +1,22 @@
 # Butcher Hero — aktív projektutasítások
 
+## Kristálypanel 623×863: levágott cím javítása — 2026-11-01 (335)
+
+A user kéri: a most megnyitott saját inventoryból x1-gyel továbbmenni,
+nyitható geode nélkül a saját jobb felső X-szel visszatérni. Nem általános
+ismeretlenpanel-kattintás. A 623×863 élő panel régi titlecropja `A EEE`-t
+olvasott; a pink X 73px-es komponenséből számolt scale a cím tetejét vágta.
+Egyetlen szűk felső titlecrop-tartalék: x.38/y.337/w.25/h.041 a meglévő
+X-hez kötve. Pontos CRYSTALSTATS+CRYSTALS, külön arany X1 és frisspreclick
+továbbra kötelező. Sem pöttyküszöb, sem próbakeret/600s recoveryguard nem
+változik.4eredeti kép+4újunit, végső203teszt+7JScheck szükséges.
+09:54:03Zsaját D2BE operatorrecovery az eredeti kezdettől565s, nem lejárt
+2DEátvétel.09:54:06Zx1→ütések→piros40/Pierce89K→19ZContinue→22ZX→
+23.681Zcompleted_ui.09:54:56.064Zúj Health18200Freeigazolt. Helyreállított,
+nem megszakításmentes új kristálykör. Gyűjtő6390/runner6381/session4985;
+frissruntimeJSONelsődleges. További offline/Git-kapuk alatt nincs stop.
+Részletek és tényleges betöltési eredmény: docs/335-kristalypanel-623-cim.md.
+
 ## Geode kisablakos javítás; élő folytatás TCC miatt blokkolt — 2026-11-01 (334)
 
 A user jóváhagyta333javítását. Klasszikus fehérgyűrű ág változatlan:

@@ -42,7 +42,12 @@ public final class CrystalVision {
         // Anchor the known inventory to its actual close button. Its vertical
         // position changes with window aspect; do not mistake it for the HUD.
         if let layout=CrystalInventoryLayout.locate(p) {
-            let title=try words(layout.rect(.init(x:0.38,y:0.353,width:0.25,height:0.033)),white:false)
+            var title=try words(layout.rect(.init(x:0.38,y:0.353,width:0.25,height:0.033)),white:false)
+            if compact(title) != "CRYSTALSTATS" {
+                // Integer-pixel X widths slightly change the inferred scale.
+                // Include the clipped ascenders, keeping the same exact title.
+                title=try words(layout.rect(.init(x:0.38,y:0.337,width:0.25,height:0.041)),white:false)
+            }
             var grid=try words(layout.rect(.init(x:0.37,y:0.616,width:0.26,height:0.029)))
             // Shorter windows compress the header gap independently of the X
             // anchor. Retry only two bounded upward crops; text stays exact.

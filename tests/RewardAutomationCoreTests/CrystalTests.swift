@@ -91,6 +91,71 @@ final class CrystalTests:XCTestCase {
         XCTAssertFalse(CrystalAction.openOne.permits(rejected))
         XCTAssertFalse(CrystalAction.closeInventory.permits(rejected))
     }
+    func test623PixelInventoryUsesItsVisibleX1AndOwnCloseButton()throws {
+        let png=try image("inventory-ready-623-live")
+        let actual=try CrystalVision().observe(png,hudVisible:false)
+        XCTAssertEqual(actual.screen,.inventoryReady,actual.texts.joined(separator:";"))
+        XCTAssertTrue(actual.texts.contains{$0.filter{$0.isLetter || $0.isNumber}=="CRYSTALSTATS"})
+        XCTAssertTrue(actual.texts.contains("CRYSTALS"))
+        XCTAssertTrue(CrystalAction.openOne.permits(actual))
+        let open=CrystalAction.openOne.point(in:actual)
+        XCTAssertTrue(CGRect(x:246,y:489,width:122,height:37).contains(.init(x:open.x*623,y:open.y*863)))
+        let close=try XCTUnwrap(actual.closePoint)
+        XCTAssertTrue(CGRect(x:418,y:112,width:66,height:30).contains(.init(x:close.x*623,y:close.y*863)))
+    }
+    private func masked623Inventory(_ rect:CGRect)throws->CGImage {
+        let png=try image("inventory-ready-623-live"),p=try Pixels(png)
+        var data=p.data
+        for y in Int(rect.minY)..<Int(rect.maxY) {for x in Int(rect.minX)..<Int(rect.maxX) {
+            let i=(y*p.w+x)*4;for n in 0..<3 {data[i+n]=160}
+        }}
+        let provider=try XCTUnwrap(CGDataProvider(data:Data(data) as CFData))
+        return try XCTUnwrap(CGImage(width:p.w,height:p.h,bitsPerComponent:8,bitsPerPixel:32,
+            bytesPerRow:p.w*4,space:CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo:.init(rawValue:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue),
+            provider:provider,decode:nil,shouldInterpolate:false,intent:.defaultIntent))
+    }
+    func test623InventoryStillRequiresBothExactHeaders()throws {
+        for rect in [CGRect(x:236,y:298,width:150,height:38),CGRect(x:232,y:530,width:164,height:26)] {
+            let actual=try CrystalVision().observe(masked623Inventory(rect),hudVisible:false)
+            XCTAssertEqual(actual.screen,.unknown,actual.texts.joined(separator:";"))
+            XCTAssertFalse(CrystalAction.openOne.permits(actual))
+            XCTAssertFalse(CrystalAction.closeInventory.permits(actual))
+        }
+    }
+    func test623InventoryMissingX1ClosesOwnedPanelAndRecoveryRetainsAttempts()throws {
+        let actual=try CrystalVision().observe(masked623Inventory(.init(x:242,y:485,width:131,height:45)),hudVisible:false)
+        XCTAssertEqual(actual.screen,.inventoryUnavailable,actual.texts.joined(separator:";"))
+        XCTAssertFalse(CrystalAction.openOne.permits(actual))
+        var owned=begin()
+        XCTAssertNil(owned.observe(actual,now:3,inputReady:true))
+        XCTAssertNil(owned.observe(actual,now:4,inputReady:false))
+        XCTAssertEqual(owned.observe(actual,now:5,inputReady:true),.closeInventory)
+        owned.sent(.closeInventory,now:5)
+        _=owned.observe(observation(.hud),now:7,inputReady:true)
+        _=owned.observe(observation(.hud),now:8,inputReady:true)
+        XCTAssertFalse(owned.active);XCTAssertEqual(owned.completed,0)
+        let ready=try CrystalVision().observe(image("inventory-ready-623-live"),hudVisible:false)
+        var recovered=CrystalFlow(recovering:[.openInventory,.openOne,.openOne],now:100)
+        XCTAssertNil(recovered.observe(ready,now:101,inputReady:false))
+        XCTAssertEqual(recovered.observe(ready,now:102,inputReady:true),.openOne)
+        recovered.sent(.openOne,now:102)
+        XCTAssertNil(recovered.observe(ready,now:103,inputReady:true))
+        XCTAssertEqual(recovered.failure,"attempt_limit_openOne")
+    }
+    func test623LiveValidationResultAndNoOpenPanelRequireTheirOwnActions()throws {
+        let vision=CrystalVision()
+        for (name,expected,action) in [
+            ("inventory-ready-623-validation",CrystalScreen.inventoryReady,CrystalAction.openOne),
+            ("result-623-live",.result,.proceed),
+            ("inventory-no-open-623-live",.inventoryUnavailable,.closeInventory)] {
+            let actual=try vision.observe(image(name),hudVisible:false)
+            XCTAssertEqual(actual.screen,expected,"\(name):\(actual.texts)")
+            XCTAssertTrue(action.permits(actual),name)
+            if expected != .inventoryReady {XCTAssertFalse(CrystalAction.openOne.permits(actual),name)}
+            XCTAssertFalse(CrystalAction.openInventory.permits(actual),name)
+        }
+    }
     func testSmallResultRequiresExactTitleAndContinueWithoutDecorativeBorderOCR()throws {
         let png=try image("result-small-live"),vision=CrystalVision()
         let animation=try vision.observe(image("result-small-animation-live"),hudVisible:false)
