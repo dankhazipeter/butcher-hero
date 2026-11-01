@@ -89,6 +89,15 @@ test("reward icons remain transparent on cards, ledger and frequency legend",()=
   }
 });
 
+test("ledger reserves stable columns independently of pending/confirmed content",()=>{
+  const html=fs.readFileSync(path.join(__dirname,"../dashboard/index.html"),"utf8");
+  const css=fs.readFileSync(path.join(__dirname,"../dashboard/style.css"),"utf8");
+  assert.match(html,/<colgroup><col class="ledger-time"><col class="ledger-reward"><col class="ledger-amount"><col class="ledger-state"><\/colgroup>/);
+  assert.match(css,/\.ledger table\{table-layout:fixed;min-width:600px\}/);
+  assert.match(css,/\.ledger-time\{width:25%\}\.ledger-reward\{width:35%\}\.ledger-amount,\.ledger-state\{width:20%\}/);
+  assert.match(css,/\.table-wrap\{overflow:auto\}/,"narrow screens scroll rather than crush or clip statuses");
+});
+
 async function renderDashboard(data,frequencyWidth=0,{savedLanguage=null,failFetch=false,fetchReply=null,timeZone="UTC",statWidth=0}={}) {
   const vm=require("node:vm");
   class Element {

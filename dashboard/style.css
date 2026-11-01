@@ -29,3 +29,5 @@ h1 .heading-text{color:var(--text)}.language-picker{display:flex;flex-direction:
 .value-roll{display:inline-grid;max-width:100%;overflow:hidden;vertical-align:top;line-height:inherit}
 .value-roll>span{grid-area:1/1;min-width:0;overflow-wrap:anywhere}
 .value-roll-old{pointer-events:none;user-select:none}
+.ledger table{table-layout:fixed;min-width:600px}
+.ledger-time{width:25%}.ledger-reward{width:35%}.ledger-amount,.ledger-state{width:20%}

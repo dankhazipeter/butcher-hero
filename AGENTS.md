@@ -1,5 +1,17 @@
 # Butcher Hero — aktív projektutasítások
 
+## Stabil jutalomlista-oszlopok — 2026-11-01 (342)
+
+User: Átvéve/Nemigazolt váltáskor ne ugráljon a Mikor,mit,mennyit táblázat.
+Csak frontend: colgroup+table-layout:fixed,25/35/20/20% idő/jutalom/összeg/
+állapot.600pxminimum mellett a meglévő overflow:auto keskenyen görget;
+nem vágunk le állapotszöveget. A státusz/napló/fordítás nem változik.
+Új struktúra/CSS-regresszió, teljes229teszt+7JS kapu. Izolált böngészőben
+4HU/EN állapot pontosan azonos X/width minden oszlopon:750px-nél
+187.5/262.5/150/150,360pxwrappernél600pxtábla150/210/120/120.
+Élesadatot/függőclaimet nem módosítunk tesztből; gyűjtő/backendrestart
+nincs. Régi userlap egyszer frissítendő. Részletek docs/342-stabil-listaoszlopok.md.
+
 ## Gördülő statösszegek felpörgetés nélkül — 2026-11-01 (341)
 
 User iOS-szerű függőleges feliratváltást kér a Növekedés kártyáin. A régi
