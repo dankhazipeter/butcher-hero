@@ -1,6 +1,6 @@
 const test=require("node:test");
 const assert=require("node:assert/strict");
-const {formatCompact,formatExact}=require("../dashboard/format.js");
+const {formatCompact,formatExact,formatPerMinute}=require("../dashboard/format.js");
 const fs=require("node:fs");
 const path=require("node:path");
 const {inflateSync}=require("node:zlib");
@@ -29,6 +29,34 @@ test("missing or invalid amounts do not become fabricated zeros",()=>{
   for(const value of [null,undefined,"bad","18K",Infinity,NaN]) {
     assert.equal(formatCompact(value),"?");
     assert.equal(formatExact(value),"?");
+  }
+});
+test("per-minute stat rates use the full selected elapsed interval including downtime",()=>{
+  const from="2026-11-01T00:00:00Z";
+  assert.equal(formatPerMinute("1440000",from,"2026-11-02T00:00:00Z"),"1K");
+  assert.equal(formatPerMinute("1440000",from,"2026-11-01T12:00:00Z"),"2K");
+  assert.equal(formatPerMinute("819000",from,"2026-11-01T02:40:00Z"),"5,1K");
+  assert.equal(formatPerMinute("83",from,"2026-11-01T02:40:00Z"),"0,51");
+  assert.equal(formatPerMinute("83",from,"2026-11-01T02:40:00Z","en-GB"),"0.51");
+  assert.equal(formatPerMinute("60","2026-10-25T00:30:00Z","2026-10-25T01:30:00Z"),"1","DST elapsed hour, not identical local wall clocks");
+});
+test("per-minute formatting preserves decimal totals, compact units and tiny positive averages",()=>{
+  const from="2026-11-01T00:00:00Z",minute="2026-11-01T00:01:00Z";
+  assert.equal(formatPerMinute("999.99",from,minute),"999,99");
+  assert.equal(formatPerMinute("1000",from,minute),"1K");
+  assert.equal(formatPerMinute("1000000",from,minute),"1M");
+  assert.equal(formatPerMinute("0.001",from,minute),"<0,01");
+  assert.equal(formatPerMinute("0.001",from,minute,"en-GB"),"<0.01");
+  assert.equal(formatPerMinute("0",from,minute),"0");
+  assert.equal(formatPerMinute("100000000000000000000000000001",from,minute),"100000000000000000T");
+});
+test("unknown totals and missing or nonpositive time spans have no fabricated rate",()=>{
+  const at="2026-11-01T00:00:00Z",to="2026-11-01T00:01:00Z";
+  for(const value of [null,undefined,"bad","18K","-1",Infinity,Number.MAX_SAFE_INTEGER+1]) {
+    assert.equal(formatPerMinute(value,at,to),null,String(value));
+  }
+  for(const [from,end] of [[at,at],[to,at],[null,to],[at,undefined],["invalid",to]]) {
+    assert.equal(formatPerMinute("83",from,end),null);
   }
 });
 test("all eight UI-only icons are small RGBA PNGs with a transparent corner",()=>{
@@ -227,6 +255,54 @@ function helpData() {
   return {generatedAt:at,range:{mode:"run",from:"2026-10-30T16:50:44.381Z",to:at,bucketSeconds:60},kinds:[],
     collectionCounts:{},collectionSeries:{},confirmedClaims:3,pendingClaims:0,clickAttempts:3,logExists:true,recent:[]};
 }
+
+test("stat cards show per-minute units beside unchanged totals for the applied interval, not claim counts",async()=>{
+  const data=helpData();
+  data.range={mode:"day",from:"2026-11-01T00:00:00Z",to:"2026-11-02T00:00:00Z",bucketSeconds:60};
+  data.kinds=[{kind:"hp",label:"Health",total:"1440000",count:12}];
+  data.collectionCounts={hp:12};
+  data.series={};
+  const elements=await renderDashboard(data);
+  const card=elements.get("stats-grid").children[0];
+  assert.equal(card.querySelector(".stat-value").textContent,"+1,4M");
+  assert.equal(card.querySelector(".stat-rate").textContent,"Átlag: 1K/perc");
+  assert.equal(card.querySelector(".stat-count").textContent,"12 igazolt átvétel");
+  assert.ok(card.querySelector(".stat-rate").title.includes("leállított bot"));
+  assert.ok(card.querySelector(".stat-metrics").children.includes(card.querySelector(".stat-value")));
+  assert.ok(card.querySelector(".stat-metrics").children.includes(card.querySelector(".stat-rate")));
+  // Same collected total, but a12h session rather than a24h view doubles the rate.
+  data.range={...data.range,mode:"run",to:"2026-11-01T12:00:00Z"};
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(card.querySelector(".stat-rate").textContent,"Átlag: 2K/perc");
+  assert.equal(card.querySelector(".stat-value").textContent,"+1,4M");
+  const requests=elements.requests(),picker=elements.get("language");
+  picker.value="en";picker.listeners.change();
+  assert.equal(card.querySelector(".stat-rate").textContent,"Avg: 2K/min");
+  assert.ok(card.querySelector(".stat-rate").attributes["aria-label"].includes("Health"));
+  assert.equal(elements.requests(),requests,"Display-only translation must not fetch or reset");
+  assert.equal(data.kinds[0].total,"1440000");
+});
+
+test("stat rate changes on polls without new gifts and stays unavailable for a zero-length run",async()=>{
+  const data=helpData(),at="2026-11-01T00:00:00Z";
+  data.range={mode:"run",from:at,to:at,bucketSeconds:60};
+  data.kinds=[{kind:"regeneration",label:"Health Regen",total:"83",count:1}];
+  data.collectionCounts={regeneration:1};
+  data.series={};
+  const elements=await renderDashboard(data);
+  const card=elements.get("stats-grid").children[0];
+  assert.equal(card.querySelector(".stat-rate").textContent,"Átlag: —/perc");
+  data.range.to="2026-11-01T00:01:00Z";
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(card.querySelector(".stat-rate").textContent,"Átlag: 83/perc");
+  data.range.to="2026-11-01T00:02:00Z";
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(card.querySelector(".stat-rate").textContent,"Átlag: 41,5/perc");
+  assert.equal(card.querySelector(".stat-value").textContent,"+83");
+  data.kinds[0].total=null;
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(card.querySelector(".stat-rate").textContent,"Átlag: —/perc");
+});
 
 test("selected-period summary uses the applied run/all/custom bounds, not inactive form inputs",async()=>{
   for(const [mode,label] of [["run","Mostani futás"],["all","Minden"],["custom","Egyéni időszak"]]) {

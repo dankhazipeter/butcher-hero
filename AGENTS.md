@@ -1,5 +1,20 @@
 # Butcher Hero — aktív projektutasítások
 
+## Statonkénti átlagos egység/perc — 2026-11-01 (338)
+
+User kéri a Növekedés kártyák összegéhez az átlagot. Minden kártyán a nagy
+összeg mellett Átlag: érték/perc; HU/EN, K/M-formázás, statonkénti egység,
+NEM átvételi darabszám. Osztó az alkalmazott API range.to-from TELJES percei,
+így24h nézetben az állásidő is benne van, nem csak a bot aktív ideje.
+BigInt racionális számítás a nyers decimális row.total-ból, nincs kompakt
+szám visszafejtés vagy naplómódosítás. Kijelzés csonkolt2tizedes,1000+
+meglévőgameformátum; pozitív<.01 esetén <0,01, nemhamis0. Nulla/hibás
+időablak vagy ismeretlenösszeg: —. Tooltip/aria elmagyarázza az osztót.
+5újNode (3unit+2app.jsDOM), teljes221teszt+7JSkapu. Csakstatikusfrontend:
+nincs worker/backend/releaseváltozás vagy restart. Élő run/day megjelenítés
+ellenőrzött, day Health+2,3M/Átlag1,6K/perc. Saját tesztlap bezárva;
+proof .build/ui-proof/338-rates-day.png helyi, nem Git. Részletek338.
+
 ## Látható kiválasztott időszak és intervallumhossz — 2026-11-01 (337)
 
 User kéri a Mostani futás/Minden és más nézetek tényleges határait. A filter

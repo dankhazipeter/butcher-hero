@@ -36,7 +36,20 @@
     const fraction=head.length<3 && tail[0]!=="0" ? separators(locale).decimal+tail[0]:"";
     return p.sign+head+fraction+["","K","M","B","T"][unit];
   }
-  const api={formatCompact,formatExact};
+  function formatPerMinute(value,from,to,locale="hu-HU") {
+    const p=parts(value),elapsed=Date.parse(to)-Date.parse(from);
+    if(!p || p.sign || !Number.isSafeInteger(elapsed) || elapsed<=0 ||
+       (typeof value==="number" && !Number.isSafeInteger(value))) return null;
+    // Divide the exact decimal total by the WHOLE selected time window.
+    // BigInt avoids rounding large totals or using the already compact label.
+    const numerator=BigInt(p.integer+p.fraction)*60000n;
+    const denominator=BigInt(elapsed)*10n**BigInt(p.fraction.length);
+    const hundredths=numerator*100n/denominator;
+    if(numerator>0n && hundredths===0n) return "<"+formatExact("0.01",locale);
+    const decimal=String(hundredths/100n)+"."+String(hundredths%100n).padStart(2,"0");
+    return formatCompact(decimal,locale);
+  }
+  const api={formatCompact,formatExact,formatPerMinute};
   if(typeof module!=="undefined" && module.exports) module.exports=api;
   else root.RewardFormat=Object.freeze(api);
 })(globalThis);

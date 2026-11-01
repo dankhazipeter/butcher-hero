@@ -302,7 +302,9 @@
         const heading=field("div","","stat-head"),icon=document.createElement("img");
         icon.src=`/icons/${row.kind}.png`;icon.alt="";
         heading.append(icon,field("h3",labelOf(row)));
-        card.append(heading,field("div","","stat-value"),field("div","","stat-count"));
+        const metrics=field("div","","stat-metrics");
+        metrics.append(field("div","","stat-value"),field("span","","stat-rate"));
+        card.append(heading,metrics,field("div","","stat-count"));
         card.append(svgNode("svg",{class:"spark",role:"img","aria-label":t("statChartAria",{label:labelOf(row)}) }));
         $("stats-grid").append(card);cards.set(row.kind,card);
       }
@@ -312,6 +314,11 @@
       animateValue(value,row.total,`${i18n.language}:${mode==="custom"?`${mode}:${$("from").value}:${$("to").value}`:mode}:${mode==="run"?data.currentSession?.id||"":""}`);
       value.title=t("exact",{amount:decimal(row.total)});
       value.setAttribute("aria-label",`${labelOf(row)}: +${decimal(row.total)}`);
+      const average=RewardFormat.formatPerMinute(row.total,data.range.from,data.range.to,i18n.locale);
+      const rate=card.querySelector(".stat-rate");
+      rate.textContent=t("rate.value",{amount:average??"—"});
+      rate.title=t(average===null?"rate.unavailable":"rate.detail");
+      rate.setAttribute("aria-label",`${labelOf(row)}: ${t("rate.aria",{amount:average??"—"})}`);
       card.querySelector(".stat-count").textContent=t("confirmedCount",{count:decimal(data.collectionCounts[row.kind])});
       draw(card,row,data.series[row.kind]);
     }
