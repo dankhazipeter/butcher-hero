@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [iOS-szerű gördülő statösszegek, köztes számok nélkül](341-gordulo-statosszegek.md)
 - [Pierce549: 9/8 bizonytalanság, két kért pontosítás és célzott számjegyminta](340-pierce549-ket-pontositas-es-kilences.md)
 - [Azonos típusszínek az összesített és a statonkénti grafikonokon](339-egyseges-statgrafikon-szinek.md)
 - [Statonkénti átlagos egység/perc a teljes kiválasztott időszakra](338-statonkenti-percenkenti-atlag.md)

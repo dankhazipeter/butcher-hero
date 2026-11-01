@@ -1,5 +1,10 @@
 # CountUp.js — pinned local dependency
 
+Historical dependency: since round 341 the dashboard no longer loads CountUp.
+Formatted totals now roll as complete labels using native Web Animations,
+preserving game-specific K/M truncation even when the visible label is unchanged.
+These pinned files remain for historical compatibility; no runtime dependency.
+
 - Upstream: https://github.com/inorganik/countUp.js
 - Package: countup.js **2.10.1**, MIT (see `countUp.LICENSE.md`).
 - Source: https://registry.npmjs.org/countup.js/-/countup.js-2.10.1.tgz
@@ -11,4 +16,4 @@
 
 Served locally, not from a CDN. No runtime installation, network request,
 bundler or npm dependency tree required. To upgrade, review the package and
-license, update these pins, and run the real-library animation regression suite.
+license, update these pins, and run the full regression suite.

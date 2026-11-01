@@ -1,5 +1,21 @@
 # Butcher Hero — aktív projektutasítások
 
+## Gördülő statösszegek felpörgetés nélkül — 2026-11-01 (341)
+
+User iOS-szerű függőleges feliratváltást kér a Növekedés kártyáin. A régi
+CountUp helyett natív Web Animations: régi teljes K/M-felirat felfelé ki,
+új alulról be650ms alatt, köztes/kitalált számok nélkül. A trigger pontos
+nyersérték, ezért100000000→100018300 esetén a +100M→+100M is gördül.
+Elsőrender/nyelv/időszak/sessionváltás snap, változatlan poll nem restartol;
+gyors update/cancel takarít, reducedmotion/rejtettlap/APIhiba snap.
+Exact title/aria, formátum, értékek, percátlagok és grafikonok változatlanok.
+9animációteszt váltja az5régit, teljes228teszt+7JS PASS. Izolált browserben
+mindkétfelirat transformja igazolt, clipping és stabil45px magasság; végén
+csak a pontos új érték. Élődashboard8kártya ellenőrzött, újonnan nyitott
+tesztlap. UI-only: nincs gyűjtő/backendstop, naplóírás vagy statreset.
+CountUp script már nem töltődik, pinelt régi fájljai kompatibilitásból maradnak.
+Részletek docs/341-gordulo-statosszegek.md; régi userlap reloadszükséges.
+
 ## Pierce549: két engedélyezett pontosítás és új9minta — 2026-11-01 (340)
 
 User kivizsgálást, majd konkrétan két +549beírást és a további felismerés

@@ -26,3 +26,6 @@ h1 .heading-text{color:var(--text)}.language-picker{display:flex;flex-direction:
 @media(max-width:700px){.game-actions{align-items:flex-start;text-align:left}}
 .collector-heading{display:flex;align-items:center;gap:13px;min-width:0}.collector-heading>div{display:flex;flex-direction:column;gap:3px}.collector-heading strong{font-size:25px;line-height:1.2;font-weight:600;color:var(--status-color);letter-spacing:-.02em}.collector-dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--status-color)}.collector-details{display:flex;flex-direction:column;gap:5px;font-size:13px;text-align:right;max-width:520px}
 @media(max-width:700px){.collector-panel{align-items:flex-start;flex-direction:column;gap:12px;padding:16px}.collector-details{text-align:left}.collector-heading strong{font-size:23px}}
+.value-roll{display:inline-grid;max-width:100%;overflow:hidden;vertical-align:top;line-height:inherit}
+.value-roll>span{grid-area:1/1;min-width:0;overflow-wrap:anywhere}
+.value-roll-old{pointer-events:none;user-select:none}

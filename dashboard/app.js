@@ -35,7 +35,7 @@
   const compact=value=>RewardFormat.formatCompact(value,i18n.locale);
   const connectionMessage=()=>t("connectionError",{message:connectionError?.status?t("httpError",{status:connectionError.status}):connectionError?.message||""});
   const animateValue=RewardAnimation.createAnimator({
-    CountUp:globalThis.countUp?.CountUp,formatCompact:compact,formatExact:decimal,
+    formatCompact:compact,formatExact:decimal,
     reducedMotion:()=>typeof matchMedia==="function" && matchMedia("(prefers-reduced-motion: reduce)").matches,
     hidden:()=>document.hidden,
   });
