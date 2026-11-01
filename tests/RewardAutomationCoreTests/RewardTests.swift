@@ -3,6 +3,21 @@ import ImageIO
 @testable import RewardAutomationCore
 
 final class RewardTests:XCTestCase {
+    func testReviewed549GlyphAndSeparateClaimWithoutMovingTheNumberCrop()throws {
+        for name in ["pierce549-calibration","pierce549-heldout"] {
+            let png=try image("docs/references/2026-11-01/\(name).png")
+            let shapes=try RewardNumberReader.shapes(png)
+            XCTAssertEqual(shapes.count,3)
+            XCTAssertEqual(shapes.last?.rect.minX ?? 0,68.0/637.0,accuracy:0.00001)
+            XCTAssertEqual(shapes.last?.rect.height ?? 0,16.0/882.0,accuracy:0.00001)
+            XCTAssertEqual(try RewardNumberReader().read(png)?.text,"549",name)
+            let actual=try RewardVision().observe(png)
+            XCTAssertEqual(actual.reward?.kind,"piercing_damage",name)
+            XCTAssertEqual(actual.reward?.amount,"549",name)
+        }
+        let calibrator=try String(contentsOf:project.appendingPathComponent("tools/build-reward-digit-templates.swift"),encoding:.utf8)
+        XCTAssertFalse(calibrator.contains("pierce549-heldout"),"Separate claim must not become a calibration input")
+    }
     func testReviewedExternalIconAlignmentAcrossDamageAndDefense()throws {
         for (name,kind) in [
             ("smash-defense823","smash_defense"),("smash692-large-calibration","smash_damage"),

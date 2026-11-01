@@ -1,5 +1,25 @@
 # Butcher Hero — aktív projektutasítások
 
+## Pierce549: két engedélyezett pontosítás és új9minta — 2026-11-01 (340)
+
+User kivizsgálást, majd konkrétan két +549beírást és a további felismerés
+javítását engedélyezte.6F6EA993(21:12:18Z) és43E4FD3B(21:13:23Z) kártya+
+utókép is549nyíl. Nemcrop: háromglyph45/57/68px X,567pxY,16pxmagas.
+5/4jó,9error.1010417/8error.1246875; margin.0236458<.035, ezért nil.
+Mindkettőhöz külön reward_corrected549 append,flock/O_APPEND,forrássorok
+és claimcount/időpont változatlan. Eredeti byteprefixSHA egyezik, nincs
+duplázás; API+CLI két549=1098Pierce,0unknown az adott szűk időablakban.
+Csak e két történeti tétel korrigált, nem globálisreconcile.
+Futómodell/source azonos58glyph. Új mintából csak9adódik hozzá:20forrás/
+59glyph, az első58objektum változatlan. Nincs readerkód/crop/küszöb/
+típusfüggés-változás. Első kép kalibráció, másikclaim külön teszt, de
+azonosglyphrács és előzetesen látott, nem vak új betűméret-validáció.
+Korpusz54→56eredetikép,1újunit először4hibával piros; új9hiba0,
+8hiba.1246875. Teljes224teszt+7JS PASS,21:23:29Zadat-only atomi runtime+
+staging bundlecsere gyűjtőstop nélkül; source/mindkétbundle SHAa8a20b41…
+egyezik, releaseinspect549jó. Worker25484 frissképes; új élő549 még kell.
+Élő betöltés igazolása a340doksiban.
+
 ## Egységes típusszínek a statonkénti grafikonokon — 2026-11-01 (339)
 
 User kéri az összesített grafikon nyolc típusszínét a Növekedés kártyáin is.

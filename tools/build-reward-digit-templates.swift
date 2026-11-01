@@ -30,7 +30,10 @@ import ImageIO
             ("../2026-10-31/reward-audit/smash692-small-calibration.png","692"),
             ("../2026-10-31/reward-audit/smash692-large-calibration.png","692"),
             ("../2026-10-31/reward-audit/health18100-font-calibration.png","18.1K"),
-            ("../2026-10-31/reward-audit/health18600-font-calibration.png","18.6K")]
+            ("../2026-10-31/reward-audit/health18600-font-calibration.png","18.6K"),
+            // Visually verified card and +549 after-frame. Only its missing9
+            // variant is added; the already accepted5/4 are left unchanged.
+            ("../2026-11-01/pierce549-calibration.png","549")]
         var templates=[DigitTemplate]()
         for (name,label) in samples {
             let url=URL(fileURLWithPath:"docs/references/2026-10-30/"+name)
@@ -39,6 +42,7 @@ import ImageIO
             print("\(name) expected=\(label) count=\(shapes.count) shapes=\(shapes.map{String(format:"%.4f/%.4f",$0.rect.width,$0.rect.height)})")
             guard shapes.count==label.count else{fatalError("Reviewed label and segmented glyph count disagree: \(name)")}
             for (character,shape) in zip(label,shapes) where character != "." {
+                if name=="../2026-11-01/pierce549-calibration.png",character != "9" {continue}
                 templates.append(.init(character:String(character),aspect:shape.aspect,bits:shape.bits))
             }
         }
