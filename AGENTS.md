@@ -1,5 +1,20 @@
 # Butcher Hero — aktív projektutasítások
 
+## Látható kiválasztott időszak és intervallumhossz — 2026-11-01 (337)
+
+User kéri a Mostani futás/Minden és más nézetek tényleges határait. A filter
+alatt külön panel: alkalmazott időszak neve, teljes helyi év/hó/nap/óra/perc/
+másodperces Kezdet és Vége, intervallumhossz nap/óra/perc/mp bontással.
+Kizárólag API range.mode/from/to: nem a saját inputmezők piszkozata, nem a
+worker/chat indulása vagy Date.now-ból újraszámolt kezdet. HU/EN, IANAzone
+megmarad, DST-hosszt UTCinstantokból számolunk. Run-hint kimondja, hogy
+szüneteket is tartalmaz, nem aktív játékidő; All a megőrzött teljes napló.
+Új poll frissíti, nyelvváltás nincs fetch/reset.3új Node integrációs teszt,
+216teszt+7JS teljeskapu. Backend/gyűjtő/logok változatlanok, restart NINCS.
+Élő IAB runkezdés2026-11-01 10:45:57, All2026-10-29 21:56:28 Budapest;
+mindkettő vizuálisan ellenőrzött. Saját tesztlap bezárva, userlap reloadkell.
+Helyi képi proof .build/ui-proof/337-{run,all}.png nem Gitadat. Részletek337.
+
 ## Csak igazolt játékablak és valós gyűjtőállapot — 2026-11-01 (336)
 
 A user mindkét bizonyított hibát javíttatja. A régi Capture.frame OR-szűrése

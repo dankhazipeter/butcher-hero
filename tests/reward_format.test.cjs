@@ -228,6 +228,61 @@ function helpData() {
     collectionCounts:{},collectionSeries:{},confirmedClaims:3,pendingClaims:0,clickAttempts:3,logExists:true,recent:[]};
 }
 
+test("selected-period summary uses the applied run/all/custom bounds, not inactive form inputs",async()=>{
+  for(const [mode,label] of [["run","Mostani futás"],["all","Minden"],["custom","Egyéni időszak"]]) {
+    const data=helpData();
+    data.range={mode,from:"2025-12-31T22:15:00Z",to:"2026-01-02T00:20:05Z",bucketSeconds:60};
+    const elements=await renderDashboard(data,0,{timeZone:"Europe/Budapest"});
+    assert.equal(elements.get("period-name").textContent,label);
+    assert.equal(elements.get("period-from").attributes.datetime,data.range.from);
+    assert.equal(elements.get("period-to").attributes.datetime,data.range.to);
+    assert.match(elements.get("period-from").textContent,/2025/);
+    assert.match(elements.get("period-from").textContent,/23:15:00/);
+    assert.match(elements.get("period-to").textContent,/2026/);
+    assert.match(elements.get("period-to").textContent,/01:20:05/);
+    assert.equal(elements.get("period-duration").textContent,"1 nap 2 óra 5 perc 5 mp");
+    elements.get("from").value="2026-11-01T12:00";
+    elements.get("to").value="2026-11-01T13:00";
+    elements.poll();await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(elements.get("period-from").attributes.datetime,data.range.from);
+    assert.equal(elements.get("period-to").attributes.datetime,data.range.to);
+    assert.equal(elements.get("period-duration").textContent,"1 nap 2 óra 5 perc 5 mp");
+    if(mode==="run") assert.ok(elements.get("period-hint").textContent.includes("nem aktív játékidő"));
+    if(mode==="all") assert.ok(elements.get("period-hint").textContent.includes("teljes megőrzött napló"));
+  }
+});
+
+test("period bounds and elapsed duration update with server polls and translate without resetting or fetching",async()=>{
+  const data=helpData();data.range={mode:"run",from:"2026-10-31T23:59:00Z",to:"2026-11-01T00:00:01Z",bucketSeconds:60};
+  const elements=await renderDashboard(data,0,{timeZone:"Europe/Budapest"});
+  assert.equal(elements.get("period-duration").textContent,"1 perc 1 mp");
+  data.range.to="2026-11-01T00:00:03Z";
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.get("period-duration").textContent,"1 perc 3 mp");
+  const requests=elements.requests();
+  const picker=elements.get("language");picker.value="en";picker.listeners.change();
+  assert.equal(elements.get("period-name").textContent,"Current run");
+  assert.equal(elements.get("period-duration").textContent,"1 min 3 s");
+  assert.equal(elements.get("period-to").attributes.datetime,data.range.to);
+  assert.equal(elements.requests(),requests);
+  assert.ok(elements.requestLog.every(request=>!request.options?.method || request.options.method==="GET"));
+});
+
+test("period elapsed time uses instants through DST fallback and preserves zero-length sessions",async()=>{
+  const data=helpData();
+  data.range={mode:"all",from:"2026-10-25T00:30:00Z",to:"2026-10-25T01:30:00Z",bucketSeconds:60};
+  const elements=await renderDashboard(data,0,{timeZone:"Europe/Budapest"});
+  assert.match(elements.get("period-from").textContent,/02:30:00/);
+  assert.match(elements.get("period-to").textContent,/02:30:00/);
+  assert.equal(elements.get("period-duration").textContent,"1 óra");
+  data.range.from=data.range.to;
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.get("period-duration").textContent,"0 mp");
+  data.range.from="2026-10-25T01:30:01Z";
+  elements.poll();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.get("period-duration").textContent,"még nincs adat","Invalid intervals are not invented as zero");
+});
+
 function sessionData() {
   return {...helpData(),statisticsSessionToken:"session-token",currentSession:{id:"old-session",startedAt:"2026-10-30T16:50:44.381Z"}};
 }

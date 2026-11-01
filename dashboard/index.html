@@ -74,7 +74,16 @@
       <p class="subtle" data-i18n="rangeHelpScope">Csak a naplózott Free-átvételekről van szó. A kristályok és az eseményablakok kezelése külön naplóba kerül.</p>
       <details><summary data-i18n="rangeHelpTechnicalTitle">Technikai részletek</summary><p data-i18n="rangeHelpTechnical">Az utolsó watcher_started naplóbejegyzés jelöli a kezdetet. Az alap indítás új munkamenetet jelöl; a --resume-run kapcsoló watcher_resumed bejegyzéssel folytatja a meglévőt. Ha még nincs kezdőbejegyzés, a nézet a megőrzött napló elejétől indul.</p></details>
     </dialog>
-    <p id="range-description" class="range-description">Időzóna betöltése…</p>
+    <section class="period-summary" aria-labelledby="period-title">
+      <div class="period-heading"><span id="period-title" class="metric-label" data-i18n="period.title">KIVÁLASZTOTT IDŐSZAK</span><strong id="period-name">—</strong></div>
+      <dl class="period-bounds">
+        <div><dt data-i18n="from">Kezdet</dt><dd><time id="period-from">—</time></dd></div>
+        <div><dt data-i18n="to">Vége</dt><dd><time id="period-to">—</time></dd></div>
+        <div><dt data-i18n="period.duration">Időintervallum hossza</dt><dd id="period-duration">—</dd></div>
+      </dl>
+      <p id="period-hint" class="subtle"></p>
+      <p id="range-description" class="range-description">Időzóna betöltése…</p>
+    </section>
     <div class="notice" id="data-quality-note" role="status" hidden data-i18n="historicalWarning">Korábbi futások naplóadatai is szerepelnek: régi Health-félreolvasások és hiányzó átvételi igazolások maradhattak bennük. A javított gyűjtő adataihoz válaszd a Mostani futást.</div>
     <div id="notice" class="notice" role="status" hidden></div>
     <section class="overview" aria-label="Összesítés" data-i18n-aria-label="overview">

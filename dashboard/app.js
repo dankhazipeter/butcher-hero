@@ -7,13 +7,14 @@
   const i18n=RewardI18n.createI18n({catalogs:RewardLocales,storage});
   const t=i18n.t;
   const labelOf=row=>i18n.has(`kind.${row.kind}`)?t(`kind.${row.kind}`):row.label;
-  let date,clock,short;
+  let date,clock,short,fullDate;
   function applyLanguage() {
     i18n.apply(document);
     $("range-description").textContent=t("timezone",{zone});
     date=new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"});
     clock=new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,hour:"2-digit",minute:"2-digit",second:"2-digit"});
     short=new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,hour:"2-digit",minute:"2-digit"});
+    fullDate=new Intl.DateTimeFormat(i18n.locale,{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
   }
   applyLanguage();
   let mode = "run", snapshot, sequence = 0, pollVersion = 0, timer, lastCount;
@@ -254,6 +255,26 @@
       (data.unclassifiedClaims?" "+t("unclassifiedSummary",{count:decimal(data.unclassifiedClaims)}):"");
     drawFrequency();
   }
+  function renderPeriod(data) {
+    // Use the APPLIED backend range, not the inactive custom inputs, process
+    // start time, or a newly selected range whose request is still in flight.
+    const range=data.range,applied=range.mode||mode;
+    $("period-name").textContent=t(["run","all","today","hour","day"].includes(applied)?applied:"period.custom");
+    for(const [id,value] of [["period-from",range.from],["period-to",range.to]]) {
+      $(id).textContent=fullDate.format(new Date(value));$(id).setAttribute("datetime",value);
+    }
+    let seconds=Math.floor((Date.parse(range.to)-Date.parse(range.from))/1000);
+    const parts=[];
+    if(Number.isFinite(seconds) && seconds>=0) {
+      for(const [size,key] of [[86400,"period.days"],[3600,"period.hours"],[60,"period.minutes"],[1,"period.seconds"]]) {
+        const count=Math.floor(seconds/size);seconds%=size;
+        if(count || (size===1 && !parts.length)) parts.push(t(key,{count:decimal(count)}));
+      }
+    }
+    $("period-duration").textContent=parts.length?parts.join(" "):t("noData");
+    $("period-hint").textContent=t(applied==="run"?"period.runHint":applied==="all"?"period.allHint":"period.hint");
+    $("range-description").textContent=t("rangeDescription",{zone,minutes:decimal(Math.round(range.bucketSeconds/60))});
+  }
   function render(data,fresh=true) {
     snapshot=data;
     if(fresh) {statusConnected=true;connectionError=null;}
@@ -265,7 +286,7 @@
     $("pending").textContent=decimal(data.pendingClaims);
     $("last-claim").textContent=data.lastConfirmedAt?clock.format(new Date(data.lastConfirmedAt)):t("noClaims");
     $("attempts").textContent=t("attempts",{count:decimal(data.clickAttempts)});
-    $("range-description").textContent=t("rangeDescription",{from:date.format(new Date(data.range.from)),to:date.format(new Date(data.range.to)),zone,minutes:decimal(Math.round(data.range.bucketSeconds/60))});
+    renderPeriod(data);
     const warnings=[];
     $("data-quality-note").hidden=!data.historicalDataWarning;
     if(!data.logExists) warnings.push(t("noLog"));
