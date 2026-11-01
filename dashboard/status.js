@@ -30,7 +30,12 @@
     if(!checkedAt) return result("starting","status.startingDetail");
     const age=Math.max(0,(now-parsed)/1000);
     if(age>10) return result("stale","status.staleDetail",{seconds:Math.floor(age)});
+    if(watcher.captureStatus==="error") return result("capture_error","status.captureErrorDetail");
+    if(watcher.captureSourceVerified!==true || watcher.captureStatus!=="ok") return result("source_unverified","status.sourceUnverifiedDetail");
+    if(watcher.crystalPhase==="blocked" || watcher.eventEndPhase==="blocked" || watcher.screenState==="manual_crystal") return result("blocked","status.blockedDetail");
+    if(!["hud","crystal","event"].includes(watcher.screenState)) return result("unrecognized","status.unrecognizedDetail");
     if(watcher.waitingForMouseRelease) return result("waiting","status.waitingDetail");
+    if(watcher.screenState!=="hud") return result("processing","status.processingDetail");
     return result("running","status.runningDetail");
   }
   if(typeof module!=="undefined" && module.exports) module.exports={collectorStatus,gameStatus};

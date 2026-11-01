@@ -3,7 +3,8 @@ const assert=require("node:assert/strict");
 const {collectorStatus,gameStatus}=require("../dashboard/status.js");
 const now=Date.parse("2026-10-30T20:00:10Z");
 const fresh="2026-10-30T20:00:09Z";
-const active={stateKnown:true,running:true,lastCheckedAt:fresh,waitingForMouseRelease:false};
+const active={stateKnown:true,running:true,lastCheckedAt:fresh,waitingForMouseRelease:false,
+  captureSourceVerified:true,captureStatus:"ok",screenState:"hud"};
 const {createI18n}=require("../dashboard/i18n.js");
 const t=createI18n({catalogs:{hu:require("../dashboard/locales/hu.js")}}).t;
 const status=(watcher,generatedAt=fresh,at=now,connected=true)=>collectorStatus(watcher,generatedAt,at,connected,t);
@@ -11,6 +12,31 @@ const status=(watcher,generatedAt=fresh,at=now,connected=true)=>collectorStatus(
 test("only a live worker with fresh successful frames is green",()=>{
   assert.equal(status(active).state,"running");
   assert.equal(status(active).label,"Fut");
+});
+test("fresh captures with a foreign or missing source are never green",()=>{
+  for(const value of [false,undefined,null,"true",1]) {
+    assert.equal(status({...active,captureSourceVerified:value}).state,"source_unverified");
+  }
+  for(const value of [undefined,"starting","invalid"]) {
+    assert.equal(status({...active,captureStatus:value}).state,"source_unverified");
+  }
+});
+test("capture errors and unrecognized game frames are warnings even with a live fresh worker",()=>{
+  assert.equal(status({...active,captureStatus:"error"}).state,"capture_error");
+  for(const screenState of [undefined,null,"unrecognized","browser","invalid"]) {
+    assert.equal(status({...active,screenState}).state,"unrecognized");
+  }
+  assert.equal(status({...active,captureStatus:"error",running:false}).state,"stopped");
+  assert.equal(status({...active,captureStatus:"error",lastCheckedAt:"2026-10-30T19:59:50Z"}).state,"stale");
+});
+test("recognized workflows are distinct from blocked and manual panels",()=>{
+  for(const screenState of ["crystal","event"]) {
+    assert.equal(status({...active,screenState}).state,"processing");
+  }
+  for(const change of [{crystalPhase:"blocked"},{eventEndPhase:"blocked"},{screenState:"manual_crystal"}]) {
+    assert.equal(status({...active,...change}).state,"blocked");
+  }
+  assert.equal(status({...active,screenState:"crystal",waitingForMouseRelease:true}).state,"waiting");
 });
 test("a stopped or dead worker is explicitly stopped even with a recent old frame",()=>{
   assert.equal(status({...active,running:false}).state,"stopped");

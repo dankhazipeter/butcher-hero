@@ -1,5 +1,28 @@
 # Butcher Hero — aktív projektutasítások
 
+## Csak igazolt játékablak és valós gyűjtőállapot — 2026-11-01 (336)
+
+A user mindkét bizonyított hibát javíttatja. A régi Capture.frame OR-szűrése
+(`bundle==game || title contains Butcher Hero`) a nagyobb Safari dashboardot
+választotta; saját10:04:21Z/10:04:51Z diagnosztikai képek ezt mutatják.
+Ezek nem jutalomfelismerési negatív képek, hanem rossz képforrások. A user
+Health18.2K képe offline jól olvasható; ebből nem következik botátvétel.
+Most GameCapturePolicy csak pontos com.multicastgames.butcher+pozitívPID+
+WindowID+használható méret alapján választ, címalapú fallback NINCS. Pure
+metaadat-tesztek több nagyobb böngészővel/játék nélkül/hibásazonosítókkal;
+a személyes böngészős képek nem kerülnek publikus Gitbe.
+Workerstate: captureSourceBundleID/PID/WindowID, captureStatus, screenState.
+Backend külön ellenőrzi a forrásidentitást, nem fogad bemondott verifiedflaget.
+UIcsak friss+igazolt+ok+HUD esetben zöld; régi worker metaadat nélkül sem
+zöld. Képrögzítési hiba/ismeretlenUI/blokkolt vagy kézi panel külön warning;
+ismert event/kristály processing, nem Freegyűjtési ígéret. Captureerror
+azonnal állapotba kerül, nem csak naplóba. Stagingbuild+teljeskapu után
+rövidstop/resume-run, statreset/naplóátírás nincs.4Swift+2Python+4Nodeújteszt,
+végső213teszt+7JScheck.10:28:37Zstop→58Zresume, worker13630/session90840;
+frissstatejátékbundle/PID13534/Window546,ok/hud,APIverifiedtrue.10:29:30.948Z
+újRegen83UIigazolt, utóképen+83regen. ÚjIABlapfrissszöveg ellenőrzött;
+meglévőSafari egyszerreloadkell. További kapuk alatt nincs stop. Részletek336.
+
 ## Kristálypanel 623×863: levágott cím javítása — 2026-11-01 (335)
 
 A user kéri: a most megnyitott saját inventoryból x1-gyel továbbmenni,

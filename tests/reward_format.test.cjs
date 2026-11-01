@@ -184,7 +184,7 @@ test("cards, legend and chart share the requested order without reordering sourc
 test("live language switch updates existing cards, legend, amounts and ledger without another request or filter reset",async()=>{
   const at=new Date().toISOString();
   const data={generatedAt:at,range:{from:at,to:at,bucketSeconds:60},
-    watcher:{stateKnown:true,running:true,lastCheckedAt:at},
+    watcher:{stateKnown:true,running:true,lastCheckedAt:at,captureSourceVerified:true,captureStatus:"ok",screenState:"hud"},
     kinds:[{kind:"hp",label:"Health",total:"18300",count:1}],collectionCounts:{hp:1},collectionSeries:{},series:{},
     confirmedClaims:1,pendingClaims:0,clickAttempts:1,logExists:true,
     recent:[{at,amount:"18300",label:"Health",kind:"hp",confirmed:true}]};
@@ -400,7 +400,7 @@ test("help is translated on first load and language changes preserve open state 
 
 test("game-not-running is explicit and launch only occurs on a user action with the local token",async()=>{
   const data=helpData(),at=data.generatedAt;
-  data.watcher={stateKnown:true,running:true,lastCheckedAt:at};
+  data.watcher={stateKnown:true,running:true,lastCheckedAt:at,captureSourceVerified:true,captureStatus:"ok",screenState:"hud"};
   data.game={known:true,installed:true,running:false,hidden:false,windowVisible:false,checkedAt:at};
   data.gameLaunchToken="fixture-server-token";
   let posts=0,release;
@@ -454,7 +454,7 @@ test("launch failure is translated, permits retry and cannot advertise the game 
 test("switching language after a connection failure cannot mark the collector healthy",async()=>{
   const at=new Date().toISOString();
   const elements=await renderDashboard({generatedAt:at,range:{from:at,to:at,bucketSeconds:60},kinds:[],
-    watcher:{stateKnown:true,running:true,lastCheckedAt:at},collectionCounts:{},collectionSeries:{},
+    watcher:{stateKnown:true,running:true,lastCheckedAt:at,captureSourceVerified:true,captureStatus:"ok",screenState:"hud"},collectionCounts:{},collectionSeries:{},
     confirmedClaims:1,pendingClaims:0,clickAttempts:1,logExists:true,recent:[]},0,{failFetch:request=>request>1});
   assert.equal(elements.get("collector").textContent,"Fut");
   elements.poll();await new Promise(resolve=>setImmediate(resolve));
@@ -464,4 +464,33 @@ test("switching language after a connection failure cannot mark the collector he
   assert.equal(elements.get("connection").textContent,"DISCONNECTED");
   assert.ok(elements.get("notice").textContent.includes("last successfully loaded data"));
   assert.equal(elements.requests(),2);
+});
+
+test("rendered status follows source and screen health on polling and language changes",async()=>{
+  const css=fs.readFileSync(path.join(__dirname,"../dashboard/style.css"),"utf8");
+  const good={stateKnown:true,running:true,captureSourceVerified:true,captureStatus:"ok",screenState:"hud"};
+  for(const [change,expected] of [
+    [{captureSourceVerified:false},"source_unverified"],
+    [{captureStatus:"error"},"capture_error"],
+    [{screenState:"unrecognized"},"unrecognized"],
+    [{crystalPhase:"blocked"},"blocked"],
+    [{screenState:"manual_crystal"},"blocked"],
+    [{screenState:"crystal"},"processing"]]) {
+    const data=helpData();
+    data.watcher={...good,lastCheckedAt:data.generatedAt,...change};
+    const elements=await renderDashboard(data);
+    assert.equal(elements.get("collector-panel").dataset.state,expected);
+    assert.notEqual(elements.get("collector").textContent,"Fut");
+    const picker=elements.get("language");picker.value="en";picker.listeners.change();
+    assert.equal(elements.get("collector-panel").dataset.state,expected);
+    assert.notEqual(elements.get("collector").textContent,"Running");
+    assert.ok(!elements.get("collector-detail").textContent.includes("status."));
+    assert.ok(css.includes(`.collector-panel[data-state=${expected}]`),"Warning state must have explicit non-green styling");
+    data.watcher={...good,lastCheckedAt:data.generatedAt};
+    elements.poll();await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(elements.get("collector-panel").dataset.state,"running");
+    data.watcher={...data.watcher,...change};
+    elements.poll();await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(elements.get("collector-panel").dataset.state,expected,"A later bad frame must remove green again");
+  }
 });

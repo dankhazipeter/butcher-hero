@@ -50,12 +50,12 @@ private enum HumanInput {
     func frame()async throws->Frame {
         guard !WindowInputGeometry.displays().isEmpty else{throw AutomationError("Nincs aktív kijelző; a képernyők alvó vagy lekapcsolt állapotára várakozom.")}
         let content=try await SCShareableContent.excludingDesktopWindows(false,onScreenWindowsOnly:true)
-        let windows=content.windows.filter {
-            $0.owningApplication?.bundleIdentifier=="com.multicastgames.butcher" ||
-            ($0.title ?? "").lowercased().contains("butcher hero")
-        }
-        guard let window=windows.max(by:{$0.frame.width*$0.frame.height<$1.frame.width*$1.frame.height}),
-              window.frame.width>=350,window.frame.height>=550 else{throw AutomationError("Játékablak nem található; várakozás.")}
+        let selected=GameCapturePolicy.selectWindow(content.windows.map {
+            .init(windowID:$0.windowID,processID:$0.owningApplication?.processID,
+                  bundleIdentifier:$0.owningApplication?.bundleIdentifier,width:$0.frame.width,height:$0.frame.height)
+        })
+        guard let window=content.windows.first(where:{$0.windowID==selected})
+        else{throw AutomationError("A játék alkalmazásához tartozó ablak nem található; várakozás.")}
         let config=SCStreamConfiguration()
         config.width=Int(window.frame.width.rounded());config.height=Int(window.frame.height.rounded())
         config.showsCursor=false;config.ignoreShadowsSingleWindow=true;config.captureResolution = .best
@@ -242,6 +242,11 @@ private struct WatchState:Codable {
     var ocrBackend:String? = nil
     var crystalPhase:String? = nil
     var eventEndPhase:String? = nil
+    var captureSourceBundleID:String? = nil
+    var captureSourcePID:Int32? = nil
+    var captureWindowID:UInt32? = nil
+    var captureStatus:String = "starting"
+    var screenState:String = "unrecognized"
 }
 
 private final class Journal {
@@ -399,6 +404,11 @@ private final class Journal {
             let tick=ProcessInfo.processInfo.systemUptime
             do {
                 let frame=try await capture.frame(),observation=try vision.observe(frame.image)
+                state.captureSourceBundleID=frame.window.owningApplication?.bundleIdentifier
+                state.captureSourcePID=frame.window.owningApplication?.processID
+                state.captureWindowID=frame.window.windowID
+                state.captureStatus="ok"
+                state.screenState=observation.gameHUDVisible ? "hud":"unrecognized"
                 if diagnosticSaves==0 {try diagnostic(frame,observation,"observation_diagnostic",nil,"startup")}
                 if observation.reward != nil {lastReadableAt=tick}
                 else if tick-lastReadableAt>=35 && tick-lastIdleDiagnosticAt>=30 {
@@ -415,6 +425,7 @@ private final class Journal {
                 // Recognised event overlays have priority over Free and crystals.
                 // Their disappearance must never count as a Free reward claim.
                 let eo=try eventVision.observe(frame.image,hudVisible:observation.gameHUDVisible)
+                if eo.screen != .hud && eo.screen != .unknown {state.screenState="event"}
                 let eventWasActive=eventFlow.active,eventCompleted=eventFlow.completed
                 let eventAction=eventFlow.observe(eo,now:tick,inputReady:HumanInput.ready)
                 state.eventEndPhase=eventFlow.phase.rawValue
@@ -468,9 +479,11 @@ private final class Journal {
                 // candidates cannot survive across its overlays. A pending Free
                 // claim must finish verification before a new transaction starts.
                 let co=try crystalVision.observe(frame.image,hudVisible:observation.gameHUDVisible)
+                if co.screen != .hud && co.screen != .unknown {state.screenState="crystal"}
                 // A recognised manual panel is not ours to close, but must also
                 // suppress Free input if the colour-only HUD heuristic leaked.
                 if CrystalInputPolicy.isManualPanel(screen:co.screen,active:crystal.active) {
+                    state.screenState="manual_crystal"
                     if let p=pending {
                         try journal.append("claim_unconfirmed",claimID:p.id,reward:p.reward,message:"Manual crystal panel interrupted verification; not counted")
                         pending=nil
@@ -623,6 +636,9 @@ private final class Journal {
                 state.pendingClaimID=pending?.id
                 try journal.state(state)
             } catch {
+                state.captureStatus="error"
+                state.screenState="unrecognized"
+                try journal.state(state)
                 let message=error.localizedDescription
                 if lastError != message {try journal.append("observation_error",message:message);fputs("\(message)\n",stderr);lastError=message}
                 // Journal writes failing must stop the watcher rather than allow unlogged input.

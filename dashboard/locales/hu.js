@@ -35,7 +35,7 @@
     "collectorEyebrow": "GYŰJTŐPROGRAM ÁLLAPOTA",
     "checking": "Ellenőrzés…",
     "connectingStatus": "Kapcsolódás az állapotadatokhoz…",
-    "lastFrame": "Utolsó sikeres képolvasás: {time}",
+    "lastFrame": "Legutóbbi képrögzítés: {time}",
     "noData": "még nincs adat",
     "rangeLabel": "Időszak kiválasztása",
     "quickRanges": "Gyors időszakok",
@@ -144,7 +144,17 @@
     "status.startingDetail": "A folyamat fut, de még várunk az első sikeres képolvasásra.",
     "status.staleDetail": "A folyamat él, de {seconds} mp óta nincs sikeres képolvasás.",
     "status.waitingDetail": "Az egérgomb elengedése után folytatja a jutalomgyűjtést.",
-    "status.runningDetail": "Figyeli és átveszi az ingyenes jutalmakat."
+    "status.runningDetail": "Igazolt játékablak és felismert játékképernyő; az elérhető Free-jutalmakat figyeli.",
+    "status.source_unverified": "Képforrás nem igazolt",
+    "status.sourceUnverifiedDetail": "A folyamat fut, de nem igazolt, hogy a kép a játék alkalmazásából érkezik. A gyűjtés működése nem igazolt; régi futtatónál frissítés szükséges.",
+    "status.capture_error": "Képrögzítési hiba",
+    "status.captureErrorDetail": "A folyamat fut, de a legutóbbi képrögzítés vagy feldolgozás hibás. Nincs igazoltan működő gyűjtés.",
+    "status.unrecognized": "Ismeretlen játékképernyő",
+    "status.unrecognizedDetail": "A kép a játékból érkezik, de a képernyőt nem ismerjük fel. Az automatikus gyűjtés nem folytatható ezen a képernyőn.",
+    "status.blocked": "Gyűjtés elakadt",
+    "status.blockedDetail": "Blokkolt automatizáció vagy kézi kristálypanel akadályozza a Free-gyűjtést. Ellenőrizd a játék képernyőjét.",
+    "status.processing": "Játékképernyő kezelése",
+    "status.processingDetail": "Felismert kristály- vagy eseményképernyő kezelése folyik; a Free-gyűjtés addig szünetel."
   }
 };
   if(typeof module!=="undefined" && module.exports) module.exports=catalog;

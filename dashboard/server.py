@@ -284,11 +284,18 @@ def watcher_state(path: Path, now: datetime):
             known = False
         checked = state.get("lastCheckedAt")
         age = max(0, (now - parse_time(checked)).total_seconds()) if checked else None
+        source_pid, window_id = state.get("captureSourcePID"), state.get("captureWindowID")
+        source_verified = (state.get("captureSourceBundleID") == "com.multicastgames.butcher"
+                           and type(source_pid) is int and 0 < source_pid <= 2**31 - 1
+                           and type(window_id) is int and 0 < window_id <= 2**32 - 1)
         return {"stateKnown": known, "processAlive": alive,
                 "running": bool(state.get("running") and alive),
                 "waitingForMouseRelease": bool(state.get("waitingForMouseRelease")),
                 "lastCheckedAt": checked, "frameAgeSeconds": age,
-                "pendingClaimID": state.get("pendingClaimID")}
+                "pendingClaimID": state.get("pendingClaimID"),
+                "captureSourceVerified": source_verified,
+                "captureStatus": state.get("captureStatus"), "screenState": state.get("screenState"),
+                "crystalPhase": state.get("crystalPhase"), "eventEndPhase": state.get("eventEndPhase")}
     except (OSError, ValueError, TypeError, AttributeError):
         return {"stateKnown": False, "processAlive": False,
                 "running": False, "waitingForMouseRelease": False, "lastCheckedAt": None,

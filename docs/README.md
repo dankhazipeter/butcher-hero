@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Safari helyett csak igazolt játékablak; a „Fut” jelzés forrás- és képernyőellenőrzése](336-kepforras-es-gyujtoallapot.md)
 - [623×863 kristálypanel: levágott cím, x1 és saját üres panel bezárása](335-kristalypanel-623-cim.md)
 - [Kisablakos geode: jelzés és két panel javítása, TCC miatt félbeszakadt élő igazolás](334-kisablakos-geode-javitas-es-tcc-blokk.md)
 - [Nyitható geode kimarad: kis ablakon a fehér szegély ellenőrzése tévesen elutasít](333-geode-jelzes-kisablak-diagnozis.md)

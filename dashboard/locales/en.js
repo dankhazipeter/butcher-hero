@@ -35,7 +35,7 @@
     "collectorEyebrow": "COLLECTOR STATUS",
     "checking": "Checking…",
     "connectingStatus": "Connecting to collector status…",
-    "lastFrame": "Last successful screen check: {time}",
+    "lastFrame": "Latest captured frame: {time}",
     "noData": "no data yet",
     "rangeLabel": "Select time range",
     "quickRanges": "Quick time ranges",
@@ -144,7 +144,17 @@
     "status.startingDetail": "The process is running, but its first successful screen check is still pending.",
     "status.staleDetail": "The process is alive, but no screen check has succeeded for {seconds} seconds.",
     "status.waitingDetail": "Reward collection will continue after the mouse button is released.",
-    "status.runningDetail": "Watching for and claiming free rewards."
+    "status.runningDetail": "Verified game window and recognized gameplay screen; watching for available Free rewards.",
+    "status.source_unverified": "Unverified screen source",
+    "status.sourceUnverifiedDetail": "The process is running, but the image is not verified as coming from the game app. Collection is not verified; older collectors need an update.",
+    "status.capture_error": "Screen capture error",
+    "status.captureErrorDetail": "The process is running, but the latest capture or processing failed. Working collection is not verified.",
+    "status.unrecognized": "Unrecognized game screen",
+    "status.unrecognizedDetail": "The image comes from the game, but its screen is not recognized. Automatic collection cannot continue on this screen.",
+    "status.blocked": "Collection blocked",
+    "status.blockedDetail": "A blocked automation or a manual crystal panel is preventing Free collection. Check the game screen.",
+    "status.processing": "Handling game screen",
+    "status.processingDetail": "Handling a recognized crystal or event screen; Free collection is paused until it finishes."
   }
 };
   if(typeof module!=="undefined" && module.exports) module.exports=catalog;

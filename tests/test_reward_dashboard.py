@@ -290,6 +290,36 @@ class DashboardTests(unittest.TestCase):
         with patch("dashboard.server.os.kill"):
             self.assertFalse(watcher_state(path,now)["running"])
 
+    def test_watcher_capture_source_is_derived_from_exact_native_identity(self):
+        path=self.path.with_name("state.json")
+        now=parse_time("2026-10-30T10:00:12Z")
+        base={"pid":123,"running":True,"lastCheckedAt":"2026-10-30T10:00:11Z",
+              "captureSourceBundleID":"com.multicastgames.butcher","captureSourcePID":456,
+              "captureWindowID":419,"captureStatus":"ok","screenState":"hud",
+              "crystalPhase":"idle","eventEndPhase":"idle"}
+        for change,expected in [({},True),({"captureSourceBundleID":"com.apple.Safari"},False),
+                ({"captureSourceBundleID":None},False),({"captureSourcePID":True},False),
+                ({"captureSourcePID":0},False),({"captureSourcePID":2**31},False),
+                ({"captureWindowID":True},False),({"captureWindowID":0},False),
+                ({"captureWindowID":2**32},False),({"captureWindowID":"419"},False)]:
+            path.write_text(json.dumps({**base,**change,"captureSourceVerified":True}))
+            with patch("dashboard.server.os.kill"):
+                state=watcher_state(path,now)
+            self.assertEqual(state["captureSourceVerified"],expected,change)
+            self.assertEqual(state["screenState"],"hud")
+            self.assertEqual(state["captureStatus"],"ok")
+            self.assertEqual(state["crystalPhase"],"idle")
+
+    def test_legacy_fresh_worker_has_no_verified_capture_source(self):
+        path=self.path.with_name("state.json")
+        path.write_text(json.dumps({"pid":123,"running":True,"lastCheckedAt":"2026-10-30T10:00:11Z"}))
+        with patch("dashboard.server.os.kill"):
+            state=watcher_state(path,parse_time("2026-10-30T10:00:12Z"))
+        self.assertTrue(state["running"])
+        self.assertFalse(state["captureSourceVerified"])
+        self.assertIsNone(state["captureStatus"])
+        self.assertIsNone(state["screenState"])
+
     def test_http_read_only_restricted_paths_host_and_live_append(self):
         self.write([event("click_sent", 0)])
         static=self.root / "dashboard"

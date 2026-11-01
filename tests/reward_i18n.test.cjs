@@ -84,11 +84,17 @@ test("English and Hungarian format numbers without changing the exact source",()
 });
 test("all collector states are translated without changing their health decisions",()=>{
   const i18n=createI18n({catalogs});i18n.setLanguage("en");
-  const now=Date.now(),stamp=new Date(now).toISOString(),active={stateKnown:true,running:true,lastCheckedAt:stamp};
+  const now=Date.now(),stamp=new Date(now).toISOString(),active={stateKnown:true,running:true,lastCheckedAt:stamp,
+    captureSourceVerified:true,captureStatus:"ok",screenState:"hud"};
   const states=[
     [active,true,"running"],[{...active,running:false},true,"stopped"],
     [{...active,lastCheckedAt:null},true,"starting"],[{...active,lastCheckedAt:new Date(now-15000).toISOString()},true,"stale"],
     [{...active,waitingForMouseRelease:true},true,"waiting"],[active,false,"unknown"],
+    [{...active,captureSourceVerified:false},true,"source_unverified"],
+    [{...active,captureStatus:"error"},true,"capture_error"],
+    [{...active,screenState:"unrecognized"},true,"unrecognized"],
+    [{...active,screenState:"crystal"},true,"processing"],
+    [{...active,crystalPhase:"blocked"},true,"blocked"],
   ];
   for(const [watcher,connected,expected] of states) {
     const status=collectorStatus(watcher,stamp,now,connected,i18n.t);
