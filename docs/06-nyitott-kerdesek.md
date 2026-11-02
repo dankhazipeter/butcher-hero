@@ -2,6 +2,15 @@
 
 ## Aktív — 2026-10-31
 
+347,2026-11-02 aktuális:346STOPját új explicit normálstart feloldotta,
+háttérkattintás kísérlete félretéve. Gyűjtés/dashboard fut, friss forrás és
+újHealth18700igazolt; statkezdet megmaradt.346fehérpálya-számhiba7eredeti
+képre javítva,63fixkorpusz/241teljesteszt+7JS, aktívrelease betöltve1.295s
+szünettel. A konkrét fehérpályahelyzet újélőismétlése még nincs, nem állítunk
+általános hibamentességet.343külsőkijelzős geodeügy külön változatlan;
+háttérinput támogatást nem igazoltunk/nem engedélyeztünk. FrissruntimeJSON
+felülírja az alábbi régi TCC/STOP/PID állapotokat; részletek347.
+
 334 új aktuális blokk (Budapest2026-11-01): a333jelzéshiba és a kisablakos
 inventory/result-crop hibák javítva,199helyiteszt PASS. Élő kör azonban
 nem teljes:2DE3B931x1+5ütés utánresult látszott, Continue nem ment el,

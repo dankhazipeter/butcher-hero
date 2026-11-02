@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Normál gyűjtés újra; fehér pályarész ne legyen számjegy](347-normal-gyujtes-es-feher-hatter-szamolvasas.md)
 - [Teljes leállítás, külön geode-kattintó és három képpel igazolt naplójavítás](346-kulon-geodeproba-es-szamolvasasi-diagnozis.md)
 - [Elkülönített háttérkattintás-próba; még nem jutott el tényleges inputig](345-hatterinput-egyjutalmas-proba.md)
 - [Gyűjtés újraindítása, korábbi statmunkamenet és új Pierce565 igazolás](344-gyujtes-ujrainditas.md)

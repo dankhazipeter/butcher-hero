@@ -3,6 +3,58 @@ import ImageIO
 @testable import RewardAutomationCore
 
 final class RewardTests:XCTestCase {
+    func testWhiteSceneryDoesNotReplaceOrTruncateTheRewardNumber()throws {
+        for (name,kind,amount) in [
+            ("smash700","smash_damage","700"),
+            ("pierce565","piercing_damage","565"),
+            ("smash-defense817","smash_defense","817")
+        ] {
+            let png=try image("docs/references/2026-11-02/white-scenery-\(name).png")
+            XCTAssertEqual(try RewardNumberReader().read(png)?.text,amount,name)
+            let result=try RewardVision().observe(png)
+            XCTAssertEqual(result.reward?.kind,kind,name)
+            XCTAssertEqual(result.reward?.amount,amount,name)
+        }
+    }
+    func testWhiteSceneryFixPreservesSeparateTwoDigitAndKSuffixClaims()throws {
+        for (name,raw,kind,amount) in [
+            ("regen84","84","regeneration","84"),
+            ("health18700","18.7K","hp","18700")
+        ] {
+            let path="docs/references/2026-11-02/white-scenery-\(name)-development.png"
+            let png=try image(path)
+            XCTAssertEqual(try RewardNumberReader().read(png)?.text,raw,name)
+            let result=try RewardVision().observe(png)
+            XCTAssertEqual(result.reward?.kind,kind,name)
+            XCTAssertEqual(result.reward?.amount,amount,name)
+        }
+    }
+    func testWhiteScenerySeparateClaimsAfterSegmentationWasFixed()throws {
+        for (name,raw,kind,amount) in [
+            ("health18700","18.7K","hp","18700"),
+            ("pierce-defense624","624","piercing_defense","624")
+        ] {
+            let png=try image("docs/references/2026-11-02/white-scenery-\(name)-heldout.png")
+            XCTAssertEqual(try RewardNumberReader().read(png)?.text,raw,name)
+            let result=try RewardVision().observe(png)
+            XCTAssertEqual(result.reward?.kind,kind,name)
+            XCTAssertEqual(result.reward?.amount,amount,name)
+        }
+    }
+    func testWhiteSceneryAloneMustNotBecomeOne()throws {
+        let png=try image("docs/references/2026-11-02/white-scenery-smash-defense817.png")
+        let context=try XCTUnwrap(CGContext(data:nil,width:png.width,height:png.height,
+            bitsPerComponent:8,bytesPerRow:0,space:CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.draw(png,in:CGRect(x:0,y:0,width:png.width,height:png.height))
+        // Synthetic negative: erase only the real text/card portion. Retain
+        // the exact original right-hand scenery which used to be read as 1.
+        context.setFillColor(CGColor(gray:0.1,alpha:1))
+        context.fill(CGRect(x:21,y:png.height-583,width:58,height:35))
+        let sceneryOnly=try XCTUnwrap(context.makeImage())
+        XCTAssertTrue(try RewardNumberReader.shapes(sceneryOnly).isEmpty)
+        XCTAssertNil(try RewardNumberReader().read(sceneryOnly))
+    }
     func testReviewed549GlyphAndSeparateClaimWithoutMovingTheNumberCrop()throws {
         for name in ["pierce549-calibration","pierce549-heldout"] {
             let png=try image("docs/references/2026-11-01/\(name).png")

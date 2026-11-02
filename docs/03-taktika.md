@@ -2,6 +2,14 @@
 
 ## Aktív — 2026-10-31
 
+347: a user a normál gyűjtést kéri újra, háttérkattintást egyelőre nem.
+Nem folytatjuk a probe-okat, nem váltunk inputbackendet. A külön engedélyezett
+számolvasási javítás offline tesztelhető futó gyűjtő mellett; csak a bevizsgált
+release betöltésére rövid stop/resume. White-scene700/565/817 és a fejlesztés
+közben feltárt84/18.7K nem lehet kitalált vagy levágott szám. A tesztben
+hibát feltáró kép fejlesztési minta lesz, nem utólag független heldout.
+Múltbeli naplót e javítástól nem írunk át, a346három pontosítása különügy.
+
 329: unknown nem feltétlen új jutalom. Szétválasztjuk a típust és összeget;
 eredeti click_sentképek kézi ellenőrzése és jelenlegi kóddal replay követi.
 A jelen esetben9ikonfüggőlegesvágás,22azonos2/8számfont,3darab692eset

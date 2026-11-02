@@ -32,20 +32,45 @@ final class RewardNumberReader {
             let r=Int(rgba[i*4]),g=Int(rgba[i*4+1]),b=Int(rgba[i*4+2])
             white[i]=min(r,min(g,b))>185 && max(r,max(g,b))-min(r,min(g,b))<45
         }
-        var remaining=white,components:[(Int,Int,Int,Int,Int)]=[]
-        for start in remaining.indices where remaining[start] {
-            var queue=[start],head=0,x0=w,y0=h,x1=0,y1=0;remaining[start]=false
-            while head<queue.count {
-                let p=queue[head],x=p%w,y=p/w;head+=1
-                x0=min(x0,x);y0=min(y0,y);x1=max(x1,x);y1=max(y1,y)
-                for dy in -1...1 {for dx in -1...1 {
-                    let nx=x+dx,ny=y+dy
-                    guard nx>=0,ny>=0,nx<w,ny<h else{continue}
-                    let next=ny*w+nx
-                    if remaining[next] {remaining[next]=false;queue.append(next)}
-                }}
+        func groups(_ mask:[Bool])->[[Int]] {
+            var remaining=mask,result:[[Int]]=[]
+            for start in remaining.indices where remaining[start] {
+                var queue=[start],head=0;remaining[start]=false
+                while head<queue.count {
+                    let p=queue[head],x=p%w,y=p/w;head+=1
+                    for dy in -1...1 {for dx in -1...1 {
+                        let nx=x+dx,ny=y+dy
+                        guard nx>=0,ny>=0,nx<w,ny<h else{continue}
+                        let next=ny*w+nx
+                        if remaining[next] {remaining[next]=false;queue.append(next)}
+                    }}
+                }
+                result.append(queue)
             }
-            if queue.count>=2 {components.append((x0,y0,x1,y1,queue.count))}
+            return result
+        }
+        // Only boundary-connected white scenery needs separation. Preserve
+        // intact glyphs verbatim: filtering every glyph can split the crossbar
+        // of 4 and silently truncate 84 to 8. When scenery joins a final 0,
+        // retain its white pixels enclosed by the font's dark horizontal outline.
+        let outlineReach=max(3,Int(ceil(Double(image.height)*0.015)))
+        func dark(_ x:Int,_ y:Int)->Bool {
+            let i=(y*w+x)*4
+            return max(rgba[i],max(rgba[i+1],rgba[i+2]))<80
+        }
+        for group in groups(white) where group.contains(where:{i in
+            i%w==0 || i%w==w-1 || i/w==0 || i/w==h-1
+        }) {
+            for i in group {
+                let x=i%w,y=i/w
+                let left=(1...outlineReach).contains{d in x-d>=0 && dark(x-d,y)}
+                let right=(1...outlineReach).contains{d in x+d<w && dark(x+d,y)}
+                if !left || !right {white[i]=false}
+            }
+        }
+        let components=groups(white).filter{$0.count>=2}.map{group in
+            (group.map{$0%w}.min()!,group.map{$0/w}.min()!,
+             group.map{$0%w}.max()!,group.map{$0/w}.max()!,group.count)
         }
         let maxHeight=components.map{$0.3-$0.1+1}.max() ?? 0
         let tops=components.filter{Double($0.3-$0.1+1)>=Double(maxHeight)*0.8}.map{$0.1}.sorted()

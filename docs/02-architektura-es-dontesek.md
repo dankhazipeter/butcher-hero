@@ -2,6 +2,16 @@
 
 ## Aktív — 2026-10-31
 
+347,2026-11-02: RewardNumberReader a fehér maszk8szomszédos komponenseiből
+először csak a ROI-peremmel érintkezőket bontja. E komponenseken a fehér
+pixelhez ugyanazon sorban balra és jobbra<80RGB sötétfontkontúr kell,
+max(3,ceil(képmagasság×.015)) keresési távolságban. Az ép belső glyph-ek
+bitazonosak; utána új komponensezés és a korábbi baseline/decimal/24×32
+mintázás. ROI,0.30hibakapu,0.035margin és59glyph változatlan. Nem csak
+eldobjuk a szélkomponenst: a hozzákapcsolódott végső0 is visszanyerhető,
+tehát nem lesz700→70. Nincs típus-/előzőérték-/jutalomgyakoriság-tippelés.
+63eredeti képi elvárás, külön származtatott scenery-only negatív. Részletek347.
+
 334,2026-11-01: külön kis-pixel AA-gyűrűág, maximum75 szűk illesztéssel és
 ugyanazon centrumon erős fehér/semleges/sötét körstruktúrával. Klasszikus
 ág nem lazult. Inventoryszöveg csak2új felfelé crop, resultheader csak1

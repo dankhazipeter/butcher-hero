@@ -1,5 +1,26 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — normál gyűjtés újra; háttérinput félretéve — 2026-11-02 (347)
+
+User újraindítást kért, és egyelőre elengedi a másfajta kattintást. Ez feloldja
+346STOPját a meglévő Free/kristály/konkrét DiamondLeague automatizációra.
+Normál butcher-hero start, resume-run,14:17:26.931Z; nincs statreset,
+recover-crystal, új backend vagy további háttérinput-próba. Régi bot/heartbeat
+PAUSED. FrissPID/képidő mindig runtimeJSONból, nem történeti bejegyzésből.
+14:22:43.348Z2D5A406C új Pierce565UIigazolt. Külön jóváhagyott fehérpálya-
+számolvasás javítva: csak ROIperemhez kapcsolódó fehér komponensre kétoldali
+sötétfontkontúr; épbelsőglyph/ROI/baseline/0.30hiba/0.035margin/59modell
+változatlan.700/565/817elsőteszt6hiba→helyes. Az első prototípust megtörő
+Regen84/Health18.7Kfejlesztési, nem heldout; két külön később kiválasztott
+Health18.7K/PierceDefense624változatlan validáció.7eredetiPNG/63fixkorpusz,
+4újSwiftunit és származtatott negatív; teljes241teszt+7JS PASS. Különrelease
+is7/7helyes. Tesztelésalatt gyűjtőfut; atomikusbetöltésstop14:34:17.110Z→
+resume18.405Z,1.295sszünet. Újworker71640/session16390, frissjáték ok/hud.
+5B2A793E14:34:39.284ZHealth18700UIigazolt, utóképen explicit+18.7Kszív.
+Ez normál újélősiker, nem a korábbi fehérpályahelyzet újélőismétlése.
+Nincs további naplópontosítás/reconcile;346háromjavítása külön.343külső-
+monitoros geodeügy nemjavított ebben. Részletek347; kapukalatt gyűjtésfut.
+
 ## TELJES GYŰJTŐ LEÁLLÍTVA; külön geodepróba és3kért naplópontosítás — 2026-11-02 (346)
 
 User külön egyszerű kattintóhoz engedte az egész program leállítását; a
