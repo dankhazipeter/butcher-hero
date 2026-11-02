@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Felhasználói leállítás november2-án; nyitott külsőmonitoros geodehiba](343-felhasznaloi-stop.md)
 - [Stabil táblázatos oszlopok az Átvéve/Nem igazolt váltásnál](342-stabil-listaoszlopok.md)
 - [iOS-szerű gördülő statösszegek, köztes számok nélkül](341-gordulo-statosszegek.md)
 - [Pierce549: 9/8 bizonytalanság, két kért pontosítás és célzott számjegyminta](340-pierce549-ket-pontositas-es-kilences.md)

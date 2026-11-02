@@ -1,5 +1,21 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — FELHASZNÁLÓI STOP — 2026-11-02 (343)
+
+User: „állítsd le a programot, egyelőre nem játszunk”. A közös indító és
+saját gyűjtő/felügyelő/dashboard leállítva, supervisor_stopped08:04:11Z
+(09:04Budapest), state.running=false. Folyamatlista szerint nincs watcher/
+supervisor/dashboard/runner;8765nem figyel. Képrögzítés, input és figyelés
+NEM indulhat újra új kifejezett userkérés nélkül. Nincs esti/időzített
+újraindítás. Régi bot/heartbeat továbbraPAUSED; naplók/statisztikák maradnak.
+A korábbi „active” bejegyzések történetiek, nem folytatási engedélyek.
+Nyitott: külsőmonitoron geodepötty ingadozó felismerése és x1célzott olvasási
+hiba; laptopra visszatéve06:23:34Budapest teljes5F042063kör completed_ui.
+Azonos623x863ablaknál panelXkomponens70→73px; kijelzőfüggő megjelenítési
+eltérés, pontos alacsonyszintű oka nincs bizonyítva. Diagnózis, nem javítás;
+felismerőt nem módosítottunk, nincs külsőmonitoros hibamentességi állítás.
+Részletek docs/343-felhasznaloi-stop.md. Friss runtimeJSON elsődleges.
+
 ## Stabil jutalomlista-oszlopok — 2026-11-01 (342)
 
 User: Átvéve/Nemigazolt váltáskor ne ugráljon a Mikor,mit,mennyit táblázat.
