@@ -1,5 +1,34 @@
 # Butcher Hero — aktív projektutasítások
 
+## TELJES GYŰJTŐ LEÁLLÍTVA; külön geodepróba és3kért naplópontosítás — 2026-11-02 (346)
+
+User külön egyszerű kattintóhoz engedte az egész program leállítását; a
+gyűjtő/supervisor/dashboard13:44:17.504Zleállt,8765nem fut. Egyelőre maradjon
+leállítva, ne induljon önkényesen újra; legacy bot/heartbeatPAUSED.
+Új külön scripts/probe-geode-click.swift: nincs OCR/gyűjtés/bolt/geodetörés,
+csak manuálisan megerősítettHUD blueikonja egyszer, privát PIDeseményekkel.
+cg/cg-move/appkit külön explicit mód; nincs activate/warp/globálistap/fallback.
+Meglévőjogok mindtrue (AX és CGPreflightPostEventAccess), nincs újTCC-jog.
+Mindháromgeodepróba után továbbraHUD, panel NEMnyílt. Ez a kipróbált
+nyilvánosmódszerek negatíveredménye, nem általános lehetetlenségi bizonyíték.
+Korábban3valódiFreepost is:84C249AB(CG) ésBD739748(AppKit) zavartalan
+106/108mintával0kurzoreltérés, de kártya mind6utóképen megmaradt; CD2F767D
+moveospróbát kézimozgás/appváltás zavarta, nemnevezzük tiszta méréssé.
+Egyiksemconfirmed; utána normál gyűjtő külön vette át. SajátGUIharness zárt.
+Nemtelepítettük a kísérleti buildet. A346közbeni integrált variantek saját,
+nemcommitolt módosításait visszavettük;345parancs változatlan, külön tesztelő
+fájl marad.4újofflinePythonCLIteszt a kötelezőkapuban:237teszt+7JS.
+Reader/model NEMváltozott: aktívbinaryNov1, digitsSHAa8a20b41... egyezik.
+Új fehérpályarész bekerül a számROIba; maxHeight/baseline kiválasztja a23–35px
+világfoltot a16pxszámok helyett.700/565→nil;817→1 reprodukált. User most
+kifejezetten kérte naplójavítást:4DB09255Smash700,C4F95838Pierce565,
+68D3ABCFSmashDefense817 (előtte1); kártya ÉS explicit+utókép egyezik.
+Pontosan3reward_corrected append,flock/O_APPEND/fsync; eredetibyteprefix
+megmaradt, ismétlés0újsor. Dashboardoffline+CLI igazolja: számokjók,
+darabszám/időpont változatlan, a szűkablak unknown2→0. Nincs globálisreconcile.
+Olvasójavítás NINCS;3diagnosztikaiPNG nem PASS-korpuszcímke/kalibráció.
+Részletek docs/346-kulon-geodeproba-es-szamolvasasi-diagnozis.md.
+
 ## Kísérleti háttér-Free-kattintás: kész, élő input még nem történt — 2026-11-02 (345)
 
 User jóváhagyta az elkülönített egy-Free próbát CGEventPostToPid módszerrel.

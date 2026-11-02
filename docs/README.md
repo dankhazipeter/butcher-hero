@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Teljes leállítás, külön geode-kattintó és három képpel igazolt naplójavítás](346-kulon-geodeproba-es-szamolvasasi-diagnozis.md)
 - [Elkülönített háttérkattintás-próba; még nem jutott el tényleges inputig](345-hatterinput-egyjutalmas-proba.md)
 - [Gyűjtés újraindítása, korábbi statmunkamenet és új Pierce565 igazolás](344-gyujtes-ujrainditas.md)
 - [Felhasználói leállítás november2-án; nyitott külsőmonitoros geodehiba](343-felhasznaloi-stop.md)
