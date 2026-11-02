@@ -1,5 +1,17 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — FELHASZNÁLÓI STOP — 2026-11-02 (348)
+
+User: „állítsd le a programot, egyelőre leállunk”. A közös indító és saját
+gyűjtő/felügyelő/dashboard leállítva15:10:29.553620Z (16:10Budapest),
+state.running=false. Nincs matchingworker/supervisor/runner/dashboard
+folyamat vagy8765listener. Képrögzítés, input és automatikus figyelés áll;
+új explicit kérés nélkül nincs újraindítás/időzítés. Régi bot/heartbeatPAUSED,
+háttérinput-kísérlet továbbra félretéve. Napló/képek/statisztikák megmaradtak,
+játékot nem zártuk be és statot nem nulláztunk. Offline teszt/commit/push
+nem indít gyűjtést.347/b54f54d sajátCI41464241777 completed/success.
+Részletek docs/348-felhasznaloi-stop.md;347futóPID-jei már történetiek.
+
 ## ELSŐBBSÉG — normál gyűjtés újra; háttérinput félretéve — 2026-11-02 (347)
 
 User újraindítást kért, és egyelőre elengedi a másfajta kattintást. Ez feloldja
