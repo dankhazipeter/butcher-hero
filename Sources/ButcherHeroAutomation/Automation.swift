@@ -292,6 +292,10 @@ private final class Journal {
     }
     @MainActor static func run(_ args:[String])async throws {
         guard let command=args.first else{print(usage);return}
+        if command=="probe-background-free" {
+            guard args.count==1 else{throw AutomationError("probe-background-free takes no arguments")}
+            try await probeBackgroundFree();return
+        }
         if command=="game-status" {
             guard args.count==1 else{throw AutomationError("game-status takes no arguments")}
             print(String(decoding:try JSONEncoder().encode(NativeGameStatus.read()),as:UTF8.self));return
@@ -721,6 +725,130 @@ private final class Journal {
         }
         print("Bizonyítékkép alapján pontosítva: \(count). Eredeti kattintási sorok megőrizve.")
     }
+    /// Explicit operator-only experiment: never called by watch-free or a restart.
+    @MainActor static func probeBackgroundFree()async throws {
+        let lockFD=open("docs/runs/.live-capture.lock",O_CREAT|O_RDWR,mode_t(0o600))
+        guard lockFD>=0 else{throw AutomationError("Probe lock unavailable")}
+        guard flock(lockFD,LOCK_EX|LOCK_NB)==0 else{close(lockFD);throw AutomationError("Collector active; probe sends no input")}
+        defer{flock(lockFD,LOCK_UN);close(lockFD)}
+        guard AXIsProcessTrusted() else{throw AutomationError("Probe requires existing Accessibility permission; no permission prompt")}
+        let capture=Capture(),vision=RewardVision(),cancel=Cancellation()
+        let deadline=ProcessInfo.processInfo.systemUptime+8
+        var initial=try await capture.frame(),first=try vision.observe(initial.image)
+        while first.gameHUDVisible && first.reward==nil && ProcessInfo.processInfo.systemUptime<deadline-4 && !cancel.requested {
+            try await Task.sleep(nanoseconds:200_000_000)
+            initial=try await capture.frame();first=try vision.observe(initial.image)
+        }
+        guard let gamePID=initial.window.owningApplication?.processID,
+              let baselinePID=NSWorkspace.shared.frontmostApplication?.processIdentifier,
+              let baselineCursor=CGEvent(source:nil)?.location,
+              first.gameHUDVisible,let reward=first.reward,reward.kind != "unknown",reward.amount != nil
+        else{throw AutomationError("Probe needs a readable Free reward and foreground application")}
+        struct Sample:Codable {let uptime:Double,pid:Int32,x:Double,y:Double,buttonDown:Bool}
+        var samples:[Sample]=[]
+        func sample()->Bool {
+            let pid=NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0
+            let point=CGEvent(source:nil)?.location ?? CGPoint(x:Double.greatestFiniteMagnitude,y:Double.greatestFiniteMagnitude)
+            let down=HumanInput.buttonDown
+            samples.append(.init(uptime:ProcessInfo.processInfo.systemUptime,pid:pid,x:point.x,y:point.y,buttonDown:down))
+            return RewardBackgroundProbeGate.permits(baselinePID:baselinePID,currentPID:pid,gamePID:gamePID,
+                baselineCursor:baselineCursor,currentCursor:point,buttonDown:down,cancelled:cancel.requested,frameAge:0)
+        }
+        let baselineSafe=sample(),baselineReady=HumanInput.ready
+        guard baselineSafe,baselineReady else {
+            throw AutomationError("Probe pre-input gate: baselinePID=\(baselinePID);gamePID=\(gamePID);mouseReady=\(baselineReady);sample=\(String(describing:samples.last)); no input")
+        }
+        var undisturbed=true
+        let monitor=Task { @MainActor in
+            while !Task.isCancelled {
+                if !sample() {undisturbed=false}
+                try? await Task.sleep(nanoseconds:20_000_000)
+            }
+        }
+        defer{monitor.cancel()}
+        try await Task.sleep(nanoseconds:150_000_000)
+        let fresh=try await capture.frame(),current=try vision.observe(fresh.image)
+        guard sample(),undisturbed,HumanInput.ready,!cancel.requested,ProcessInfo.processInfo.systemUptime<deadline-3,
+              fresh.window.windowID==initial.window.windowID,
+              fresh.window.owningApplication?.processID==gamePID,
+              Date().timeIntervalSince(fresh.capturedAt)<=1,
+              current.gameHUDVisible,current.reward?.fingerprint==reward.fingerprint,
+              try CrystalVision().observe(fresh.image,hudVisible:true).screen == .hud,
+              try EventEndVision().observe(fresh.image,hudVisible:true).screen == .hud,
+              let bounds=WindowInputGeometry.bounds(windowID:fresh.window.windowID,pid:gamePID),
+              let point=RewardInputGeometry.target(normalized:.init(x:reward.tapX,y:reward.tapY),
+                imageSize:.init(width:fresh.image.width,height:fresh.image.height),capturedWindow:fresh.window.frame,
+                currentWindow:bounds,activeDisplays:WindowInputGeometry.displays())
+        else{throw AutomationError("Probe preflight changed; no input")}
+        guard let source=CGEventSource(stateID:.privateState),
+              let down=CGEvent(mouseEventSource:source,mouseType:.leftMouseDown,mouseCursorPosition:point,mouseButton:.left),
+              let up=CGEvent(mouseEventSource:source,mouseType:.leftMouseUp,mouseCursorPosition:point,mouseButton:.left)
+        else{throw AutomationError("Probe events unavailable")}
+        for event in [down,up] {
+            event.flags=[]
+            event.setIntegerValueField(.mouseEventClickState,value:1)
+            event.setIntegerValueField(.mouseEventWindowUnderMousePointer,value:Int64(fresh.window.windowID))
+            event.setIntegerValueField(.mouseEventWindowUnderMousePointerThatCanHandleThisEvent,value:Int64(fresh.window.windowID))
+        }
+        let root=URL(fileURLWithPath:FileManager.default.currentDirectoryPath).appendingPathComponent("data/free-rewards")
+        let journal=try Journal(root:root),id=UUID().uuidString
+        let proof=try journal.image(fresh.image,id:id,suffix:"background-probe-before")
+        try journal.append("click_intent",claimID:id,reward:reward,evidence:proof,message:"EXPERIMENT one-shot privateState/postToPid; no activate/warp/global tap/fallback")
+        var submitted=false,terminal=false
+        defer {
+            if !terminal {try? journal.append(submitted ? "claim_unconfirmed":"click_failed",claimID:id,reward:reward,
+                message:"EXPERIMENT interrupted; no inferred success, retry or fallback")}
+        }
+        guard sample(),undisturbed,HumanInput.ready,!cancel.requested,
+              ProcessInfo.processInfo.systemUptime<deadline-3,
+              NSRunningApplication(processIdentifier:gamePID)?.bundleIdentifier=="com.multicastgames.butcher",
+              let finalBounds=WindowInputGeometry.bounds(windowID:fresh.window.windowID,pid:gamePID),
+              RewardInputGeometry.target(normalized:.init(x:reward.tapX,y:reward.tapY),
+                imageSize:.init(width:fresh.image.width,height:fresh.image.height),capturedWindow:fresh.window.frame,
+                currentWindow:finalBounds,activeDisplays:WindowInputGeometry.displays())==point
+        else{throw AutomationError("Probe cancelled or geometry changed before input")}
+        try journal.append("input_geometry",claimID:id,message:"EXPERIMENT privateState/postToPid;window=\(fresh.window.windowID);frame=\(fresh.window.frame);target=\(point);physicalCursor=\(baselineCursor);foregroundPID=\(baselinePID);NO warp/activate/global tap")
+        let inputAge=Date().timeIntervalSince(fresh.capturedAt)
+        guard sample(),undisturbed,HumanInput.ready,!cancel.requested,inputAge>=0,inputAge<=1,
+              ProcessInfo.processInfo.systemUptime<deadline-3
+        else{throw AutomationError("Probe changed while saving evidence; no input")}
+        let sentAt=Date()
+        submitted=true
+        down.postToPid(gamePID)
+        // Always deliver the matching release to the SAME process, even if cancelled.
+        try? await Task.sleep(nanoseconds:70_000_000)
+        up.postToPid(gamePID)
+        if !sample() {undisturbed=false}
+        try journal.append("click_sent",claimID:id,reward:reward,evidence:proof,message:"EXPERIMENT process-targeted event submitted, not acknowledged",at:sentAt)
+        var absent=0,confirmed=false
+        for index in 0..<6 {
+            try? await Task.sleep(nanoseconds:250_000_000)
+            let after=try await capture.frame(),observed=try vision.observe(after.image)
+            if !sample(){undisturbed=false}
+            let file=try journal.image(after.image,id:id,suffix:"background-probe-after-\(index)")
+            let same=after.window.windowID==initial.window.windowID && after.window.owningApplication?.processID==gamePID
+            let crystal=try CrystalVision().observe(after.image,hudVisible:observed.gameHUDVisible)
+            let event=try EventEndVision().observe(after.image,hudVisible:observed.gameHUDVisible)
+            let hud=same && observed.gameHUDVisible && crystal.screen == .hud && event.screen == .hud
+            absent=hud && !observed.freeCardVisible ? absent+1:0
+            if absent>=2,undisturbed,!cancel.requested {
+                try journal.append("claim_confirmed_ui",claimID:id,reward:reward,evidence:file,
+                    message:"EXPERIMENT two HUD frames without Free card; sampled focus/cursor unchanged; not a measured numeric gain")
+                terminal=true
+                confirmed=true;break
+            }
+        }
+        struct Report:Codable {let claimID:String,gamePID:Int32,baselinePID:Int32,windowID:UInt32,targetX:Double,targetY:Double,submitted:Bool,confirmed:Bool,undisturbed:Bool,samples:[Sample]}
+        let directory=root.deletingLastPathComponent().appendingPathComponent("background-input-probes")
+        try FileManager.default.createDirectory(at:directory,withIntermediateDirectories:true)
+        let report=Report(claimID:id,gamePID:gamePID,baselinePID:baselinePID,windowID:fresh.window.windowID,targetX:point.x,targetY:point.y,
+                          submitted:true,confirmed:confirmed,undisturbed:undisturbed,samples:samples)
+        let encoded=try JSONEncoder().encode(report)
+        try encoded.write(to:directory.appendingPathComponent("\(id).json"),options:.atomic)
+        if !confirmed {try journal.append("claim_unconfirmed",claimID:id,reward:reward,message:"EXPERIMENT no verified background claim; no retry or fallback; inspect probe report")}
+        terminal=true
+        print(String(decoding:encoded,as:UTF8.self))
+    }
     static let usage="""
     ButcherHeroAutomation watch-free [--interval 1] [--seconds 60] [--dry-run] [--resume-run] [--recover-crystal]
     ButcherHeroAutomation inspect <frame.png>
@@ -728,6 +856,7 @@ private final class Journal {
     ButcherHeroAutomation inspect-event <frame.png>
     ButcherHeroAutomation game-status  # process/window metadata only; never launches the game
     ButcherHeroAutomation snapshot <output.png>  # passive single window capture
+    ButcherHeroAutomation probe-background-free  # operator-only one-shot; collector MUST be stopped
     ButcherHeroAutomation stats [--from 2026-10-29T22:00:00+02:00] [--to 2026-10-30T08:00:00+02:00]
     ButcherHeroAutomation reconcile [--current-run]  # offline re-read of uncertain saved rewards
     Local append-only journal: data/free-rewards/events.jsonl. Ctrl+C stops.

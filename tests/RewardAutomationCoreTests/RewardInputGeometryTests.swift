@@ -3,6 +3,41 @@ import ImageIO
 @testable import RewardAutomationCore
 
 final class RewardInputGeometryTests:XCTestCase {
+    private func background(_ pid:Int32=11,_ cursor:CGPoint = .init(x:-40,y:100),
+                            _ down:Bool=false,_ cancelled:Bool=false,_ age:Double=0.2)->Bool {
+        RewardBackgroundProbeGate.permits(baselinePID:11,currentPID:pid,gamePID:22,
+            baselineCursor:.init(x:-40,y:100),currentCursor:cursor,buttonDown:down,cancelled:cancelled,frameAge:age)
+    }
+    func testBackgroundProbeAcceptsOnlyUntouchedBackgroundInput() {
+        XCTAssertTrue(background())
+        XCTAssertFalse(background(22));XCTAssertFalse(background(33));XCTAssertFalse(background(0))
+        XCTAssertFalse(RewardBackgroundProbeGate.permits(baselinePID:22,currentPID:22,gamePID:22,
+            baselineCursor:.zero,currentCursor:.zero,buttonDown:false,cancelled:false,frameAge:0))
+    }
+    func testBackgroundProbeRejectsHumanMovementButtonsAndCancellation() {
+        XCTAssertFalse(background(11,.init(x:-39,y:100)))
+        XCTAssertFalse(background(11,.init(x:Double.nan,y:100)))
+        XCTAssertFalse(background(11,.init(x:-40,y:100),true))
+        XCTAssertFalse(background(11,.init(x:-40,y:100),false,true))
+    }
+    func testBackgroundProbeRejectsStaleFutureOrNonfiniteFrames() {
+        for age in [-0.01,1.01,Double.nan,Double.infinity] {
+            XCTAssertFalse(background(11,.init(x:-40,y:100),false,false,age))
+        }
+    }
+    func testBackgroundProbeIsOptInWithoutForegroundOrCursorFallback()throws {
+        let project=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let source=try String(contentsOf:project.appendingPathComponent("Sources/ButcherHeroAutomation/Automation.swift"))
+        let body=try XCTUnwrap(source.components(separatedBy:"@MainActor static func probeBackgroundFree()async throws {").last)
+            .components(separatedBy:"static let usage=").first!
+        XCTAssertTrue(body.contains("LOCK_EX|LOCK_NB"))
+        XCTAssertTrue(body.contains(".privateState"));XCTAssertTrue(body.contains("down.postToPid(gamePID)"))
+        XCTAssertTrue(body.contains("up.postToPid(gamePID)"));XCTAssertTrue(body.contains("for index in 0..<6"))
+        for forbidden in [".activate(","CGWarpMouseCursorPosition(",".post(tap:","watch(root:"] {
+            XCTAssertFalse(body.contains(forbidden),forbidden)
+        }
+        XCTAssertEqual(source.components(separatedBy:"try await probeBackgroundFree()").count-1,1)
+    }
     func testUserExternalScreenshotTargetFallsInsideTheVisibleFreeCard()throws {
         let project=URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let path=project.appendingPathComponent("docs/references/2026-10-31/external-pierce567-user.png")

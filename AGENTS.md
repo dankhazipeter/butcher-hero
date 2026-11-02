@@ -1,5 +1,27 @@
 # Butcher Hero — aktív projektutasítások
 
+## Kísérleti háttér-Free-kattintás: kész, élő input még nem történt — 2026-11-02 (345)
+
+User jóváhagyta az elkülönített egy-Free próbát CGEventPostToPid módszerrel.
+Új explicit `probe-background-free` CLI, NEM watcherflag/automatikus backend.
+PrivateState+PIDcélzott down/up, publikus windowhint mezők, nincs activate/
+warp/globális tap/egérmozgatás/fallback/kristályinput. Ugyanaz a .live-capture
+flock kizárja a normál watchert; futóworker mellett valódiCLI elutasítás igazolt.
+2azonosFreekép, HUD/modal/PID/WindowID/frissgeometria, ismerttípus+összeg,
+háttérbenlevőjáték és nyugvóegér kell.20mscélzott fókusz/kurzor/gombminták,
+nem billentyű-/szövegrögzítés. Legfeljebb1down/up, matchingup cancellationkor
+is; újrapróba/fallback nincs,6utókép maximum. Külön probeJSON, standard
+claimnapló csak ténylegesküldés+szokásos2HUDeltűnés után igazolhat.
+Két éles átadás09:57/10:03Z: mindkettő INPUT ELŐTT elutasítva. A második
+diagnosztika baselinePID==gamePID72012,mouseReadytrue; nem háttérben a játék.
+Nincs postToPid elküldve, nincs siker/kudarcállítás e technológiáról! Normál
+gyűjtő mindkettő után azonnalresume, Pierce565/CutDefense625siker. Friss
+worker94243/session83792; runtimeJSON elsődleges, régi73878/72511 történeti.
+Aktívrelease NEM cserélt: próba .build/background-probe/release alatt.
+4újSwiftunit,233teljes+7JSkapu. Usernek jeleztük: másikapp előtér+10snyugvó
+egér kell; aszinkron kérdés nyitva, ténylegesháttérinput még igazolandó.
+Részletek docs/345-hatterinput-egyjutalmas-proba.md; régi bot/heartbeatPAUSED.
+
 ## ELSŐBBSÉG — GYŰJTÉS ÚJRA ENGEDÉLYEZVE — 2026-11-02 (344)
 
 User: „indítsd el a cuccot, újra játszunk”. Ez feloldja343STOPját a meglévő
