@@ -1,5 +1,22 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — GYŰJTÉS ÚJRA ENGEDÉLYEZVE — 2026-11-02 (344)
+
+User: „indítsd el a cuccot, újra játszunk”. Ez feloldja343STOPját a meglévő
+Free/kristály/konkrét lejártDiamondLeague automatizációra, NEM mozgás/harc/
+bolt/eladás/fejlesztés/reklám/vásárlás. Normál butcher-hero start, resume-run,
+08:58:10.971Zwatcher_resumed, korábbi statkezdet megtartva. Előtérben tartott
+közösrunner-session73878; indulóworker72511/supervisor72510. FrissPID mindig
+runtimeJSONból, nem ebből a történeti bejegyzésből. Dashboard/healthPASS,
+igazolt játékforrás com.multicastgames.butcher/PID72012/window2198, friss
+ok/hud.63A2915E08:58:17.669Zinput→19.924Zclaim_confirmed_ui Pierce565,
+utóképen explicit+565nyíl vizuálisan ellenőrizve. Ez új Free-siker; új
+kristálykör még nem igazolt. Külsőmonitoros geodehiba343változatlan, nem
+javítottuk és nem vállalunk rá hibamentességet. Régi bot/heartbeatPAUSED.
+Nincs new-run/recover-crystal, build/capturejog-változtatás vagy új startup.
+Részletek docs/344-gyujtes-ujrainditas.md; offline dokumentációs kapu közben
+a gyűjtő maradjon futva.
+
 ## ELSŐBBSÉG — FELHASZNÁLÓI STOP — 2026-11-02 (343)
 
 User: „állítsd le a programot, egyelőre nem játszunk”. A közös indító és
