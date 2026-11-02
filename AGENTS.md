@@ -1,5 +1,20 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — újraindítás és igazolt kristály/Free kör — 2026-11-02 (349)
+
+User: „indítsd el a programot!” Ez feloldja348STOPját a meglévő normál
+Free/kristály/ismert DiamondLeague automatizációra. butcher-hero start,
+watcher_resumed17:19:47.733Z (18:19Budapest), korábbi statfutás megtartva.
+Nincs new-run/recover-crystal/új inputbackend vagy játékindítás. Frissforrás
+com.multicastgames.butcher/PID91468/window4228, captureok; worker91568,
+közösrunner-session13960. DC8756F5 új saját kristálykör17:20:23.364Z
+completed_ui, HUDvisszatérés;3FE1AB71CutDefense61717:20:34.122ZUIigazolt.
+Ez naplóalapú új éles siker; konkrét kristályértéket nem állítunk képi audit
+nélkül. Dashboard/healthPASS, runtimeJSON elsődleges. Régi bot/heartbeat
+PAUSED, háttérinput félretéve. Offline kapukalatt gyűjtés maradjon futva.
+348stopcommitb8af1b0 már kész; userfolytatás még a push előtt érkezett,
+349lezáráskor a két commit együtt megy mainre. Részletek349.
+
 ## ELSŐBBSÉG — FELHASZNÁLÓI STOP — 2026-11-02 (348)
 
 User: „állítsd le a programot, egyelőre leállunk”. A közös indító és saját
