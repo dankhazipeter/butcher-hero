@@ -52,19 +52,36 @@ struct Frame {
 @MainActor enum GameIO {
     static let bundleID="com.multicastgames.butcher"
 
-    static func frame()async throws->Frame {
-        guard !displays().isEmpty else{throw AppError("Nincs aktív kijelző; a képernyők ébredésére várok.")}
+    /// Enumerating every window via ScreenCaptureKit is the costliest part of a tick, so the
+    /// game's SCWindow is reused while its Quartz frame is unchanged (re-listed at least every 5 s).
+    private static var cachedWindow:(window:SCWindow,listedAt:TimeInterval)?
+
+    private static func gameWindow()async throws->SCWindow {
+        let now=ProcessInfo.processInfo.systemUptime
+        if let cached=cachedWindow,now-cached.listedAt<5,let pid=cached.window.owningApplication?.processID,
+           let current=bounds(windowID:cached.window.windowID,pid:pid),current==cached.window.frame {
+            return cached.window
+        }
         let content=try await SCShareableContent.excludingDesktopWindows(false,onScreenWindowsOnly:true)
         let selected=GameCapturePolicy.selectWindow(content.windows.map {
             .init(windowID:$0.windowID,processID:$0.owningApplication?.processID,
                   bundleIdentifier:$0.owningApplication?.bundleIdentifier,width:$0.frame.width,height:$0.frame.height)
         })
         guard let window=content.windows.first(where:{$0.windowID==selected})
-        else{throw AppError("A játék ablaka nem található; várakozás.")}
+        else{cachedWindow=nil;throw AppError(L("A játék ablaka nem található; várakozás.","Game window not found; waiting."))}
+        cachedWindow=(window,now)
+        return window
+    }
+
+    static func frame()async throws->Frame {
+        guard !displays().isEmpty else{throw AppError(L("Nincs aktív kijelző; a képernyők ébredésére várok.","No active display; waiting for the screens to wake."))}
+        let window=try await gameWindow()
         let config=SCStreamConfiguration()
         config.width=Int(window.frame.width.rounded());config.height=Int(window.frame.height.rounded())
         config.showsCursor=false;config.ignoreShadowsSingleWindow=true;config.captureResolution = .best
-        let image=try await SCScreenshotManager.captureImage(contentFilter:SCContentFilter(desktopIndependentWindow:window),configuration:config)
+        let image:CGImage
+        do {image=try await SCScreenshotManager.captureImage(contentFilter:SCContentFilter(desktopIndependentWindow:window),configuration:config)}
+        catch {cachedWindow=nil;throw error}
         return Frame(image:image,window:window,capturedAt:Date())
     }
 

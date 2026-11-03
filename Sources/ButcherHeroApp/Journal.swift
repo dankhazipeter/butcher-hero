@@ -36,12 +36,14 @@ enum AppPaths {
 }
 
 enum Stamp {
-    static func string(_ date:Date=Date())->String {
-        let f=ISO8601DateFormatter();f.formatOptions=[.withInternetDateTime,.withFractionalSeconds];return f.string(from:date)
-    }
+    // Formatter creation is expensive (ICU); ISO8601DateFormatter is thread-safe, so share them.
+    private static let fractional:ISO8601DateFormatter={
+        let f=ISO8601DateFormatter();f.formatOptions=[.withInternetDateTime,.withFractionalSeconds];return f
+    }()
+    private static let plain=ISO8601DateFormatter()
+    static func string(_ date:Date=Date())->String {fractional.string(from:date)}
     static func date(_ text:String)->Date? {
-        let f=ISO8601DateFormatter();f.formatOptions=[.withInternetDateTime,.withFractionalSeconds]
-        return f.date(from:text) ?? ISO8601DateFormatter().date(from:text)
+        fractional.date(from:text) ?? plain.date(from:text)
     }
 }
 

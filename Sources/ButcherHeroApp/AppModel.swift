@@ -21,7 +21,11 @@ import SwiftUI
             self?.diagnostics.append(domain,e)
         }
         // Re-publish child changes so views observing the model refresh.
-        engine.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
+        // The engine updates its status every second; only re-render for changes a user can see.
+        // (The capture time shown in the UI refreshes with the 2 s tick.)
+        engine.$status.map{s in "\(s.running)|\(s.captureStatus)|\(s.screenState)|\(s.crystalPhase)|\(s.eventEndPhase)|\(s.waitingForInput)|\(s.waitReason ?? "")|\(s.lastError ?? "")"}
+            .removeDuplicates().dropFirst()
+            .sink{[weak self] _ in self?.objectWillChange.send()}.store(in:&bag)
         game.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
         stats.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
         diagnostics.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)

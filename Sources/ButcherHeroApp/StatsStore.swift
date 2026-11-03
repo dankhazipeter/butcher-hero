@@ -24,9 +24,10 @@ import RewardAutomationCore
         static let cardOrder=["hp","regeneration","piercing_damage","cutting_defense","cutting_damage","smash_defense","smash_damage","piercing_defense"]
         static func label(_ id:String)->String {all.first{$0.id==id}?.label ?? L("Ismeretlen típus","Unknown kind")}
     }
-    struct Point:Identifiable {
-        let id=UUID()
+    /// Stable identity (time + value) so charts diff instead of rebuilding on every refresh.
+    struct Point:Identifiable,Equatable {
         let at:Date,value:Double
+        var id:String {"\(at.timeIntervalSince1970)|\(value)"}
     }
     struct Row:Identifiable {let id:String,at:Date,kind:String,amount:Decimal?,confirmed:Bool}
     struct Summary {
@@ -46,6 +47,7 @@ import RewardAutomationCore
         var startedAt:String
     }
 
+    private static let posix=Locale(identifier:"en_US_POSIX")
     @Published var range:Range = .run {didSet{recompute()}}
     @Published var customFrom=Date().addingTimeInterval(-3600)
     @Published var customTo=Date()
@@ -53,7 +55,7 @@ import RewardAutomationCore
     @Published private(set) var malformedLines=0
     @Published private(set) var sessionStart:Date?
 
-    private var clicks:[String:JournalEvent]=[:]       // last click_sent per claim
+    private var clicks:[String:(event:JournalEvent,at:Date)]=[:]  // last click_sent per claim
     private var clickTimes:[Date]=[]                    // every click_sent, for attempts
     private var confirmed=Set<String>(),corrected:[String:FreeReward]=[:]
     private var firstEventAt:Date?,watcherStartedAt:Date?
@@ -75,7 +77,7 @@ import RewardAutomationCore
         if e.event=="watcher_started" {watcherStartedAt=at}
         guard let id=e.claimID else{return}
         switch e.event {
-        case "click_sent":clicks[id]=e;clickTimes.append(at)
+        case "click_sent":clicks[id]=(e,at);clickTimes.append(at)
         case "claim_confirmed_ui":confirmed.insert(id)
         case "reward_corrected":if let reward=e.reward {corrected[id]=reward}
         default:break
@@ -119,9 +121,8 @@ import RewardAutomationCore
         s.attempts=clickTimes.filter{$0>=s.from && $0<s.to}.count
 
         var selected:[(id:String,at:Date,reward:FreeReward?)]=[]
-        for (id,e) in clicks {
-            guard let at=Stamp.date(e.timestamp),at>=s.from,at<s.to else{continue}
-            selected.append((id,at,corrected[id] ?? e.reward))
+        for (id,click) in clicks where click.at>=s.from && click.at<s.to {
+            selected.append((id,click.at,corrected[id] ?? click.event.reward))
         }
         selected.sort{$0.at<$1.at}
         var running:[String:Decimal]=[:],runningCount:[String:Int]=[:]
@@ -129,7 +130,7 @@ import RewardAutomationCore
         for claim in selected {
             let isConfirmed=confirmed.contains(claim.id)
             let kind=claim.reward?.kind ?? "unknown"
-            let amount=claim.reward?.amount.flatMap{Decimal(string:$0,locale:Locale(identifier:"en_US_POSIX"))}.flatMap{$0>0 ? $0:nil}
+            let amount=claim.reward?.amount.flatMap{Decimal(string:$0,locale:Self.posix)}.flatMap{$0>0 ? $0:nil}
             s.recent.append(.init(id:claim.id,at:claim.at,kind:kind,amount:amount,confirmed:isConfirmed))
             guard isConfirmed else{s.pending+=1;continue}
             s.confirmed+=1
