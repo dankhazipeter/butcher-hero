@@ -9,38 +9,35 @@ struct AppError:LocalizedError {
     init(_ message:String){errorDescription=message}
 }
 
-/// The user is mid-click/drag (or typing, when keys can't be held back); input waits.
+/// The user is playing the game by hand right now; input waits.
 struct HumanInputBusy:LocalizedError {
     let reason:HumanInput.Busy
     var errorDescription:String?{reason.description}
 }
 
+/// Background clicks never touch the user's focus, cursor or keyboard, so whatever they do
+/// in other apps is irrelevant. Only when the game itself is the active app (the user plays)
+/// does a held or just-released mouse button defer input, so the two never collide.
 enum HumanInput {
     enum Busy:Equatable,CustomStringConvertible {
-        case buttonHeld,recentClick(Double),typing(Double)
+        case buttonHeld,recentClick(Double)
         var description:String {
             switch self {
-            case .buttonHeld:L("Egérgomb lenyomva (kattintás vagy húzás); elengedés után kattintok.","A mouse button is held (click or drag); clicking after release.")
-            case .recentClick(let s):L("Épp kattintottál (\(String(format:"%.2f",s)) mp); rövid szünet után kattintok.","You just clicked (\(String(format:"%.2f",s)) s ago); clicking after a short pause.")
-            case .typing(let s):L("Gépelsz (\(String(format:"%.2f",s)) mp); a billentyűk visszatartása nem érhető el, szünetre várok.","You are typing (\(String(format:"%.2f",s)) s ago); key holding unavailable, waiting for a pause.")
+            case .buttonHeld:L("A játékban épp lenyomva tartod az egérgombot; elengedés után kattintok.","You are holding a mouse button in the game; clicking after release.")
+            case .recentClick(let s):L("Épp kattintottál a játékban (\(String(format:"%.2f",s)) mp); rövid szünet után kattintok.","You just clicked in the game (\(String(format:"%.2f",s)) s ago); clicking after a short pause.")
             }
         }
     }
-    /// Only used when KeyboardShield can't hold keys back during the focus hand-over.
-    static let keyboardQuietSeconds:TimeInterval=1.0
     static var buttonDown:Bool {
         (0..<5).contains{CGEventSource.buttonState(.combinedSessionState,button:CGMouseButton(rawValue:UInt32($0))!)}
     }
     @MainActor static var busy:Busy? {
+        guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier==GameIO.bundleID else{return nil}
         if buttonDown {return .buttonHeld}
         let buttons:[CGEventType]=[.leftMouseDown,.leftMouseUp,.leftMouseDragged,
             .rightMouseDown,.rightMouseUp,.rightMouseDragged,.otherMouseDown,.otherMouseUp,.otherMouseDragged]
         let mouseQuiet=buttons.map{CGEventSource.secondsSinceLastEventType(.combinedSessionState,eventType:$0)}.min() ?? 0
         if !RewardInputPolicy.permitsClick(anyButtonDown:false,secondsSinceButtonActivity:mouseQuiet) {return .recentClick(mouseQuiet)}
-        if !KeyboardShield.shared.available {
-            let keyQuiet=[CGEventType.keyDown,.flagsChanged].map{CGEventSource.secondsSinceLastEventType(.combinedSessionState,eventType:$0)}.min() ?? 0
-            if keyQuiet<keyboardQuietSeconds {return .typing(keyQuiet)}
-        }
         return nil
     }
     @MainActor static var ready:Bool {busy==nil}

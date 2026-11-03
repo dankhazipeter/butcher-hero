@@ -26,10 +26,8 @@ struct DiagnosticsView:View {
                         Text(model.engine.status.waitReason ?? L("nincs","none"))
                     }
                     GridRow {
-                        Text(L("Billentyű-visszatartás","Key holding")).foregroundStyle(.secondary)
-                        Text(KeyboardShield.shared.available
-                             ? L("elérhető — gépelés közben is kattint, a leütések nem vesznek el","available — clicks while you type, no keystroke is lost")
-                             : L("nem elérhető — gépelési szünetre vár","unavailable — waits for typing pauses"))
+                        Text(L("Kattintási mód","Click mode")).foregroundStyle(.secondary)
+                        Text(L("háttér, fókuszváltás nélkül — az aktív app, a kurzor és a gépelés érintetlen","background, no focus change — active app, cursor and typing untouched"))
                     }
                     GridRow {
                         Text(L("Fázisok","Phases")).foregroundStyle(.secondary)

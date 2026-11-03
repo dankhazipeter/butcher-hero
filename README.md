@@ -10,9 +10,9 @@ parancssoros gyűjtőt, felügyelőt és a http://127.0.0.1:8765 webes dashboard
 scripts/build-app.sh        # fordít, aláír, telepít: ~/Applications/Butcher Hero.app
 ```
 
-- **Háttérkattintás:** a valódi egér nem mozdul, a játékablak takarva is lehet.
-  A kattintás egy pillanatra (~0,2 s) aktívvá teszi a játékot az ablaka előrehozása
-  nélkül, ezért csak gépelési szünetben (≥1 s) kattint. Részletek:
+- **Háttérkattintás:** a valódi egér nem mozdul, a játékablak takarva is lehet, és a
+  rendszer aktív appja sem változik (gépelés, nyitott menük érintetlenek): a játék csak
+  egy neki küldött AppKit-aktiválási eseményből „hiszi”, hogy aktív. Részletek:
   `Sources/ButcherHeroApp/BackgroundInput.swift`.
 - **Felismerés:** változatlanul a `RewardAutomationCore` (Free, kristály/geode, esemény vége).
 - **Vezérlés:** a gyűjtés kapcsolóval indul/áll; az app megjegyzi és indításkor folytatja.
