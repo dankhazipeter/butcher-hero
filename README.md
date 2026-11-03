@@ -1,5 +1,30 @@
 # Butcher Hero — új kezdet, 2026-10-29
 
+## Natív app (2026-11-03-tól ez az elsődleges)
+
+A gyűjtő és a statisztika egyetlen macOS appban fut: **Butcher Hero.app**
+(`Sources/ButcherHeroApp`). Ez váltja a `make start` által indított
+parancssoros gyűjtőt, felügyelőt és a http://127.0.0.1:8765 webes dashboardot.
+
+```sh
+scripts/build-app.sh        # fordít, aláír, telepít: ~/Applications/Butcher Hero.app
+```
+
+- **Háttérkattintás:** a valódi egér nem mozdul, a játékablak takarva is lehet.
+  A kattintás egy pillanatra (~0,2 s) aktívvá teszi a játékot az ablaka előrehozása
+  nélkül, ezért csak gépelési szünetben (≥1 s) kattint. Részletek:
+  `Sources/ButcherHeroApp/BackgroundInput.swift`.
+- **Felismerés:** változatlanul a `RewardAutomationCore` (Free, kristály/geode, esemény vége).
+- **Vezérlés:** a gyűjtés kapcsolóval indul/áll; az app megjegyzi és indításkor folytatja.
+  Figyeli, fut-e a játék, és el is tudja indítani. Az ablak bezárása után is gyűjt.
+- **Engedélyek** (egyszer): Kisegítő lehetőségek + Képernyőfelvétel. Az Apple Development
+  aláírás miatt újrafordítás után is megmaradnak.
+- **Adatok:** `~/Library/Application Support/Butcher Hero/` (ugyanaz a JSONL-séma, mint a
+  régi `data/*/events.jsonl`); bizonyítékképek 7 napig.
+- Amíg a régi `ButcherHeroAutomation` fut, az app nem kattint.
+
+A lenti, régi parancssoros leírás történeti; a két rendszert ne futtasd egyszerre.
+
 ## Setup / Getting started
 
 Full English installation and usage instructions, including prerequisites,
