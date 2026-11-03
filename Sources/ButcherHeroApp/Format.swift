@@ -2,7 +2,10 @@ import AppKit
 import SwiftUI
 
 enum Format {
-    private static let hu=Locale(identifier:"hu_HU")
+    private static var hu:Locale {AppLanguage.current.locale}
+    static func percent(_ fraction:Double)->String {
+        fraction.formatted(.percent.precision(.fractionLength(1)).locale(hu))
+    }
 
     /// 19000 → "19K", 1712345 → "1,7M": truncated, one decimal only for short heads.
     static func compact(_ value:Decimal)->String {
@@ -12,7 +15,7 @@ enum Format {
             let head=n/size
             if abs(head)<100 {
                 let truncated=(head*10).rounded(.towardZero)/10
-                let text=truncated==truncated.rounded(.towardZero) ? String(Int(truncated)):String(format:"%.1f",truncated).replacingOccurrences(of:".",with:",")
+                let text=truncated==truncated.rounded(.towardZero) ? String(Int(truncated)):String(format:"%.1f",truncated).replacingOccurrences(of:".",with:AppLanguage.current == .hu ? ",":".")
                 return text+suffix
             }
             return String(Int(head.rounded(.towardZero)))+suffix
@@ -21,7 +24,7 @@ enum Format {
     }
     static func exact(_ value:Decimal)->String {
         let f=NumberFormatter();f.locale=hu;f.numberStyle = .decimal;f.maximumFractionDigits=2
-        f.groupingSeparator="\u{202F}"
+        if AppLanguage.current == .hu {f.groupingSeparator="\u{202F}"}
         return f.string(from:NSDecimalNumber(decimal:value)) ?? "\(value)"
     }
     static func rate(_ total:Decimal,from:Date,to:Date)->String {
@@ -42,10 +45,10 @@ enum Format {
         let h=rest/3600;rest%=3600
         let m=rest/60,s=rest%60
         var parts:[String]=[]
-        if d>0 {parts.append("\(d) nap")}
-        if h>0 {parts.append("\(h) óra")}
-        if m>0 {parts.append("\(m) perc")}
-        parts.append("\(s) mp")
+        if d>0 {parts.append(L("\(d) nap","\(d) d"))}
+        if h>0 {parts.append(L("\(h) óra","\(h) h"))}
+        if m>0 {parts.append(L("\(m) perc","\(m) min"))}
+        parts.append(L("\(s) mp","\(s) s"))
         return parts.joined(separator:" ")
     }
 }

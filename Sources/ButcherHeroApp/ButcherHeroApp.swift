@@ -6,16 +6,19 @@ import SwiftUI
     @StateObject private var model=AppModel()
     var body:some Scene {
         Window("Butcher Hero",id:"main") {
-            DashboardView(model:model)
+            RootView(model:model)
         }
-        .defaultSize(width:980,height:900)
+        .defaultSize(width:1100,height:900)
         .commands {
-            CommandMenu("Gyűjtés") {
-                Button(model.collectorEnabled ? "Gyűjtés leállítása":"Gyűjtés indítása"){model.setCollecting(!model.collectorEnabled)}
+            CommandMenu(L("Gyűjtés","Collecting")) {
+                Button(model.collectorEnabled ? L("Gyűjtés leállítása","Stop collecting"):L("Gyűjtés indítása","Start collecting")){model.setCollecting(!model.collectorEnabled)}
                     .keyboardShortcut("r",modifiers:[.command])
-                Button("Játék indítása"){model.game.launch()}
+                Button(L("Játék indítása","Launch game")){model.game.launch()}
                     .disabled(model.game.state == .running)
             }
+        }
+        Settings {
+            SettingsView(model:model)
         }
     }
 }

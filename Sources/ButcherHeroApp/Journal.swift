@@ -13,6 +13,16 @@ struct JournalEvent:Codable {
     let message:String?
 }
 
+enum JournalDomain:String,CaseIterable {
+    case free,crystal,event
+    var label:String {
+        switch self {case .free:L("Free","Free");case .crystal:L("Kristály","Crystal");case .event:L("Esemény","Event")}
+    }
+    var root:URL {
+        switch self {case .free:AppPaths.free;case .crystal:AppPaths.crystal;case .event:AppPaths.event}
+    }
+}
+
 enum AppPaths {
     static let root:URL = {
         let base=FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0]

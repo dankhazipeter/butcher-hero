@@ -6,7 +6,7 @@ import SwiftUI
 
 /// Ties the collector, the game monitor and the statistics together for the UI.
 @MainActor final class AppModel:ObservableObject {
-    let engine=CollectorEngine(),game=GameMonitor(),stats=StatsStore()
+    let engine=CollectorEngine(),game=GameMonitor(),stats=StatsStore(),diagnostics=DiagnosticsStore()
     @Published private(set) var accessibilityGranted=AXIsProcessTrusted()
     @Published private(set) var screenCaptureGranted=CGPreflightScreenCaptureAccess()
     @Published private(set) var legacyRunning=LegacyCollector.isRunning
@@ -16,11 +16,15 @@ import SwiftUI
     private var timer:Timer?,bag:Set<AnyCancellable>=[]
 
     init() {
-        engine.onFreeEvent={[weak self] e in self?.stats.append(e)}
+        engine.onEvent={[weak self] domain,e in
+            if domain == .free {self?.stats.append(e)}
+            self?.diagnostics.append(domain,e)
+        }
         // Re-publish child changes so views observing the model refresh.
         engine.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
         game.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
         stats.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
+        diagnostics.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
         timer=Timer.scheduledTimer(withTimeInterval:2,repeats:true){[weak self] _ in Task{@MainActor in self?.tick()}}
         if collectorEnabled {engine.start()}
         tick()
@@ -80,8 +84,8 @@ import SwiftUI
         if s.screenState=="manual_crystal" {return .manualPanel}
         if !["hud","crystal","event"].contains(s.screenState) {return .unrecognized}
         if s.waitingForInput {return .waitingInput}
-        if s.screenState=="crystal" {return .processing("Kristálynyitás folyamatban.")}
-        if s.screenState=="event" {return .processing("Esemény végi ablak kezelése.")}
+        if s.screenState=="crystal" {return .processing(L("Kristály/geode nyitása folyamatban.","Opening crystals/geodes."))}
+        if s.screenState=="event" {return .processing(L("Esemény végi ablak kezelése.","Handling an event-end screen."))}
         return .running
     }
 

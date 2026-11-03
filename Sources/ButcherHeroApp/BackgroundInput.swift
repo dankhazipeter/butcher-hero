@@ -14,30 +14,55 @@ import CoreGraphics
 @MainActor enum BackgroundInput {
     struct Failure:LocalizedError {let errorDescription:String?}
 
-    static func click(pid:pid_t,windowID:CGWindowID,windowFrame:CGRect,at point:CGPoint)async throws {
-        guard let api=SkyLight.shared else{throw Failure(errorDescription:"SkyLight nem érhető el; háttérkattintás nem lehetséges.")}
+    /// What happened around one click, for the journal.
+    struct Receipt {
+        var previousApp:String?,heldKeys=0,focusMilliseconds=0
+        var keysShielded=false,restored=false
+        var summary:String {
+            "focusFrom=\(previousApp ?? "-");focusMs=\(focusMilliseconds);restored=\(restored);keysShielded=\(keysShielded);heldKeys=\(heldKeys)"
+        }
+    }
+
+    // Kept as short as the game reliably accepts: the user's window is inactive meanwhile.
+    private static let settleNanos:UInt64=30_000_000,pressNanos:UInt64=50_000_000,releaseNanos:UInt64=40_000_000
+
+    static func click(pid:pid_t,windowID:CGWindowID,windowFrame:CGRect,at point:CGPoint)async throws->Receipt {
+        guard let api=SkyLight.shared else{throw Failure(errorDescription:L("SkyLight nem érhető el; háttérkattintás nem lehetséges.","SkyLight unavailable; background clicks impossible."))}
         let local=CGPoint(x:point.x-windowFrame.minX,y:point.y-windowFrame.minY)
         guard local.x>=0,local.y>=0,local.x<=windowFrame.width,local.y<=windowFrame.height
-        else{throw Failure(errorDescription:"A célpont kívül esik a játékablakon.")}
+        else{throw Failure(errorDescription:L("A célpont kívül esik a játékablakon.","Target is outside the game window."))}
         let previous=NSWorkspace.shared.frontmostApplication
         let previousWindow=previous.flatMap{frontWindow(of:$0.processIdentifier)}
-        guard let target=api.psn(pid) else{throw Failure(errorDescription:"A játékfolyamat nem címezhető.")}
+        guard let target=api.psn(pid) else{throw Failure(errorDescription:L("A játékfolyamat nem címezhető.","Game process not addressable."))}
+        var receipt=Receipt(previousApp:previous?.localizedName)
         let needsFocus=previous?.processIdentifier != pid
+        let started=DispatchTime.now().uptimeNanoseconds
+        // Keys typed while the game is active are held and replayed to the user's app afterwards.
+        if needsFocus {receipt.keysShielded=KeyboardShield.shared.begin()}
         if needsFocus {api.setFront(target,windowID)}
         api.makeKey(target,windowID)
-        try? await Task.sleep(nanoseconds:50_000_000)
+        try? await Task.sleep(nanoseconds:settleNanos)
         post(.leftMouseDown,pid:pid,windowID:windowID,global:point,local:local)
         // The matching release always goes to the same process.
-        try? await Task.sleep(nanoseconds:80_000_000)
+        try? await Task.sleep(nanoseconds:pressNanos)
         post(.leftMouseUp,pid:pid,windowID:windowID,global:point,local:local)
-        try? await Task.sleep(nanoseconds:80_000_000)
-        guard needsFocus,let previous,!previous.isTerminated else{return}
-        // If the user switched to a third app meanwhile, leave their choice alone.
-        let front=NSWorkspace.shared.frontmostApplication?.processIdentifier
-        guard front==nil || front==pid || front==previous.processIdentifier,
-              let back=api.psn(previous.processIdentifier) else{return}
-        api.setFront(back,previousWindow ?? 0)
-        if let previousWindow {api.makeKey(back,previousWindow)}
+        try? await Task.sleep(nanoseconds:releaseNanos)
+        if needsFocus,let previous,!previous.isTerminated {
+            // If the user switched to a third app meanwhile, leave their choice alone.
+            let front=NSWorkspace.shared.frontmostApplication?.processIdentifier
+            if front==nil || front==pid || front==previous.processIdentifier,let back=api.psn(previous.processIdentifier) {
+                api.setFront(back,previousWindow ?? 0)
+                if let previousWindow {api.makeKey(back,previousWindow)}
+                receipt.restored=true
+            }
+        }
+        if receipt.keysShielded {
+            // Give the window server a moment to route keys to the restored app.
+            try? await Task.sleep(nanoseconds:15_000_000)
+            receipt.heldKeys=KeyboardShield.shared.end()
+        }
+        receipt.focusMilliseconds=Int((DispatchTime.now().uptimeNanoseconds-started)/1_000_000)
+        return receipt
     }
 
     private static func post(_ type:CGEventType,pid:pid_t,windowID:CGWindowID,global:CGPoint,local:CGPoint) {

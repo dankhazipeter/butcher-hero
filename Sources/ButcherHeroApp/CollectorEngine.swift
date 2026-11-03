@@ -13,14 +13,15 @@ import RewardAutomationCore
         var screenState="unrecognized"   // hud | crystal | event | manual_crystal | unrecognized
         var crystalPhase="idle",eventEndPhase="idle"
         var waitingForInput=false
+        var waitReason:String?
         var pendingClaimID:String?
         var lastCheckedAt:Date?
         var lastError:String?
         var startedAt:Date?
     }
     @Published private(set) var status=Status()
-    /// Called on every Free journal append (stats update live).
-    var onFreeEvent:((JournalEvent)->Void)?
+    /// Called on every journal append (stats and diagnostics update live).
+    var onEvent:((JournalDomain,JournalEvent)->Void)?
 
     private var task:Task<Void,Never>?
     private var stopRequested=false
@@ -48,9 +49,9 @@ import RewardAutomationCore
 
     /// Why the collector can't start right now, if anything.
     static func blocker()->String? {
-        if !AXIsProcessTrusted() {return "Hiányzik az Accessibility-engedély (Rendszerbeállítások › Adatvédelem és biztonság › Kisegítő lehetőségek)."}
-        if !CGPreflightScreenCaptureAccess() {return "Hiányzik a képernyőfelvételi engedély (Rendszerbeállítások › Adatvédelem és biztonság › Képernyő- és rendszerhang-felvétel)."}
-        if LegacyCollector.isRunning {return "A régi gyűjtő (ButcherHeroAutomation) még fut; előbb azt kell leállítani."}
+        if !AXIsProcessTrusted() {return L("Hiányzik a Kisegítő lehetőségek engedély (Rendszerbeállítások › Adatvédelem és biztonság › Kisegítő lehetőségek).","Accessibility permission missing (System Settings › Privacy & Security › Accessibility).")}
+        if !CGPreflightScreenCaptureAccess() {return L("Hiányzik a képernyőfelvételi engedély (Rendszerbeállítások › Adatvédelem és biztonság › Képernyő- és rendszerhang-felvétel).","Screen Recording permission missing (System Settings › Privacy & Security › Screen & System Audio Recording).")}
+        if LegacyCollector.isRunning {return L("A régi gyűjtő (ButcherHeroAutomation) még fut; előbb azt kell leállítani.","The old collector (ButcherHeroAutomation) is still running; stop it first.")}
         return nil
     }
 
@@ -74,10 +75,12 @@ import RewardAutomationCore
     private func watch()async throws {
         try acquireLock()
         let journal=try Journal(root:AppPaths.free),vision=RewardVision()
-        journal.onAppend={[weak self] e in self?.onFreeEvent?(e)}
+        journal.onAppend={[weak self] e in self?.onEvent?(.free,e)}
         let crystalJournal=try Journal(root:AppPaths.crystal),crystalVision=CrystalVision()
+        crystalJournal.onAppend={[weak self] e in self?.onEvent?(.crystal,e)}
         var crystal=CrystalFlow(),crystalID:String?,crystalScreen:CrystalScreen?,crystalFailure:String?
         let eventJournal=try Journal(root:AppPaths.event),eventVision=EventEndVision()
+        eventJournal.onAppend={[weak self] e in self?.onEvent?(.event,e)}
         var eventFlow=EventEndFlow(),eventID:String?,eventScreen:EventEndScreen?,eventFailure:String?
         Journal.pruneEvidence(in:[AppPaths.free,AppPaths.crystal,AppPaths.event])
         var lastPrune=ProcessInfo.processInfo.systemUptime
@@ -280,9 +283,10 @@ import RewardAutomationCore
                         try journal.append("reward_detected",claimID:candidateID,reward:reward,at:frame.capturedAt)
                     }
                     if stableCount>=2 && pending==nil {
-                        if !HumanInput.ready {
+                        if let busy=HumanInput.busy {
+                            status.waitReason=busy.description
                             if !inputDeferred {
-                                try journal.append("input_deferred",claimID:candidateID,reward:reward,message:HumanInputBusy().localizedDescription)
+                                try journal.append("input_deferred",claimID:candidateID,reward:reward,message:busy.description)
                                 inputDeferred=true
                             }
                         } else {
@@ -301,8 +305,9 @@ import RewardAutomationCore
                                 try journal.append("input_geometry",claimID:id,message:geometry)
                                 try journal.append("click_sent",claimID:id,reward:current,evidence:proof,at:sentAt)
                                 pending=(id,current,RewardClaimVerification(sentAt:ProcessInfo.processInfo.systemUptime),false)
-                            } catch is HumanInputBusy {
-                                try journal.append("input_deferred",claimID:id,reward:reward,evidence:before,message:HumanInputBusy().localizedDescription)
+                            } catch let busy as HumanInputBusy {
+                                status.waitReason=busy.reason.description
+                                try journal.append("input_deferred",claimID:id,reward:reward,evidence:before,message:busy.reason.description)
                                 inputDeferred=true
                             } catch {
                                 try journal.append("click_failed",claimID:id,reward:reward,evidence:before,message:error.localizedDescription)
@@ -315,6 +320,7 @@ import RewardAutomationCore
                     stableKey=nil;stableCount=0;if pending==nil {candidateID=nil;inputDeferred=false}
                 }
                 status.waitingForInput=inputDeferred
+                if !inputDeferred {status.waitReason=nil}
                 status.pendingClaimID=pending?.id
             } catch {
                 status.captureStatus="error";status.screenState="unrecognized"
@@ -335,7 +341,7 @@ import RewardAutomationCore
         let startedAt=ProcessInfo.processInfo.systemUptime
         var validation=RewardPreclickValidation(expectedFingerprint:reward.fingerprint)
         while true {
-            guard HumanInput.ready else{throw HumanInputBusy()}
+            if let busy=HumanInput.busy {throw HumanInputBusy(reason:busy)}
             let fresh=try await GameIO.frame(),observation=try vision.observe(fresh.image)
             let elapsed=ProcessInfo.processInfo.systemUptime-startedAt
             let sameWindow=fresh.window.windowID==original.window.windowID

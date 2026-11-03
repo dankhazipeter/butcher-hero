@@ -9,25 +9,41 @@ struct AppError:LocalizedError {
     init(_ message:String){errorDescription=message}
 }
 
-/// The user is mid-click/drag or typing; input waits so the brief focus hand-over can't steal it.
+/// The user is mid-click/drag (or typing, when keys can't be held back); input waits.
 struct HumanInputBusy:LocalizedError {
-    var errorDescription:String?{"Kézi egér- vagy billentyűhasználat; szünet után kattintok."}
+    let reason:HumanInput.Busy
+    var errorDescription:String?{reason.description}
 }
 
 enum HumanInput {
-    /// Keystrokes typed during the ~0.2 s focus hand-over would land in the game.
+    enum Busy:Equatable,CustomStringConvertible {
+        case buttonHeld,recentClick(Double),typing(Double)
+        var description:String {
+            switch self {
+            case .buttonHeld:L("Egérgomb lenyomva (kattintás vagy húzás); elengedés után kattintok.","A mouse button is held (click or drag); clicking after release.")
+            case .recentClick(let s):L("Épp kattintottál (\(String(format:"%.2f",s)) mp); rövid szünet után kattintok.","You just clicked (\(String(format:"%.2f",s)) s ago); clicking after a short pause.")
+            case .typing(let s):L("Gépelsz (\(String(format:"%.2f",s)) mp); a billentyűk visszatartása nem érhető el, szünetre várok.","You are typing (\(String(format:"%.2f",s)) s ago); key holding unavailable, waiting for a pause.")
+            }
+        }
+    }
+    /// Only used when KeyboardShield can't hold keys back during the focus hand-over.
     static let keyboardQuietSeconds:TimeInterval=1.0
     static var buttonDown:Bool {
         (0..<5).contains{CGEventSource.buttonState(.combinedSessionState,button:CGMouseButton(rawValue:UInt32($0))!)}
     }
-    static var ready:Bool {
+    @MainActor static var busy:Busy? {
+        if buttonDown {return .buttonHeld}
         let buttons:[CGEventType]=[.leftMouseDown,.leftMouseUp,.leftMouseDragged,
             .rightMouseDown,.rightMouseUp,.rightMouseDragged,.otherMouseDown,.otherMouseUp,.otherMouseDragged]
         let mouseQuiet=buttons.map{CGEventSource.secondsSinceLastEventType(.combinedSessionState,eventType:$0)}.min() ?? 0
-        let keyQuiet=[CGEventType.keyDown,.flagsChanged].map{CGEventSource.secondsSinceLastEventType(.combinedSessionState,eventType:$0)}.min() ?? 0
-        return RewardInputPolicy.permitsClick(anyButtonDown:buttonDown,secondsSinceButtonActivity:mouseQuiet)
-            && keyQuiet>=keyboardQuietSeconds
+        if !RewardInputPolicy.permitsClick(anyButtonDown:false,secondsSinceButtonActivity:mouseQuiet) {return .recentClick(mouseQuiet)}
+        if !KeyboardShield.shared.available {
+            let keyQuiet=[CGEventType.keyDown,.flagsChanged].map{CGEventSource.secondsSinceLastEventType(.combinedSessionState,eventType:$0)}.min() ?? 0
+            if keyQuiet<keyboardQuietSeconds {return .typing(keyQuiet)}
+        }
+        return nil
     }
+    @MainActor static var ready:Bool {busy==nil}
 }
 
 struct Frame {
@@ -67,9 +83,9 @@ struct Frame {
                 imageSize:.init(width:frame.image.width,height:frame.image.height),
                 capturedWindow:frame.window.frame,currentWindow:current,activeDisplays:displays())
         else{throw AppError("Kattintási geometria elutasítva; window=\(windowID);frame=\(frame.window.frame)")}
-        guard HumanInput.ready else{throw HumanInputBusy()}
-        try await BackgroundInput.click(pid:pid,windowID:windowID,windowFrame:current,at:point)
-        return "background;window=\(windowID);frame=\(current);image=\(frame.image.width)x\(frame.image.height);target=\(point)"
+        if let busy=HumanInput.busy {throw HumanInputBusy(reason:busy)}
+        let receipt=try await BackgroundInput.click(pid:pid,windowID:windowID,windowFrame:current,at:point)
+        return "background;window=\(windowID);frame=\(current);image=\(frame.image.width)x\(frame.image.height);target=\(point);\(receipt.summary)"
     }
 
     static func bounds(windowID:CGWindowID,pid:pid_t)->CGRect? {

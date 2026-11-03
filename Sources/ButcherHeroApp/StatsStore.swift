@@ -8,8 +8,8 @@ import RewardAutomationCore
         var id:String {rawValue}
         var label:String {
             switch self {
-            case .run:"Mostani futás";case .today:"Ma";case .hour:"Utolsó óra"
-            case .day:"24 óra";case .all:"Minden";case .custom:"Egyéni"
+            case .run:L("Mostani futás","Current run");case .today:L("Ma","Today");case .hour:L("Utolsó óra","Last hour")
+            case .day:L("24 óra","24 hours");case .all:L("Minden","All");case .custom:L("Egyéni","Custom")
             }
         }
     }
@@ -22,7 +22,7 @@ import RewardAutomationCore
             .init(id:"cutting_defense",label:"Cut Defense"),.init(id:"smash_defense",label:"Smash Defense")]
         /// Order of the stat cards.
         static let cardOrder=["hp","regeneration","piercing_damage","cutting_defense","cutting_damage","smash_defense","smash_damage","piercing_defense"]
-        static func label(_ id:String)->String {all.first{$0.id==id}?.label ?? "Ismeretlen típus"}
+        static func label(_ id:String)->String {all.first{$0.id==id}?.label ?? L("Ismeretlen típus","Unknown kind")}
     }
     struct Point:Identifiable {
         let id=UUID()
