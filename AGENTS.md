@@ -1,5 +1,12 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — normál gyűjtés újra — 2026-11-03 (351)
+
+A felhasználó a gyűjtő indítását kérte; ez feloldja a 350-es STOP-ot.
+Normál indulás 19:39 Budapest, friss játék-HUD, statisztika megőrizve.
+Háttérkattintás és régi bot/heartbeat továbbra is szünetel.
+Részletek: docs/351-gyujtes-ujra.md; az élő állapot forrása a runtime JSON.
+
 ## ELSŐBBSÉG — MINDEN AUTOMATIZÁCIÓ LEÁLLÍTVA — 2026-11-03 (350)
 
 User: „állíts le mindnet!” Saját közösrunner/gyűjtő/felügyelő/dashboard
