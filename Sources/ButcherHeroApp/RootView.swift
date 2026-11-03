@@ -34,11 +34,16 @@ struct RootView:View {
             }
             .navigationSplitViewColumnWidth(min:190,ideal:210)
         } detail:{
-            switch page {
-            case .overview:OverviewView(model:model,stats:model.stats)
-            case .ledger:LedgerView(stats:model.stats)
-            case .diagnostics:DiagnosticsView(model:model,diagnostics:model.diagnostics)
+            Group {
+                switch page {
+                case .overview:OverviewView(model:model,stats:model.stats)
+                case .ledger:LedgerView(stats:model.stats)
+                case .diagnostics:DiagnosticsView(model:model,diagnostics:model.diagnostics)
+                }
             }
+            .frame(maxWidth:.infinity,maxHeight:.infinity)
+            // White content area (dark in Dark Mode); the sidebar keeps its system grey.
+            .background(Color(nsColor:.textBackgroundColor))
         }
         .navigationTitle(page.title)
         .toolbar {

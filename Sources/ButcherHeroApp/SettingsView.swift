@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView:View {
     @ObservedObject var model:AppModel
     @AppStorage(AppLanguage.defaultsKey) private var language=AppLanguage.hu.rawValue
+    @AppStorage(GameMonitor.backgroundPriorityKey) private var gameBackgroundPriority=false
     var body:some View {
         Form {
             Section(L("Általános","General")) {
@@ -11,6 +12,13 @@ struct SettingsView:View {
                 }
                 Toggle(L("Gyűjtés bekapcsolva (indításkor folytatja)","Collecting on (resumes at launch)"),
                        isOn:Binding(get:{model.collectorEnabled},set:{model.setCollecting($0)}))
+            }
+            Section(L("Játék","Game")) {
+                Toggle(L("A játék háttérprioritással fusson","Run the game at background priority"),isOn:$gameBackgroundPriority)
+                    .onChange(of:gameBackgroundPriority){model.game.applyPriority()}
+                Text(L("A macOS a takarékos magokra teszi a játékot (kevesebb hő és energia); a játék lassabb lehet. Bármikor kikapcsolható.",
+                       "macOS moves the game to efficiency cores (less heat and energy); the game may run slower. Can be turned off any time."))
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section(L("Engedélyek","Permissions")) {
                 PermissionLabel(name:L("Kisegítő lehetőségek","Accessibility"),granted:model.accessibilityGranted)

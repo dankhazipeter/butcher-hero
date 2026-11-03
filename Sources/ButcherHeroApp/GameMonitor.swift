@@ -1,5 +1,6 @@
 import AppKit
 import CoreGraphics
+import Darwin
 
 /// Watches whether the game is installed, running and has a usable window.
 @MainActor final class GameMonitor:ObservableObject {
@@ -9,6 +10,10 @@ import CoreGraphics
     @Published private(set) var pid:pid_t?
     @Published private(set) var checkedAt=Date()
     private var timer:Timer?,launchRequestedAt:Date?,observers:[NSObjectProtocol]=[]
+    /// Runs the game at macOS background priority (efficiency cores, throttled I/O).
+    static let backgroundPriorityKey="gameBackgroundPriority"
+    @Published private(set) var backgroundPriorityApplied=false
+    private var prioritizedPID:pid_t?
 
     init() {
         refresh()
@@ -35,7 +40,21 @@ import CoreGraphics
         }
         launchRequestedAt=nil
         pid=app.processIdentifier;hidden=apps.allSatisfy(\.isHidden)
+        applyPriority()
         state=hasGameWindow(pids:Set(apps.map(\.processIdentifier))) ? .running:.windowUnavailable
+    }
+
+    /// Keeps the game's scheduling priority in line with the setting (also after a game restart).
+    func applyPriority() {
+        let wanted=UserDefaults.standard.bool(forKey:Self.backgroundPriorityKey)
+        guard let pid else{prioritizedPID=nil;backgroundPriorityApplied=false;return}
+        if wanted && prioritizedPID != pid {
+            backgroundPriorityApplied=setpriority(PRIO_DARWIN_PROCESS,id_t(pid),PRIO_DARWIN_BG)==0
+            prioritizedPID=backgroundPriorityApplied ? pid:nil
+        } else if !wanted && prioritizedPID==pid {
+            _=setpriority(PRIO_DARWIN_PROCESS,id_t(pid),0)
+            prioritizedPID=nil;backgroundPriorityApplied=false
+        }
     }
 
     /// Opens the game in the background; it never steals focus from the user.

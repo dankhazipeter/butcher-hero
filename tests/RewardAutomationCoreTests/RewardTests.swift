@@ -132,7 +132,8 @@ final class RewardTests:XCTestCase {
         let path=project.appendingPathComponent("Sources/RewardAutomationCore/Resources/FreeBadges/templates.json")
         let model=try XCTUnwrap(JSONSerialization.jsonObject(with:Data(contentsOf:path)) as? [String:Any])
         let templates=try XCTUnwrap(model["templates"] as? [[String:Any]])
-        XCTAssertEqual(templates.count,3)
+        // 3 normal-quality + 2 "Low Quality" game-setting templates (thicker, merged letters).
+        XCTAssertEqual(templates.count,5)
         let sources=templates.compactMap{$0["source"] as? String}
         XCTAssertFalse(sources.contains("docs/references/2026-10-31/regen81-ree-heldout.png"))
         for template in templates {
@@ -141,6 +142,15 @@ final class RewardTests:XCTestCase {
             XCTAssertTrue(signature.allSatisfy{(0...2).contains($0)})
             let source=try XCTUnwrap(template["source"] as? String)
             XCTAssertTrue(FileManager.default.fileExists(atPath:project.appendingPathComponent(source).path))
+        }
+    }
+    func testLowQualityGraphicsFreeBadgeReadsWithPixels()throws {
+        for path in ["docs/references/2026-11-04/low-quality-pierce588-free-a.png",
+                     "docs/references/2026-11-04/low-quality-pierce588-free-b.png"] {
+            let observed=try RewardVision().observe(try image(path))
+            XCTAssertEqual(observed.badgeReader,"pixels")
+            XCTAssertEqual(observed.reward?.kind,"piercing_damage")
+            XCTAssertEqual(observed.reward?.amount,"588")
         }
     }
     func testPixelFreeReadsRejectedHealthAndHeldOutRegenWithoutOCR()throws {
