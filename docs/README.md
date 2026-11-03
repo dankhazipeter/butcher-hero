@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Minden automatizáció leállítása november3-án](350-minden-automatizacio-stop.md)
 - [Újraindítás; új kristálykör és Free617 igazolás](349-gyujtes-ujrainditas.md)
 - [Felhasználói leállítás; gyűjtő, figyelés és dashboard kikapcsolva](348-felhasznaloi-stop.md)
 - [Normál gyűjtés újra; fehér pályarész ne legyen számjegy](347-normal-gyujtes-es-feher-hatter-szamolvasas.md)

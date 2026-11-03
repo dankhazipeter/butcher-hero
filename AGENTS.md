@@ -1,5 +1,16 @@
 # Butcher Hero — aktív projektutasítások
 
+## ELSŐBBSÉG — MINDEN AUTOMATIZÁCIÓ LEÁLLÍTVA — 2026-11-03 (350)
+
+User: „állíts le mindnet!” Saját közösrunner/gyűjtő/felügyelő/dashboard
+leállítva08:17:36.867690Z (09:17Budapest). state.running=false; célzott
+folyamatellenőrzés szerint nincs normál/legacybot vagy automatizáció,8765
+nem figyel. Nincs új kép/input/figyelés vagy automatikus újraindítás/ütemezés
+új explicit userkérésig. Régi bot/heartbeatPAUSED, háttérinput félretéve.
+Naplók/képek/statisztikák megmaradnak; játékot és idegen appot nem zárunk.
+349futóPID-jei történetiek, offline teszt/commit/push nem folytatási engedély.
+Részletek docs/350-minden-automatizacio-stop.md.
+
 ## ELSŐBBSÉG — újraindítás és igazolt kristály/Free kör — 2026-11-02 (349)
 
 User: „indítsd el a programot!” Ez feloldja348STOPját a meglévő normál
