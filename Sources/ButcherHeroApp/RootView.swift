@@ -69,6 +69,9 @@ struct RootView:View {
             Text(L("A „Mostani futás” nézet mostantól számol. A korábbi átvételek a többi időszakban továbbra is látszanak.","“Current run” counts from now. Earlier claims stay visible in the other periods."))
         }
         .frame(minWidth:900,minHeight:620)
+        // Content that fits the window stays put: no rubber-band drag on the overview,
+        // the tables or the sidebar. Scrolling still works once something overflows.
+        .scrollBounceBehavior(.basedOnSize,axes:[.vertical,.horizontal])
         .environment(\.locale,AppLanguage.current.locale)
         .id(language)
     }

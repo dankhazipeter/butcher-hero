@@ -36,6 +36,7 @@ struct SettingsView:View {
             }
         }
         .formStyle(.grouped)
+        .scrollBounceBehavior(.basedOnSize,axes:[.vertical,.horizontal])
         .frame(width:520)
         .fixedSize(horizontal:false,vertical:true)
         .environment(\.locale,AppLanguage.current.locale)
