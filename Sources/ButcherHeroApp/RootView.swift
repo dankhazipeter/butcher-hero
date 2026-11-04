@@ -28,8 +28,10 @@ struct RootView:View {
                     ForEach(Page.allCases){Label($0.title,systemImage:$0.icon).tag($0)}
                 }
                 Section(L("Állapot","Status")) {
-                    SidebarStatus(title:L("Játék","Game"),status:model.gameStatus)
-                    SidebarStatus(title:L("Gyűjtő","Collector"),status:model.collectorStatus)
+                    SidebarStatus(title:L("Játék","Game"),icon:"gamecontroller.fill",status:model.gameStatus)
+                        .listRowInsets(EdgeInsets(top:5,leading:2,bottom:5,trailing:6))
+                    SidebarStatus(title:L("Gyűjtő","Collector"),icon:"tray.and.arrow.down.fill",status:model.collectorStatus)
+                        .listRowInsets(EdgeInsets(top:5,leading:2,bottom:5,trailing:6))
                 }
             }
             .navigationSplitViewColumnWidth(min:190,ideal:210)
@@ -77,17 +79,69 @@ struct RootView:View {
     }
 }
 
+/// A small shop sign per status, in the status band's colours: yellow while working,
+/// pale while waiting, steel when stopped. Ink outline and hard shadow like the price tag.
 private struct SidebarStatus:View {
-    let title:String,status:StatusText
+    let title:String,icon:String,status:StatusText
     var body:some View {
-        HStack(spacing:8) {
-            Circle().fill(status.tone.color).frame(width:8,height:8)
+        let shape=RoundedRectangle(cornerRadius:6,style:.continuous)
+        HStack(spacing:6) {
             VStack(alignment:.leading,spacing:1) {
-                Text(title).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                Text(status.title).font(.callout.weight(.medium)).lineLimit(1)
+                HStack(spacing:4) {
+                    Image(systemName:icon).font(.system(size:9,weight:.bold))
+                    Text(title.uppercased()).font(.system(size:9.5,weight:.heavy)).tracking(0.9).lineLimit(1)
+                }
+                .foregroundStyle(Theme.ink.opacity(0.65))
+                Text(status.title).font(Theme.display(17))
+                    .foregroundStyle(status.tone == .bad ? Theme.blood:Theme.ink)
+                    .lineLimit(1).minimumScaleFactor(0.65)
+                    .contentTransition(.opacity)
+            }
+            Spacer(minLength:2)
+            StatusMark(tone:status.tone)
+        }
+        .padding(.leading,10).padding(.trailing,8)
+        .frame(height:46)
+        // Shadow on the card shape only, so the lettering stays crisp.
+        .background(shape.fill(Theme.band(status.tone)).shadow(color:.black.opacity(0.22),radius:0,x:2,y:3))
+        .overlay(shape.strokeBorder(Theme.ink,lineWidth:2))
+        .animation(.smooth,value:status.title)
+        .help(status.detail)
+        .accessibilityElement(children:.combine)
+    }
+}
+
+/// Right-hand mark: a live pulse while working, an hourglass while waiting, a cross when stopped.
+private struct StatusMark:View {
+    let tone:Tone
+    var body:some View {
+        Group {
+            switch tone {
+            case .good:LivePulse()
+            case .warn:Image(systemName:"hourglass").font(.system(size:11,weight:.bold)).foregroundStyle(Theme.ink)
+            case .bad:Image(systemName:"xmark").font(.system(size:10,weight:.heavy)).foregroundStyle(Theme.blood)
             }
         }
-        .help(status.detail)
+        .frame(width:16,height:16)
+    }
+}
+
+/// Ink dot with a ring that keeps expanding outward; still when Reduce Motion is on.
+private struct LivePulse:View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var expanded=false
+    var body:some View {
+        ZStack {
+            if !reduceMotion {
+                Circle().stroke(Theme.ink,lineWidth:1.5).frame(width:8,height:8)
+                    .scaleEffect(expanded ? 2.2:1).opacity(expanded ? 0:0.7)
+            }
+            Circle().fill(Theme.ink).frame(width:8,height:8)
+        }
+        .onAppear {
+            guard !reduceMotion else{return}
+            withAnimation(.easeOut(duration:1.6).repeatForever(autoreverses:false)) {expanded=true}
+        }
     }
 }
 
