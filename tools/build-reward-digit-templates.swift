@@ -33,7 +33,10 @@ import ImageIO
             ("../2026-10-31/reward-audit/health18600-font-calibration.png","18.6K"),
             // Visually verified card and +549 after-frame. Only its missing9
             // variant is added; the already accepted5/4 are left unchanged.
-            ("../2026-11-01/pierce549-calibration.png","549")]
+            ("../2026-11-01/pierce549-calibration.png","549"),
+            // The game's "Low Quality" graphics: 3 lost its margin over 8 (0.126 vs 0.151).
+            // Only this frame's 3 is added; low-quality 631 and 823 stay held out.
+            ("../2026-11-04/low-quality-smash713.png","713")]
         var templates=[DigitTemplate]()
         for (name,label) in samples {
             let url=URL(fileURLWithPath:"docs/references/2026-10-30/"+name)
@@ -43,6 +46,7 @@ import ImageIO
             guard shapes.count==label.count else{fatalError("Reviewed label and segmented glyph count disagree: \(name)")}
             for (character,shape) in zip(label,shapes) where character != "." {
                 if name=="../2026-11-01/pierce549-calibration.png",character != "9" {continue}
+                if name=="../2026-11-04/low-quality-smash713.png",character != "3" {continue}
                 templates.append(.init(character:String(character),aspect:shape.aspect,bits:shape.bits))
             }
         }

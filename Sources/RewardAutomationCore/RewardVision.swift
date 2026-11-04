@@ -164,7 +164,9 @@ struct Pixels {
         guard x0<x1,y0<y1 else{return false}
         var run=0,best=0
         for y in y0..<y1 {
-            let dark=(x0..<x1).contains {x in let i=(y*w+x)*4;return max(data[i],max(data[i+1],data[i+2]))<75}
+            // <90 like the badge's own dark-pixel test: over light scenery the card's
+            // translucent outline reads 76–79 and the run kept breaking (docs/references/2026-11-04).
+            let dark=(x0..<x1).contains {x in let i=(y*w+x)*4;return max(data[i],max(data[i+1],data[i+2]))<90}
             run=dark ? run+1:0;best=max(best,run)
         }
         return Double(best)>=Double(h)*0.018

@@ -144,6 +144,21 @@ final class RewardTests:XCTestCase {
             XCTAssertTrue(FileManager.default.fileExists(atPath:project.appendingPathComponent(source).path))
         }
     }
+    func testLowQualityGraphicsAmountsWithThreeAndLightCardBorder()throws {
+        // 713 calibrated only its 3; 631 and 823 are held out. The 588 frame's card
+        // outline reads 76–79 over light scenery and must still count as a border.
+        for (path,kind,amount) in [
+            ("docs/references/2026-11-04/low-quality-smash713.png","smash_damage","713"),
+            ("docs/references/2026-11-04/low-quality-piercedef631.png","piercing_defense","631"),
+            ("docs/references/2026-11-04/low-quality-smashdef823.png","smash_defense","823"),
+            ("docs/references/2026-11-04/low-quality-pierce588-card-border.png","piercing_damage","588")
+        ] {
+            let observed=try RewardVision().observe(try image(path))
+            XCTAssertTrue(observed.freeCardVisible,path)
+            XCTAssertEqual(observed.reward?.kind,kind,path)
+            XCTAssertEqual(observed.reward?.amount,amount,path)
+        }
+    }
     func testLowQualityGraphicsFreeBadgeReadsWithPixels()throws {
         for path in ["docs/references/2026-11-04/low-quality-pierce588-free-a.png",
                      "docs/references/2026-11-04/low-quality-pierce588-free-b.png"] {
