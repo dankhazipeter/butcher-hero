@@ -14,29 +14,31 @@ struct DiagnosticsView:View {
     }
 
     var body:some View {
-        VStack(alignment:.leading,spacing:12) {
-            GroupBox {
-                Grid(alignment:.leading,horizontalSpacing:16,verticalSpacing:6) {
+        VStack(alignment:.leading,spacing:14) {
+            SectionTitle(title:L("Most","Right now"),note:L("mit csinál a gyűjtő, és miért","what the collector is doing, and why"))
+            Grid(alignment:.leading,horizontalSpacing:16,verticalSpacing:6) {
                     GridRow {
-                        Text(L("Gyűjtő","Collector")).foregroundStyle(.secondary)
-                        Text("\(model.collectorStatus.title) — \(model.collectorStatus.detail)")
+                        Text(L("Gyűjtő","Collector")).foregroundStyle(Theme.steel)
+                        Text("\(model.collectorStatus.title). \(model.collectorStatus.detail)")
                     }
                     GridRow {
-                        Text(L("Várakozás oka","Wait reason")).foregroundStyle(.secondary)
+                        Text(L("Várakozás oka","Wait reason")).foregroundStyle(Theme.steel)
                         Text(model.engine.status.waitReason ?? L("nincs","none"))
                     }
                     GridRow {
-                        Text(L("Kattintási mód","Click mode")).foregroundStyle(.secondary)
-                        Text(L("háttér, fókuszváltás nélkül — az aktív app, a kurzor és a gépelés érintetlen","background, no focus change — active app, cursor and typing untouched"))
+                        Text(L("Kattintási mód","Click mode")).foregroundStyle(Theme.steel)
+                        Text(L("háttérkattintás fókuszváltás nélkül: az aktív app, a kurzor és a gépelés érintetlen","background click without focus change: active app, cursor and typing untouched"))
                     }
                     GridRow {
-                        Text(L("Fázisok","Phases")).foregroundStyle(.secondary)
-                        Text(L("képernyő: ","screen: ")+model.engine.status.screenState+L(" · kristály: "," · crystal: ")+model.engine.status.crystalPhase+L(" · esemény: "," · event: ")+model.engine.status.eventEndPhase)
+                        Text(L("Fázisok","Phases")).foregroundStyle(Theme.steel)
+                        Text(L("képernyő: ","screen: ")+model.engine.status.screenState+L(", kristály: ",", crystal: ")+model.engine.status.crystalPhase+L(", esemény: ",", event: ")+model.engine.status.eventEndPhase)
                     }
                 }
                 .font(.callout)
-                .frame(maxWidth:.infinity,alignment:.leading).padding(6)
-            } label:{Label(L("Most","Now"),systemImage:"waveform.path.ecg")}
+                .frame(maxWidth:.infinity,alignment:.leading)
+                .padding(.leading,12)
+                .overlay(alignment:.leading){Rectangle().fill(Theme.band(model.collectorStatus.tone)).frame(width:3)}
+            SectionTitle(title:L("Események","Events"),note:L("a legutóbbi 500, legfrissebb elöl","the latest 500, newest first")).padding(.top,6)
 
             HStack {
                 Picker(L("Terület","Area"),selection:$domain) {
@@ -74,6 +76,7 @@ struct DiagnosticsView:View {
                 }
             }
         }
-        .padding(20)
+        .padding(.horizontal,28).padding(.vertical,24)
+        .background(Theme.paper)
     }
 }

@@ -7,75 +7,100 @@ struct OverviewView:View {
     @State private var hidden=Set<String>()
     var body:some View {
         ScrollView {
-            VStack(alignment:.leading,spacing:16) {
-                if !model.accessibilityGranted || !model.screenCaptureGranted {PermissionBanner(model:model)}
-                if model.legacyRunning {
-                    Banner(icon:"exclamationmark.triangle.fill",tone:.warn,
-                           text:L("A régi parancssoros gyűjtő (ButcherHeroAutomation) még fut. Amíg fut, ez az app nem kattint.","The old command-line collector (ButcherHeroAutomation) is still running. This app won't click while it runs."))
-                }
-                HStack(alignment:.top,spacing:16) {
-                    StatusCard(eyebrow:L("Játék","Game"),status:model.gameStatus) {
-                        if model.game.state == .notRunning {
-                            Button(L("Játék indítása","Launch game")){model.game.launch()}.buttonStyle(.borderedProminent).padding(.top,2)
-                        }
+            VStack(alignment:.leading,spacing:0) {
+                StatusBand(model:model,stats:stats)
+                VStack(alignment:.leading,spacing:30) {
+                    if !model.accessibilityGranted || !model.screenCaptureGranted {PermissionNotice(model:model)}
+                    if model.legacyRunning {
+                        Notice(icon:"exclamationmark.triangle.fill",tone:.warn,
+                               text:L("A régi parancssoros gyűjtő (ButcherHeroAutomation) még fut. Amíg fut, ez az app nem kattint.","The old command-line collector (ButcherHeroAutomation) is still running. This app won't click while it runs."))
                     }
-                    StatusCard(eyebrow:L("Gyűjtő","Collector"),status:model.collectorStatus) {
-                        if model.engine.isRunning {LastCapture(engine:model.engine)}
+                    if stats.range == .custom {CustomRange(stats:stats)}
+                    if stats.summary.unknownConfirmed>0 {
+                        Notice(icon:"questionmark.circle",tone:.warn,
+                               text:L("\(stats.summary.unknownConfirmed) átvétel típusa vagy mennyisége bizonytalan, ezek nincsenek az összegekben.",
+                                      "\(stats.summary.unknownConfirmed) claims have an uncertain kind or amount and are left out of the totals."))
                     }
-                }
-                SummaryRow(stats:stats)
-                Card {
                     VStack(alignment:.leading,spacing:14) {
-                        CardHeader(title:L("Mit kaptunk gyakrabban?","What did we get most?"),
-                                   subtitle:L("Halmozott, igazolt átvételek típusonként · vidd az egeret a görbére","Cumulative confirmed claims per kind · hover the lines"))
-                        HStack(alignment:.center,spacing:24) {
-                            DistributionDonut(summary:stats.summary).frame(width:170,height:170)
-                            FrequencyLines(summary:stats.summary,hidden:hidden).frame(minHeight:230)
-                        }
-                        KindChips(summary:stats.summary,hidden:$hidden)
+                        SectionTitle(title:L("Mit fogtunk","What we caught"),note:L("\(stats.summary.confirmed) igazolt átvétel típusonként","\(stats.summary.confirmed) confirmed claims by kind"))
+                        ShareBar(summary:stats.summary,hidden:$hidden)
+                    }
+                    VStack(alignment:.leading,spacing:10) {
+                        SectionTitle(title:L("Statok","Stats"),note:L("a kiválasztott időszakban","in the selected period"))
+                        StatLedger(summary:stats.summary)
+                    }
+                    VStack(alignment:.leading,spacing:14) {
+                        SectionTitle(title:L("Alakulás","Over time"),note:L("halmozott átvételek, vidd az egeret a görbére","cumulative claims, hover a line"))
+                        FrequencyLines(summary:stats.summary,hidden:hidden).frame(height:240)
+                    }
+                    Text(L("A napló a játékban látott értékeket rögzíti, nem a karakter szorzókkal módosított statváltozását.","Values are as shown in the game, not the character's multiplied stat change."))
+                        .font(.footnote).foregroundStyle(Theme.steel)
+                }
+                .padding(.horizontal,28).padding(.top,26).padding(.bottom,28)
+                .frame(maxWidth:1400,alignment:.leading)
+            }
+        }
+        .background(Theme.paper)
+    }
+}
+
+// MARK: - Status band (the one loud element)
+
+private struct StatusBand:View {
+    @ObservedObject var model:AppModel
+    @ObservedObject var stats:StatsStore
+    var body:some View {
+        let collector=model.collectorStatus,game=model.gameStatus,s=stats.summary
+        let latest=s.recent.first{$0.confirmed}
+        HStack(alignment:.top,spacing:28) {
+            VStack(alignment:.leading,spacing:6) {
+                Text(collector.title)
+                    .font(Theme.display(52)).foregroundStyle(collector.tone == .bad ? Theme.blood:Theme.ink)
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .contentTransition(.opacity)
+                Text(collector.detail).font(.callout).foregroundStyle(Theme.ink.opacity(0.8))
+                    .fixedSize(horizontal:false,vertical:true).frame(maxWidth:420,alignment:.leading)
+                HStack(spacing:8) {
+                    Image(systemName:game.tone == .good ? "gamecontroller.fill":"gamecontroller")
+                    Text(game.title).font(.callout.weight(.semibold))
+                    if model.game.state == .notRunning {
+                        Button(L("Játék indítása","Launch game")){model.game.launch()}.controlSize(.small)
                     }
                 }
-                Text(L("Növekedés, statonként","Growth per stat")).font(.title3.weight(.semibold)).padding(.top,4)
-                LazyVGrid(columns:[GridItem(.adaptive(minimum:300),spacing:16)],spacing:16) {
-                    ForEach(StatsStore.Kind.cardOrder,id:\.self){StatKPI(kind:$0,summary:stats.summary)}
-                }
-                Text(L("A napló rögzített értékeit mutatjuk, nem a karakter szorzózott statváltozását.","Values are as logged, not the character's multiplied stat change."))
-                    .font(.footnote).foregroundStyle(.secondary)
+                .foregroundStyle(game.tone == .bad ? Theme.blood:Theme.ink)
+                .padding(.top,8)
+                .help(game.detail)
+                if model.engine.isRunning {LastCapture(engine:model.engine).padding(.top,2)}
             }
-            .padding(20)
-        }
-    }
-}
-
-// MARK: - Building blocks
-
-struct Banner:View {
-    let icon:String,tone:Tone,text:String
-    var body:some View {
-        Label {Text(text)} icon:{Image(systemName:icon).foregroundStyle(tone.color)}
-            .font(.callout).padding(12).frame(maxWidth:.infinity,alignment:.leading)
-            .background(tone.color.opacity(0.1),in:RoundedRectangle(cornerRadius:10,style:.continuous))
-    }
-}
-
-private struct StatusCard<Accessory:View>:View {
-    let eyebrow:String,status:StatusText
-    @ViewBuilder var accessory:Accessory
-    var body:some View {
-        Card {
-            HStack(alignment:.top,spacing:12) {
-                Image(systemName:status.tone == .good ? "checkmark.circle.fill":status.tone == .warn ? "exclamationmark.circle.fill":"xmark.circle.fill")
-                    .font(.title2).foregroundStyle(status.tone.color)
-                    .contentTransition(.symbolEffect(.replace))
-                VStack(alignment:.leading,spacing:4) {
-                    Text(eyebrow.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                    Text(status.title).font(.title3.weight(.semibold))
-                    Text(status.detail).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
-                    accessory
+            Spacer(minLength:12)
+            VStack(alignment:.leading,spacing:2) {
+                Text("\(s.confirmed)")
+                    .font(Theme.display(64)).foregroundStyle(Theme.ink)
+                    .contentTransition(.numericText(value:Double(s.confirmed))).animation(.default,value:s.confirmed)
+                Text(L("átvétel – \(stats.range.label.lowercased())","claims – \(stats.range.label.lowercased())"))
+                    .font(.callout.weight(.semibold)).foregroundStyle(Theme.ink)
+                Group {
+                    if stats.range == .custom {
+                        Text(Format.duration(s.to.timeIntervalSince(s.from)))
+                    } else {
+                        // Live elapsed time without re-rendering the page.
+                        Text(timerInterval:s.from...Date.distantFuture,countsDown:false)
+                    }
+                }
+                .font(.callout.monospacedDigit()).foregroundStyle(Theme.ink.opacity(0.7))
+                Text(L("kezdete: ","since ")+Format.dateTime(s.from)).font(.caption).foregroundStyle(Theme.ink.opacity(0.6))
+                if s.pending>0 {
+                    Text(L("\(s.pending) függőben","\(s.pending) pending")).font(.caption).foregroundStyle(Theme.ink.opacity(0.6))
                 }
             }
+            .padding(.top,6)
+            PriceTag(row:latest).padding(.top,-2)
         }
-        .animation(.smooth,value:status.title)
+        .padding(.leading,28).padding(.trailing,44).padding(.top,22).padding(.bottom,26)
+        .frame(maxWidth:.infinity,alignment:.leading)
+        .background(Theme.band(collector.tone))
+        .overlay(alignment:.bottom){Rectangle().fill(Theme.ink).frame(height:3)}
+        .animation(.smooth,value:collector.title)
     }
 }
 
@@ -85,89 +110,60 @@ private struct LastCapture:View {
     var body:some View {
         TimelineView(.periodic(from:.now,by:1)) {_ in
             if let at=engine.status.lastCheckedAt {
-                Text(L("Legutóbbi képrögzítés: ","Last capture: ")+Format.time(at)).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                Text(L("Utoljára nézett rá: ","Last looked: ")+Format.time(at)).font(.caption.monospacedDigit()).foregroundStyle(Theme.ink.opacity(0.6))
             }
         }
     }
 }
 
-struct PermissionBanner:View {
+// MARK: - Quiet building blocks
+
+struct Notice:View {
+    let icon:String,tone:Tone,text:String
+    var body:some View {
+        HStack(alignment:.firstTextBaseline,spacing:10) {
+            Image(systemName:icon).foregroundStyle(tone == .bad ? Theme.blood:Theme.ink)
+            Text(text).font(.callout).fixedSize(horizontal:false,vertical:true)
+        }
+        .padding(.leading,12).padding(.vertical,4)
+        .overlay(alignment:.leading){Rectangle().fill(tone == .bad ? Theme.blood:Theme.butcherYellow).frame(width:3)}
+    }
+}
+
+struct PermissionNotice:View {
     @ObservedObject var model:AppModel
     var body:some View {
-        Card {
-            VStack(alignment:.leading,spacing:10) {
-                Label(L("Engedélyek szükségesek","Permissions needed"),systemImage:"lock.shield").font(.headline)
-                Text(L("A gyűjtéshez képernyőfelvételi (a játékablak lefotózásához) és Kisegítő lehetőségek (a háttérkattintáshoz) engedély kell. Egyszer kell megadni.",
-                       "Collecting needs Screen Recording (to capture the game window) and Accessibility (for background clicks). Grant them once."))
-                    .font(.callout).foregroundStyle(.secondary)
-                HStack {
-                    PermissionLabel(name:L("Kisegítő lehetőségek","Accessibility"),granted:model.accessibilityGranted)
-                    PermissionLabel(name:L("Képernyőfelvétel","Screen Recording"),granted:model.screenCaptureGranted)
-                    Spacer()
-                    Button(L("Engedélykérés","Request access")){model.requestPermissions()}.buttonStyle(.borderedProminent)
-                }
+        VStack(alignment:.leading,spacing:10) {
+            Text(L("Két engedély kell a gyűjtéshez","Collecting needs two permissions")).font(.headline)
+            Text(L("Képernyőfelvétel a játékablak lefotózásához, Kisegítő lehetőségek a háttérkattintáshoz. Egyszer kell megadni.",
+                   "Screen Recording to capture the game window, Accessibility for background clicks. Grant them once."))
+                .font(.callout).foregroundStyle(Theme.steel)
+            HStack(spacing:16) {
+                PermissionLabel(name:L("Kisegítő lehetőségek","Accessibility"),granted:model.accessibilityGranted)
+                PermissionLabel(name:L("Képernyőfelvétel","Screen Recording"),granted:model.screenCaptureGranted)
+                Spacer()
+                Button(L("Engedélyek kérése","Request access")){model.requestPermissions()}.buttonStyle(.borderedProminent)
             }
         }
+        .padding(.leading,12)
+        .overlay(alignment:.leading){Rectangle().fill(Theme.blood).frame(width:3)}
     }
 }
 
 struct PermissionLabel:View {
     let name:String,granted:Bool
     var body:some View {
-        Label(name,systemImage:granted ? "checkmark.circle.fill":"xmark.circle").foregroundStyle(granted ? .green:.red)
+        Label(name,systemImage:granted ? "checkmark.circle.fill":"xmark.circle").foregroundStyle(granted ? Color.green:Theme.blood)
     }
 }
 
-/// Period and headline numbers in one row of compact tiles.
-private struct SummaryRow:View {
+private struct CustomRange:View {
     @ObservedObject var stats:StatsStore
     var body:some View {
-        let s=stats.summary
-        VStack(alignment:.leading,spacing:10) {
-            if stats.range == .custom {
-                HStack {
-                    DatePicker(L("Kezdet","From"),selection:$stats.customFrom)
-                    DatePicker(L("Vége","To"),selection:$stats.customTo)
-                    Button(L("Szűrés","Apply")){stats.recompute()}
-                }
-            }
-            HStack(spacing:16) {
-                Tile(label:stats.range.label,note:L("Kezdet: ","From: ")+Format.dateTime(s.from)) {
-                    // Live elapsed time without re-rendering the page.
-                    if stats.range == .custom {
-                        Text(Format.duration(s.to.timeIntervalSince(s.from)))
-                    } else {
-                        Text(timerInterval:s.from...Date.distantFuture,countsDown:false)
-                    }
-                }
-                Tile(label:L("Igazolt átvétel","Confirmed claims"),note:L("Kártyaeltűnéssel visszaigazolva","Confirmed by the card disappearing")) {
-                    Text("\(s.confirmed)").contentTransition(.numericText(value:Double(s.confirmed))).animation(.default,value:s.confirmed)
-                }
-                Tile(label:L("Függő","Pending"),note:L("Nem része az összegeknek","Not part of the totals")) {
-                    Text("\(s.pending)").contentTransition(.numericText(value:Double(s.pending))).animation(.default,value:s.pending)
-                }
-                Tile(label:L("Legutóbbi átvétel","Last claim"),note:L("\(s.attempts) kattintási próbálkozás","\(s.attempts) click attempts")) {
-                    Text(s.lastConfirmedAt.map(Format.time) ?? "–")
-                }
-            }
-            if s.unknownConfirmed>0 {
-                Banner(icon:"questionmark.circle",tone:.warn,text:L("\(s.unknownConfirmed) igazolt átvétel típusa vagy mennyisége bizonytalan; nincs beleszámolva a statösszegekbe.",
-                                                                   "\(s.unknownConfirmed) confirmed claims have an uncertain kind or amount; not included in the totals."))
-            }
-        }
-    }
-}
-
-private struct Tile<Value:View>:View {
-    let label:String,note:String
-    @ViewBuilder var value:Value
-    var body:some View {
-        Card(padding:14) {
-            VStack(alignment:.leading,spacing:4) {
-                Text(label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary).lineLimit(1)
-                value.font(.system(size:26,weight:.bold,design:.rounded).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.7)
-                Text(note).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-            }
+        HStack(spacing:14) {
+            DatePicker(L("Kezdet","From"),selection:$stats.customFrom)
+            DatePicker(L("Vége","To"),selection:$stats.customTo)
+            Button(L("Szűrés","Apply")){stats.recompute()}
         }
     }
 }

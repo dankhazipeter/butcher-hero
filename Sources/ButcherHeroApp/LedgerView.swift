@@ -6,6 +6,9 @@ struct LedgerView:View {
     @ObservedObject var stats:StatsStore
     var body:some View {
         VStack(alignment:.leading,spacing:0) {
+            SectionTitle(title:L("Mikor, mit, mennyit","When, what, how much"),
+                         note:L("\(stats.summary.recent.count) legutóbbi átvétel, a kattintás ideje szerint","\(stats.summary.recent.count) latest claims, by click time"))
+                .padding(.horizontal,28).padding(.top,22).padding(.bottom,12)
             Table(stats.summary.recent) {
                 TableColumn(L("Kattintás ideje","Click time")) {row in
                     Text(Format.shortDateTime(row.at)).monospacedDigit()
@@ -31,10 +34,8 @@ struct LedgerView:View {
                                            description:Text(L("Ebben az időszakban még nincs átvétel.","No claims in this period yet.")))
                 }
             }
-            Divider()
-            Text(L("\(stats.summary.recent.count) legutóbbi tétel · a kattintás időpontja szerint","\(stats.summary.recent.count) latest items · by click time"))
-                .font(.caption).foregroundStyle(.secondary).padding(8)
         }
+        .background(Theme.paper)
     }
 }
 
