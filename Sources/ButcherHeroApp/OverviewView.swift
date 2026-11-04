@@ -89,6 +89,7 @@ private struct StatusBand:View {
                     }
                 }
                 .font(.callout.monospacedDigit()).foregroundStyle(Theme.ink.opacity(0.7)).lineLimit(1)
+                ClaimPace(from:s.from,to:stats.range == .custom ? s.to:nil,claims:s.confirmed)
                 Text(L("kezdete: ","since ")+Format.dateTime(s.from)).font(.caption).foregroundStyle(Theme.ink.opacity(0.6)).lineLimit(1)
                 // Always laid out, only shown when something is pending, so the band never grows.
                 Text(L("\(s.pending) függőben","\(s.pending) pending")).font(.caption).foregroundStyle(Theme.ink.opacity(0.6))
@@ -117,6 +118,25 @@ private struct LastCapture:View {
             Text(L("Utoljára nézett rá: ","Last looked: ")+(at.map(Format.time) ?? "–"))
                 .font(.caption.monospacedDigit()).foregroundStyle(Theme.ink.opacity(0.6))
                 .lineLimit(1).opacity(at == nil ? 0:1)
+        }
+    }
+}
+
+/// Average time per confirmed claim over the selected period (elapsed ÷ claims), ticking
+/// once a second for open-ended periods. The line is always laid out so the band never grows.
+private struct ClaimPace:View {
+    let from:Date
+    /// Fixed end for a custom range; nil means "until now".
+    let to:Date?
+    let claims:Int
+    var body:some View {
+        TimelineView(.periodic(from:.now,by:1)) {context in
+            let elapsed=(to ?? context.date).timeIntervalSince(from)
+            Text(claims>0 ? L("átlag: \(Format.duration(elapsed/Double(claims)))-enként","avg.: every \(Format.duration(elapsed/Double(claims)))"):L("átlag: –","avg.: –"))
+                .font(.callout.weight(.semibold).monospacedDigit()).foregroundStyle(Theme.ink)
+                .lineLimit(1).minimumScaleFactor(0.8)
+                .help(L("A kiválasztott időszak hossza osztva az igazolt átvételek számával: átlagosan ennyi időnként jön egy átvétel.",
+                        "Length of the selected period divided by confirmed claims: on average one claim arrives this often."))
         }
     }
 }
