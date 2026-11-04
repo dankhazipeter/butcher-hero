@@ -36,7 +36,16 @@ import ImageIO
             ("../2026-11-01/pierce549-calibration.png","549"),
             // The game's "Low Quality" graphics: 3 lost its margin over 8 (0.126 vs 0.151).
             // Only this frame's 3 is added; low-quality 631 and 823 stay held out.
-            ("../2026-11-04/low-quality-smash713.png","713")]
+            ("../2026-11-04/low-quality-smash713.png","713"),
+            // Purple dungeon floor, 2026-11-04 evening: 3 vs 9 (0.128/0.149) and 5 vs 9
+            // (0.134/0.167) missed the margin. Card and +633/+591 after-frames reviewed.
+            // Only the failing middle 3 and the 5 are added (the final 3 also made 598's 9
+            // ambiguous); each claim's other frame is checked, not calibrated.
+            ("../2026-11-04/piercedef633-calibration.png","633"),
+            ("../2026-11-04/pierce591-calibration.png","591"),
+            // The new 3 left 598's 9 (0.097, reviewed +598 after-frame) only 0.030 ahead of
+            // it; this claim's 9 is added, two other 598 claims stay separate checks.
+            ("../2026-11-04/cutdef598-nine-calibration.png","598")]
         var templates=[DigitTemplate]()
         for (name,label) in samples {
             let url=URL(fileURLWithPath:"docs/references/2026-10-30/"+name)
@@ -44,9 +53,12 @@ import ImageIO
             let shapes=try RewardNumberReader.shapes(image)
             print("\(name) expected=\(label) count=\(shapes.count) shapes=\(shapes.map{String(format:"%.4f/%.4f",$0.rect.width,$0.rect.height)})")
             guard shapes.count==label.count else{fatalError("Reviewed label and segmented glyph count disagree: \(name)")}
-            for (character,shape) in zip(label,shapes) where character != "." {
+            for (index,(character,shape)) in zip(label,shapes).enumerated() where character != "." {
                 if name=="../2026-11-01/pierce549-calibration.png",character != "9" {continue}
                 if name=="../2026-11-04/low-quality-smash713.png",character != "3" {continue}
+                if name=="../2026-11-04/piercedef633-calibration.png",index != 1 {continue}
+                if name=="../2026-11-04/pierce591-calibration.png",character != "5" {continue}
+                if name=="../2026-11-04/cutdef598-nine-calibration.png",character != "9" {continue}
                 templates.append(.init(character:String(character),aspect:shape.aspect,bits:shape.bits))
             }
         }
