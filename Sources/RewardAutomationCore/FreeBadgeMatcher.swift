@@ -22,7 +22,9 @@ public final class FreeBadgeMatcher {
     public func similarity(_ image:CGImage,rect:CGRect)throws->Double {
         let pixels=try Pixels(image)
         var best=0.0
-        for dy in [-1,0,1] {for dx in [-1,0,1] {
+        // ±2 px vertically: over bright grass the located badge starts ~2 px higher
+        // than on dark scenery, which shifted the letters out of a ±1 px search.
+        for dy in [-2,-1,0,1,2] {for dx in [-1,0,1] {
             let candidate=Self.signature(pixels,rect:rect.offsetBy(dx:Double(dx)/Double(pixels.w),dy:Double(dy)/Double(pixels.h)))
             for reference in templates {
                 func dice(_ category:UInt8)->Double {

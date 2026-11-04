@@ -20,7 +20,7 @@ scripts/build-app.sh        # fordít, aláír, telepít: ~/Applications/Butcher
 - **Engedélyek** (egyszer): Kisegítő lehetőségek + Képernyőfelvétel. Az Apple Development
   aláírás miatt újrafordítás után is megmaradnak.
 - **Adatok:** `~/Library/Application Support/Butcher Hero/` (ugyanaz a JSONL-séma, mint a
-  régi `data/*/events.jsonl`); bizonyítékképek 7 napig.
+  régi `data/*/events.jsonl`); bizonyítékképek 1 napig (napi kb. 1,3 GB).
 - Amíg a régi `ButcherHeroAutomation` fut, az app nem kattint.
 
 A lenti, régi parancssoros leírás történeti; a két rendszert ne futtasd egyszerre.

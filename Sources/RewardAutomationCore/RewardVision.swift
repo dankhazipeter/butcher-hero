@@ -21,7 +21,8 @@ public final class RewardVision {
         guard hud else{return .init(reward:nil,texts:[],gameHUDVisible:false,freeCardVisible:false,diagnosticReason:"hud_rejected")}
         // Independent, conservative presence check: OCR missing the word FREE
         // must not by itself turn a still-visible card into a successful claim.
-        guard let badgeRegion=pixels.freeBadgeRect() else{return .init(reward:nil,texts:[],gameHUDVisible:true,freeCardVisible:false,diagnosticReason:"badge_shape_missing")}
+        let candidates=pixels.freeBadgeRects()
+        guard !candidates.isEmpty else{return .init(reward:nil,texts:[],gameHUDVisible:true,freeCardVisible:false,diagnosticReason:"badge_shape_missing")}
         let cardVisible=true
         func freeWord(_ words:[RewardText])->RewardText? {words.first(where:{
             $0.text.trimmingCharacters(in:.whitespacesAndNewlines).uppercased()=="FREE" &&
@@ -30,7 +31,12 @@ public final class RewardVision {
         })}
         // Exclude the white outer border and neighbouring timer fragments.
         // Never accept FRE/approximate text; retry the original crop only if needed.
-        let similarity=try badges.similarity(image,rect:badgeRegion)
+        // The candidate whose pixels best match the FREE graphic is the badge.
+        var badgeRegion=candidates[0],similarity=0.0
+        for rect in candidates {
+            let score=try badges.similarity(image,rect:rect)
+            if score>similarity {similarity=score;badgeRegion=rect}
+        }
         let badgeReader:String
         var texts:[RewardText]
         if similarity>=FreeBadgeMatcher.threshold {
@@ -121,17 +127,27 @@ struct Pixels {
         return count
     }
     func hasFreeBadge()->Bool {freeBadgeRect() != nil}
-    func freeBadgeRect()->CGRect? {
+    func freeBadgeRect()->CGRect? {freeBadgeRects().first}
+    /// Every component that passes the badge checks. On bright green terrain the badge
+    /// fill merges with the grass under the normal green mask (and a green icon below can
+    /// pass instead), so a stricter vivid-green mask (badge g≈230–250 vs grass ≈165–185)
+    /// adds its candidates too; the caller keeps the one that best matches FREE.
+    func freeBadgeRects()->[CGRect] {
+        var rects=freeBadgeRects(vivid:false)
+        for rect in freeBadgeRects(vivid:true) where !rects.contains(rect) {rects.append(rect)}
+        return rects
+    }
+    private func freeBadgeRects(vivid:Bool)->[CGRect] {
         // A compact green component must contain white text and a dark outline.
         // Green terrain alone is never evidence of a remaining reward card.
         let x0=max(0,Int(Double(w)*0.002)),x1=min(w,Int(Double(w)*0.115))
         let y0=max(0,Int(Double(h)*0.56)),y1=min(h,Int(Double(h)*0.635))
         let rw=x1-x0,rh=y1-y0
-        guard rw>0,rh>0 else{return nil}
-        var mask=[Bool](repeating:false,count:rw*rh)
+        guard rw>0,rh>0 else{return []}
+        var mask=[Bool](repeating:false,count:rw*rh),found:[CGRect]=[]
         for y in 0..<rh {for x in 0..<rw {
             let i=((y+y0)*w+x+x0)*4,r=Int(data[i]),g=Int(data[i+1]),b=Int(data[i+2])
-            mask[y*rw+x]=g>145 && g>r+40 && g>b+30
+            mask[y*rw+x]=vivid ? g>205 && g>r+60 && g>b+60 : g>145 && g>r+40 && g>b+30
         }}
         for start in mask.indices where mask[start] {
             var queue=[start],head=0,minX=rw,maxX=0,minY=rh,maxY=0
@@ -151,10 +167,12 @@ struct Pixels {
             let rect=CGRect(x:Double(x0+minX-1)/Double(w),y:Double(y0+minY-1)/Double(h),
                 width:Double(bw+2)/Double(w),height:Double(bh+2)/Double(h))
             let white=count(in:rect){r,g,b in min(r,min(g,b))>190 && max(r,max(g,b))-min(r,min(g,b))<65}
-            let dark=count(in:rect){r,g,b in max(r,max(g,b))<90}
-            if Double(white)>=Double(w*h)*0.000020 && Double(dark)>=Double(w*h)*0.000025 && hasCardBorder(below:rect) {return rect}
+            // Over bright grass the badge outline is dark green (max ≈96), not near-black.
+            let darkLimit=vivid ? 100:90
+            let dark=count(in:rect){r,g,b in max(r,max(g,b))<darkLimit}
+            if Double(white)>=Double(w*h)*0.000020 && Double(dark)>=Double(w*h)*0.000025 && hasCardBorder(below:rect) {found.append(rect)}
         }
-        return nil
+        return found
     }
     private func hasCardBorder(below badge:CGRect)->Bool {
         // The actual reward has a tall near-black right outline below FREE.
@@ -164,9 +182,10 @@ struct Pixels {
         guard x0<x1,y0<y1 else{return false}
         var run=0,best=0
         for y in y0..<y1 {
-            // <90 like the badge's own dark-pixel test: over light scenery the card's
-            // translucent outline reads 76–79 and the run kept breaking (docs/references/2026-11-04).
-            let dark=(x0..<x1).contains {x in let i=(y*w+x)*4;return max(data[i],max(data[i+1],data[i+2]))<90}
+            // The translucent card edge takes on the scenery: 76–79 over light stone, and
+            // dark green 33/96/12 (max 96) over bright grass. <100 keeps both continuous;
+            // the FREE pixel match remains the decisive check (docs/references/2026-11-04).
+            let dark=(x0..<x1).contains {x in let i=(y*w+x)*4;return max(data[i],max(data[i+1],data[i+2]))<100}
             run=dark ? run+1:0;best=max(best,run)
         }
         return Double(best)>=Double(h)*0.018

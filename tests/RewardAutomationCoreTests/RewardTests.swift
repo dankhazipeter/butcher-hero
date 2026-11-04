@@ -144,6 +144,23 @@ final class RewardTests:XCTestCase {
             XCTAssertTrue(FileManager.default.fileExists(atPath:project.appendingPathComponent(source).path))
         }
     }
+    func testFreeBadgeOverBrightGrass()throws {
+        // Grass merges with the badge under the normal green mask and the green Regen icon
+        // passed instead; the vivid-mask badge must win on its FREE match.
+        for (path,kind,amount) in [
+            ("docs/references/2026-11-04/grass-regen85-free.png","regeneration","85"),
+            ("docs/references/2026-11-04/grass-regen85-free-weak-outline.png","regeneration","85"),
+            ("docs/references/2026-11-04/grass-pierce588-free.png","piercing_damage","588")
+        ] {
+            let observed=try RewardVision().observe(try image(path))
+            XCTAssertEqual(observed.badgeReader,"pixels",path)
+            XCTAssertEqual(observed.reward?.kind,kind,path)
+            XCTAssertEqual(observed.reward?.amount,amount,path)
+        }
+        let empty=try RewardVision().observe(try image("docs/references/2026-11-04/grass-no-card.png"))
+        XCTAssertFalse(empty.freeCardVisible,"Bright grass alone is never a card")
+        XCTAssertNil(empty.reward)
+    }
     func testLowQualityGraphicsAmountsWithThreeAndLightCardBorder()throws {
         // 713 calibrated only its 3; 631 and 823 are held out. The 588 frame's card
         // outline reads 76–79 over light scenery and must still count as a border.

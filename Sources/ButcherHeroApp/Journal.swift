@@ -32,7 +32,8 @@ enum AppPaths {
     static let crystal=root.appendingPathComponent("crystal-rewards",isDirectory:true)
     static let event=root.appendingPathComponent("event-dismissals",isDirectory:true)
     static let statSession=root.appendingPathComponent("stat-session.json")
-    static let evidenceRetention:TimeInterval=7*24*3600
+    // ~1.3 GB per day of play; anything not looked into within a day is never revisited.
+    static let evidenceRetention:TimeInterval=24*3600
 }
 
 enum Stamp {

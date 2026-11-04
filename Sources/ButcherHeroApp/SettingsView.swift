@@ -31,7 +31,7 @@ struct SettingsView:View {
             }
             Section(L("Adatok","Data")) {
                 LabeledContent(L("Hely","Location"),value:AppPaths.root.path)
-                LabeledContent(L("Bizonyítékképek","Evidence images"),value:L("7 napig megőrizve","kept for 7 days"))
+                LabeledContent(L("Bizonyítékképek","Evidence images"),value:L("1 napig megőrizve","kept for 1 day"))
                 Button(L("Megnyitás a Finderben","Show in Finder")){NSWorkspace.shared.open(AppPaths.root)}
             }
         }
