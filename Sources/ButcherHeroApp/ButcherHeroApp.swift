@@ -5,7 +5,7 @@ import SwiftUI
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @StateObject private var model=AppModel()
     var body:some Scene {
-        Window("Butcher Hero",id:"main") {
+        Window("Butcher Hero Autoplayer",id:"main") {
             RootView(model:model)
         }
         .defaultSize(width:1100,height:900)

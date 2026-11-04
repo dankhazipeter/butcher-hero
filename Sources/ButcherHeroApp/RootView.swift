@@ -24,7 +24,7 @@ struct RootView:View {
     var body:some View {
         NavigationSplitView {
             List(selection:$page) {
-                Section(L("Butcher Hero","Butcher Hero")) {
+                Section("Butcher Hero Autoplayer") {
                     ForEach(Page.allCases){Label($0.title,systemImage:$0.icon).tag($0)}
                 }
                 Section(L("Állapot","Status")) {

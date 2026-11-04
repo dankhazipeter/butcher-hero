@@ -2,12 +2,12 @@
 
 ## Natív app (2026-11-03-tól ez az elsődleges)
 
-A gyűjtő és a statisztika egyetlen macOS appban fut: **Butcher Hero.app**
+A gyűjtő és a statisztika egyetlen macOS appban fut: **Butcher Hero Autoplayer.app**
 (`Sources/ButcherHeroApp`). Ez váltja a `make start` által indított
 parancssoros gyűjtőt, felügyelőt és a http://127.0.0.1:8765 webes dashboardot.
 
 ```sh
-scripts/build-app.sh        # fordít, aláír, telepít: ~/Applications/Butcher Hero.app
+scripts/build-app.sh        # fordít, aláír, telepít: ~/Applications/Butcher Hero Autoplayer.app
 ```
 
 - **Háttérkattintás:** a valódi egér nem mozdul, a játékablak takarva is lehet, és a

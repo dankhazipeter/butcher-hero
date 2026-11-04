@@ -1,10 +1,11 @@
 #!/bin/zsh
-# Builds, signs and installs "Butcher Hero.app" (native collector + statistics).
+# Builds, signs and installs "Butcher Hero Autoplayer.app" (native collector + statistics).
 # Usage: scripts/build-app.sh [--no-install]
 set -euo pipefail
 cd "${0:A:h}/.."
 
-APP_NAME="Butcher Hero"
+APP_NAME="Butcher Hero Autoplayer"
+# Same bundle id as before the rename, so Accessibility / Screen Recording grants are kept.
 BUNDLE_ID="com.dankhazipeter.butcherhero"
 DIST="dist"
 APP="$DIST/$APP_NAME.app"
@@ -59,7 +60,7 @@ codesign --verify --strict "$APP"
 
 if [[ "${1:-}" != "--no-install" ]]; then
   mkdir -p "$INSTALL_DIR"
-  rm -rf "$INSTALL_DIR/$APP_NAME.app"
+  rm -rf "$INSTALL_DIR/$APP_NAME.app" "$INSTALL_DIR/Butcher Hero.app"  # also the pre-rename copy
   cp -R "$APP" "$INSTALL_DIR/"
   echo "Telepítve: $INSTALL_DIR/$APP_NAME.app"
 fi
