@@ -48,15 +48,7 @@ struct RootView:View {
         .navigationTitle(page.title)
         .toolbar {
             if page != .diagnostics {
-                ToolbarItem {
-                    Menu {
-                        Picker(L("Időszak","Period"),selection:Binding(get:{model.stats.range},set:{model.stats.range=$0})) {
-                            ForEach(StatsStore.Range.allCases){Text($0.label).tag($0)}
-                        }
-                        .pickerStyle(.inline).labelsHidden()
-                    } label:{Label(model.stats.range.label,systemImage:"calendar").labelStyle(.titleAndIcon)}
-                    .help(L("Statisztikai időszak","Statistics period"))
-                }
+                ToolbarItem {RangeMenu(stats:model.stats)}
                 ToolbarItem {
                     Button {confirmNewSession=true} label:{Label(L("Új munkamenet","New session"),systemImage:"arrow.counterclockwise")}
                         .help(L("A „Mostani futás” statisztikát innentől újrakezdi; a gyűjtés nem áll le.","Restarts the “Current run” statistics from now; collecting continues."))
@@ -93,5 +85,19 @@ private struct SidebarStatus:View {
             }
         }
         .help(status.detail)
+    }
+}
+
+/// Observes only the statistics range, so the toolbar label updates without the whole window.
+private struct RangeMenu:View {
+    @ObservedObject var stats:StatsStore
+    var body:some View {
+        Menu {
+            Picker(L("Időszak","Period"),selection:$stats.range) {
+                ForEach(StatsStore.Range.allCases){Text($0.label).tag($0)}
+            }
+            .pickerStyle(.inline).labelsHidden()
+        } label:{Label(stats.range.label,systemImage:"calendar").labelStyle(.titleAndIcon)}
+        .help(L("Statisztikai időszak","Statistics period"))
     }
 }

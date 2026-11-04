@@ -67,9 +67,27 @@ import RewardAutomationCore
         for e in events {ingest(e)}
         dashboardSession=(try? Data(contentsOf:AppPaths.statSession)).flatMap{try? JSONDecoder().decode(Session.self,from:$0)}
         recompute()
+        startClock()
     }
 
-    func append(_ e:JournalEvent) {ingest(e);recompute()}
+    private var pendingRecompute:DispatchWorkItem?,clock:Timer?
+
+    /// New journal lines arrive in bursts (one claim is ~8 events); coalesce them into one update.
+    func append(_ e:JournalEvent) {
+        ingest(e)
+        pendingRecompute?.cancel()
+        let work=DispatchWorkItem{[weak self] in self?.recompute()}
+        pendingRecompute=work
+        DispatchQueue.main.asyncAfter(deadline:.now()+0.3,execute:work)
+    }
+
+    /// Rolling periods ("last hour", "today"…) move with time even without new claims;
+    /// once a minute is enough for their edges. Live clocks in the UI update themselves.
+    private func startClock() {
+        clock=Timer.scheduledTimer(withTimeInterval:60,repeats:true){[weak self] _ in
+            Task{@MainActor in if let self,self.range != .custom {self.recompute()}}
+        }
+    }
 
     private func ingest(_ e:JournalEvent) {
         guard let at=Stamp.date(e.timestamp) else{return}

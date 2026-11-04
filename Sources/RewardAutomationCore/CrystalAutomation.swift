@@ -50,9 +50,11 @@ public final class CrystalVision {
             }
             var grid=try words(layout.rect(.init(x:0.37,y:0.616,width:0.26,height:0.029)))
             // Shorter windows compress the header gap independently of the X
-            // anchor. Retry only two bounded upward crops; text stays exact.
+            // anchor, and the game's "Low Quality" graphics draw the X slightly
+            // differently, which skews the inferred scale either way. Retry a few
+            // bounded crops up and down; the text must still read exactly CRYSTALS.
             if compact(title)=="CRYSTALSTATS",compact(grid) != "CRYSTALS" {
-                for dy in [-0.008,-0.016] {
+                for dy in [-0.008,-0.016,0.008,-0.024,0.016,-0.032] {
                     let candidate=try words(layout.rect(.init(x:0.37,y:0.616+dy,width:0.26,height:0.029)))
                     if compact(candidate)=="CRYSTALS" {grid=candidate;break}
                 }
@@ -127,7 +129,9 @@ struct CrystalInventoryLayout {
     func point(_ p:CGPoint)->CGPoint {.init(x:close.x+(p.x-0.74)*xScale,y:close.y+(p.y-0.144)*yScale)}
     func rect(_ r:CGRect)->CGRect {.init(origin:point(r.origin),size:.init(width:r.width*xScale,height:r.height*yScale))}
     func goldButtons(_ p:Pixels)->[CGRect] {
-        let roi=rect(.init(x:0.33,y:0.55,width:0.34,height:0.065))
+        // Starts a little above the button so a slightly over-estimated scale
+        // (e.g. "Low Quality" graphics) can't clip its top, where "X1" sits.
+        let roi=rect(.init(x:0.33,y:0.54,width:0.34,height:0.075))
         let x0=max(0,Int(roi.minX*Double(p.w))),x1=min(p.w,Int(roi.maxX*Double(p.w)))
         let y0=max(0,Int(roi.minY*Double(p.h))),y1=min(p.h,Int(roi.maxY*Double(p.h)))
         let w=x1-x0,h=y1-y0;guard w>0,h>0 else{return []}
@@ -326,6 +330,7 @@ public struct CrystalFlow {
         }
     }
     public var active: Bool {phase != .idle}
+    public static let strikeSpacing=0.3
     public mutating func observe(_ observation:CrystalObservation, now:Double, inputReady:Bool, mayStart:Bool=true)->CrystalAction? {
         if observation.screen==previous && observation.notification==previousNotification {stable+=1}
         else {previous=observation.screen;previousNotification=observation.notification;stable=1}
@@ -380,7 +385,9 @@ public struct CrystalFlow {
         case .closing: action = [.inventoryEmpty,.inventoryReady,.inventoryUnavailable].contains(observation.screen) ? .closeInventory:nil
         default: action=nil
         }
-        guard let action,inputReady,now-lastSent>=1 else{return nil}
+        // Strikes on the same geode can follow each other quickly; every other
+        // step still waits a full second for the game's UI to settle.
+        guard let action,inputReady,now-lastSent>=(action == .strike ? Self.strikeSpacing:1) else{return nil}
         let limit=action == .strike ? 16:3
         if attempts[action,default:0]>=limit {phase = .blocked;failure="attempt_limit_\(action.rawValue)";return nil}
         return action

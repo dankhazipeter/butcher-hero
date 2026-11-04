@@ -83,7 +83,12 @@ enum KindStyle {
         case "cutting_defense":[5,3];case "smash_defense":[1,4];default:[]
         }
     }
-    static func icon(_ kind:String)->NSImage? {
-        Bundle.module.url(forResource:kind,withExtension:"png",subdirectory:"Icons").flatMap(NSImage.init(contentsOf:))
+    @MainActor private static var icons:[String:NSImage]=[:]
+    /// Loaded once per kind; views ask for icons on every render.
+    @MainActor static func icon(_ kind:String)->NSImage? {
+        if let cached=icons[kind] {return cached}
+        let image=Bundle.module.url(forResource:kind,withExtension:"png",subdirectory:"Icons").flatMap(NSImage.init(contentsOf:))
+        icons[kind]=image
+        return image
     }
 }

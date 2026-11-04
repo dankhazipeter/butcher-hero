@@ -8,7 +8,7 @@ import Darwin
     @Published private(set) var state:State = .notRunning
     @Published private(set) var hidden=false
     @Published private(set) var pid:pid_t?
-    @Published private(set) var checkedAt=Date()
+    private(set) var checkedAt=Date()
     private var timer:Timer?,launchRequestedAt:Date?,observers:[NSObjectProtocol]=[]
     /// Runs the game at macOS background priority (efficiency cores, throttled I/O).
     static let backgroundPriorityKey="gameBackgroundPriority"
@@ -17,7 +17,7 @@ import Darwin
 
     init() {
         refresh()
-        timer=Timer.scheduledTimer(withTimeInterval:2,repeats:true){[weak self] _ in Task{@MainActor in self?.refresh()}}
+        timer=Timer.scheduledTimer(withTimeInterval:5,repeats:true){[weak self] _ in Task{@MainActor in self?.refresh()}}
         let center=NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didLaunchApplicationNotification,NSWorkspace.didTerminateApplicationNotification,
                      NSWorkspace.didHideApplicationNotification,NSWorkspace.didUnhideApplicationNotification] {
@@ -32,16 +32,20 @@ import Darwin
     func refresh() {
         checkedAt=Date()
         let apps=NSWorkspace.shared.runningApplications.filter{$0.bundleIdentifier==GameIO.bundleID && !$0.isTerminated}
+        // Assign only on change: every @Published write re-renders the UI.
+        func set(_ newState:State,_ newPID:pid_t?,_ newHidden:Bool) {
+            if state != newState {state=newState}
+            if pid != newPID {pid=newPID}
+            if hidden != newHidden {hidden=newHidden}
+        }
         guard let app=apps.first else {
-            pid=nil;hidden=false
-            if let at=launchRequestedAt,Date().timeIntervalSince(at)<20 {state = .launching}
-            else {state=installedURL==nil ? .notInstalled:.notRunning}
+            let waiting=launchRequestedAt.map{Date().timeIntervalSince($0)<20} ?? false
+            set(waiting ? .launching:(installedURL==nil ? .notInstalled:.notRunning),nil,false)
             return
         }
         launchRequestedAt=nil
-        pid=app.processIdentifier;hidden=apps.allSatisfy(\.isHidden)
+        set(hasGameWindow(pids:Set(apps.map(\.processIdentifier))) ? .running:.windowUnavailable,app.processIdentifier,apps.allSatisfy(\.isHidden))
         applyPriority()
-        state=hasGameWindow(pids:Set(apps.map(\.processIdentifier))) ? .running:.windowUnavailable
     }
 
     /// Keeps the game's scheduling priority in line with the setting (also after a game restart).

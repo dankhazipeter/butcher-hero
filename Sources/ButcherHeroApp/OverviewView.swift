@@ -4,6 +4,7 @@ import SwiftUI
 struct OverviewView:View {
     @ObservedObject var model:AppModel
     @ObservedObject var stats:StatsStore
+    @State private var hidden=Set<String>()
     var body:some View {
         ScrollView {
             VStack(alignment:.leading,spacing:16) {
@@ -13,23 +14,30 @@ struct OverviewView:View {
                            text:L("A régi parancssoros gyűjtő (ButcherHeroAutomation) még fut. Amíg fut, ez az app nem kattint.","The old command-line collector (ButcherHeroAutomation) is still running. This app won't click while it runs."))
                 }
                 HStack(alignment:.top,spacing:16) {
-                    StatusBox(eyebrow:L("Játék","Game"),status:model.gameStatus) {
+                    StatusCard(eyebrow:L("Játék","Game"),status:model.gameStatus) {
                         if model.game.state == .notRunning {
-                            Button(L("Játék indítása","Launch game")){model.game.launch()}.padding(.top,4)
+                            Button(L("Játék indítása","Launch game")){model.game.launch()}.buttonStyle(.borderedProminent).padding(.top,2)
                         }
                     }
-                    StatusBox(eyebrow:L("Gyűjtő","Collector"),status:model.collectorStatus) {
-                        if let at=model.engine.status.lastCheckedAt,model.engine.isRunning {
-                            Text(L("Legutóbbi képrögzítés: ","Last capture: ")+Format.time(at)).font(.caption).foregroundStyle(.secondary)
-                        }
+                    StatusCard(eyebrow:L("Gyűjtő","Collector"),status:model.collectorStatus) {
+                        if model.engine.isRunning {LastCapture(engine:model.engine)}
                     }
                 }
-                PeriodBox(stats:stats)
-                SummaryTiles(summary:stats.summary)
-                FrequencyChart(summary:stats.summary)
+                SummaryRow(stats:stats)
+                Card {
+                    VStack(alignment:.leading,spacing:14) {
+                        CardHeader(title:L("Mit kaptunk gyakrabban?","What did we get most?"),
+                                   subtitle:L("Halmozott, igazolt átvételek típusonként · vidd az egeret a görbére","Cumulative confirmed claims per kind · hover the lines"))
+                        HStack(alignment:.center,spacing:24) {
+                            DistributionDonut(summary:stats.summary).frame(width:170,height:170)
+                            FrequencyLines(summary:stats.summary,hidden:hidden).frame(minHeight:230)
+                        }
+                        KindChips(summary:stats.summary,hidden:$hidden)
+                    }
+                }
                 Text(L("Növekedés, statonként","Growth per stat")).font(.title3.weight(.semibold)).padding(.top,4)
-                LazyVGrid(columns:[GridItem(.flexible(),spacing:16),GridItem(.flexible(),spacing:16)],spacing:16) {
-                    ForEach(StatsStore.Kind.cardOrder,id:\.self){StatCard(kind:$0,summary:stats.summary)}
+                LazyVGrid(columns:[GridItem(.adaptive(minimum:300),spacing:16)],spacing:16) {
+                    ForEach(StatsStore.Kind.cardOrder,id:\.self){StatKPI(kind:$0,summary:stats.summary)}
                 }
                 Text(L("A napló rögzített értékeit mutatjuk, nem a karakter szorzózott statváltozását.","Values are as logged, not the character's multiplied stat change."))
                     .font(.footnote).foregroundStyle(.secondary)
@@ -46,40 +54,49 @@ struct Banner:View {
     var body:some View {
         Label {Text(text)} icon:{Image(systemName:icon).foregroundStyle(tone.color)}
             .font(.callout).padding(12).frame(maxWidth:.infinity,alignment:.leading)
-            .background(tone.color.opacity(0.1),in:RoundedRectangle(cornerRadius:8))
+            .background(tone.color.opacity(0.1),in:RoundedRectangle(cornerRadius:10,style:.continuous))
     }
 }
 
-private struct StatusBox<Accessory:View>:View {
+private struct StatusCard<Accessory:View>:View {
     let eyebrow:String,status:StatusText
     @ViewBuilder var accessory:Accessory
     var body:some View {
-        GroupBox {
-            VStack(alignment:.leading,spacing:6) {
-                Label {
-                    Text(status.title).font(.title2.weight(.semibold))
-                } icon:{
-                    Image(systemName:status.tone == .good ? "checkmark.circle.fill":status.tone == .warn ? "exclamationmark.circle.fill":"xmark.circle.fill")
-                        .foregroundStyle(status.tone.color)
+        Card {
+            HStack(alignment:.top,spacing:12) {
+                Image(systemName:status.tone == .good ? "checkmark.circle.fill":status.tone == .warn ? "exclamationmark.circle.fill":"xmark.circle.fill")
+                    .font(.title2).foregroundStyle(status.tone.color)
+                    .contentTransition(.symbolEffect(.replace))
+                VStack(alignment:.leading,spacing:4) {
+                    Text(eyebrow.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    Text(status.title).font(.title3.weight(.semibold))
+                    Text(status.detail).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                    accessory
                 }
-                .contentTransition(.opacity)
-                Text(status.detail).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
-                accessory
             }
-            .frame(maxWidth:.infinity,alignment:.leading)
-            .padding(6)
-        } label:{
-            Text(eyebrow.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
         }
-        .animation(.default,value:status.title)
+        .animation(.smooth,value:status.title)
+    }
+}
+
+/// Re-renders only itself once a second; the rest of the page stays untouched.
+private struct LastCapture:View {
+    let engine:CollectorEngine
+    var body:some View {
+        TimelineView(.periodic(from:.now,by:1)) {_ in
+            if let at=engine.status.lastCheckedAt {
+                Text(L("Legutóbbi képrögzítés: ","Last capture: ")+Format.time(at)).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+            }
+        }
     }
 }
 
 struct PermissionBanner:View {
     @ObservedObject var model:AppModel
     var body:some View {
-        GroupBox {
+        Card {
             VStack(alignment:.leading,spacing:10) {
+                Label(L("Engedélyek szükségesek","Permissions needed"),systemImage:"lock.shield").font(.headline)
                 Text(L("A gyűjtéshez képernyőfelvételi (a játékablak lefotózásához) és Kisegítő lehetőségek (a háttérkattintáshoz) engedély kell. Egyszer kell megadni.",
                        "Collecting needs Screen Recording (to capture the game window) and Accessibility (for background clicks). Grant them once."))
                     .font(.callout).foregroundStyle(.secondary)
@@ -90,8 +107,7 @@ struct PermissionBanner:View {
                     Button(L("Engedélykérés","Request access")){model.requestPermissions()}.buttonStyle(.borderedProminent)
                 }
             }
-            .padding(6)
-        } label:{Label(L("Engedélyek szükségesek","Permissions needed"),systemImage:"lock.shield")}
+        }
     }
 }
 
@@ -102,147 +118,56 @@ struct PermissionLabel:View {
     }
 }
 
-private struct PeriodBox:View {
+/// Period and headline numbers in one row of compact tiles.
+private struct SummaryRow:View {
     @ObservedObject var stats:StatsStore
     var body:some View {
         let s=stats.summary
-        GroupBox {
-            VStack(alignment:.leading,spacing:10) {
-                if stats.range == .custom {
-                    HStack {
-                        DatePicker(L("Kezdet","From"),selection:$stats.customFrom)
-                        DatePicker(L("Vége","To"),selection:$stats.customTo)
-                        Button(L("Szűrés","Apply")){stats.recompute()}
-                    }
-                }
-                Grid(alignment:.leading,horizontalSpacing:40,verticalSpacing:4) {
-                    GridRow {
-                        Text(L("Kezdet","From"));Text(L("Vége","To"));Text(L("Időintervallum hossza","Length"))
-                    }.font(.caption).foregroundStyle(.secondary)
-                    GridRow {
-                        Text(Format.dateTime(s.from));Text(Format.dateTime(s.to))
-                        Text(Format.duration(s.to.timeIntervalSince(s.from)))
-                    }.font(.headline.monospacedDigit())
-                }
-                Text("\(TimeZone.current.identifier) · "+L("\(max(1,s.bucketSeconds/60)) perces diagrambontás","\(max(1,s.bucketSeconds/60))-minute chart buckets"))
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            .frame(maxWidth:.infinity,alignment:.leading).padding(6)
-        } label:{
-            Text(L("Kiválasztott időszak: ","Selected period: ")+stats.range.label).font(.headline)
-        }
-    }
-}
-
-private struct SummaryTiles:View {
-    let summary:StatsStore.Summary
-    var body:some View {
-        HStack(spacing:16) {
-            Tile(label:L("Igazolt átvétel","Confirmed claims"),value:Double(summary.confirmed),text:"\(summary.confirmed)",note:L("Kártyaeltűnéssel visszaigazolva","Confirmed by the card disappearing"))
-            Tile(label:L("Nem igazolt / függő","Unconfirmed / pending"),value:Double(summary.pending),text:"\(summary.pending)",note:L("Nem része a jutalomösszegeknek","Not part of the totals"))
-            Tile(label:L("Legutóbbi átvétel","Last claim"),value:summary.lastConfirmedAt?.timeIntervalSince1970 ?? 0,
-                 text:summary.lastConfirmedAt.map(Format.time) ?? "–",note:L("\(summary.attempts) kattintási próbálkozás","\(summary.attempts) click attempts"))
-        }
-        if summary.unknownConfirmed>0 {
-            Banner(icon:"questionmark.circle",tone:.warn,text:L("\(summary.unknownConfirmed) igazolt átvétel típusa vagy mennyisége bizonytalan; nincs beleszámolva a statösszegekbe.",
-                                                                 "\(summary.unknownConfirmed) confirmed claims have an uncertain kind or amount; not included in the totals."))
-        }
-    }
-}
-
-private struct Tile:View {
-    let label:String,value:Double,text:String,note:String
-    var body:some View {
-        GroupBox {
-            VStack(alignment:.leading,spacing:4) {
-                Text(text).font(.system(size:30,weight:.bold).monospacedDigit())
-                    .contentTransition(.numericText(value:value))
-                    .animation(.default,value:value)
-                Text(note).font(.caption).foregroundStyle(.secondary)
-            }
-            .frame(maxWidth:.infinity,alignment:.leading).padding(6)
-        } label:{Text(label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)}
-    }
-}
-
-private struct FrequencyChart:View {
-    let summary:StatsStore.Summary
-    @State private var hidden=Set<String>()
-    var body:some View {
-        let total=max(1,summary.counts.values.reduce(0,+))
-        GroupBox {
-            VStack(alignment:.leading,spacing:12) {
-                Chart {
-                    ForEach(StatsStore.Kind.all.filter{!hidden.contains($0.id)}) {kind in
-                        ForEach(summary.countSeries[kind.id] ?? []) {p in
-                            LineMark(x:.value(L("Idő","Time"),p.at),y:.value(L("Darab","Count"),p.value),series:.value("Kind",kind.label))
-                                .interpolationMethod(.stepEnd)
-                                .foregroundStyle(KindStyle.color(kind.id))
-                                .lineStyle(StrokeStyle(lineWidth:2,dash:KindStyle.dash(kind.id)))
-                        }
-                    }
-                }
-                .chartLegend(.hidden)
-                .frame(height:220)
-                LazyVGrid(columns:[GridItem(.adaptive(minimum:200),alignment:.leading)],alignment:.leading,spacing:6) {
-                    ForEach(StatsStore.Kind.all) {kind in
-                        let count=summary.counts[kind.id] ?? 0
-                        Toggle(isOn:Binding(get:{!hidden.contains(kind.id)},set:{on in if on {hidden.remove(kind.id)} else {hidden.insert(kind.id)}})) {
-                            HStack(spacing:6) {
-                                KindIcon(kind:kind.id,size:16)
-                                Text(kind.label)
-                                Text("\(count) db · \(Format.percent(Double(count)/Double(total)))").foregroundStyle(.secondary)
-                                    .contentTransition(.numericText(value:Double(count))).animation(.default,value:count)
-                            }
-                        }
-                        .toggleStyle(.checkbox)
-                        .tint(KindStyle.color(kind.id))
-                    }
-                }
-            }
-            .padding(6)
-        } label:{
-            VStack(alignment:.leading,spacing:2) {
-                Text(L("Mit kaptunk gyakrabban?","What did we get most?")).font(.headline)
-                Text(L("Halmozott, igazolt gyűjtések · darab","Cumulative confirmed claims · count")).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-    }
-}
-
-private struct StatCard:View {
-    let kind:String,summary:StatsStore.Summary
-    var body:some View {
-        let total=summary.totals[kind] ?? 0
-        let numeric=NSDecimalNumber(decimal:total).doubleValue
-        GroupBox {
-            VStack(alignment:.leading,spacing:6) {
-                Text("+\(Format.compact(total))")
-                    .font(.system(size:26,weight:.bold).monospacedDigit())
-                    .foregroundStyle(KindStyle.color(kind))
-                    .contentTransition(.numericText(value:numeric))
-                    .animation(.default,value:numeric)
-                    .help(Format.exact(total))
+        VStack(alignment:.leading,spacing:10) {
+            if stats.range == .custom {
                 HStack {
-                    Text(L("Átlag: \(Format.rate(total,from:summary.from,to:summary.to))/perc","Average: \(Format.rate(total,from:summary.from,to:summary.to))/min"))
-                    Spacer()
-                    Text(L("\(summary.counts[kind] ?? 0) igazolt átvétel","\(summary.counts[kind] ?? 0) confirmed claims"))
-                        .contentTransition(.numericText(value:Double(summary.counts[kind] ?? 0)))
-                        .animation(.default,value:summary.counts[kind] ?? 0)
+                    DatePicker(L("Kezdet","From"),selection:$stats.customFrom)
+                    DatePicker(L("Vége","To"),selection:$stats.customTo)
+                    Button(L("Szűrés","Apply")){stats.recompute()}
                 }
-                .font(.caption).foregroundStyle(.secondary)
-                Chart(summary.series[kind] ?? []) {p in
-                    AreaMark(x:.value(L("Idő","Time"),p.at),y:.value(L("Érték","Value"),p.value)).interpolationMethod(.stepEnd)
-                        .foregroundStyle(KindStyle.color(kind).opacity(0.15))
-                    LineMark(x:.value(L("Idő","Time"),p.at),y:.value(L("Érték","Value"),p.value)).interpolationMethod(.stepEnd)
-                        .foregroundStyle(KindStyle.color(kind))
-                }
-                .chartXAxis(.hidden)
-                .frame(height:80)
             }
-            .padding(6)
-        } label:{
-            Label {Text(StatsStore.Kind.label(kind)).font(.headline)} icon:{KindIcon(kind:kind,size:18)}
+            HStack(spacing:16) {
+                Tile(label:stats.range.label,note:L("Kezdet: ","From: ")+Format.dateTime(s.from)) {
+                    // Live elapsed time without re-rendering the page.
+                    if stats.range == .custom {
+                        Text(Format.duration(s.to.timeIntervalSince(s.from)))
+                    } else {
+                        Text(timerInterval:s.from...Date.distantFuture,countsDown:false)
+                    }
+                }
+                Tile(label:L("Igazolt átvétel","Confirmed claims"),note:L("Kártyaeltűnéssel visszaigazolva","Confirmed by the card disappearing")) {
+                    Text("\(s.confirmed)").contentTransition(.numericText(value:Double(s.confirmed))).animation(.default,value:s.confirmed)
+                }
+                Tile(label:L("Függő","Pending"),note:L("Nem része az összegeknek","Not part of the totals")) {
+                    Text("\(s.pending)").contentTransition(.numericText(value:Double(s.pending))).animation(.default,value:s.pending)
+                }
+                Tile(label:L("Legutóbbi átvétel","Last claim"),note:L("\(s.attempts) kattintási próbálkozás","\(s.attempts) click attempts")) {
+                    Text(s.lastConfirmedAt.map(Format.time) ?? "–")
+                }
+            }
+            if s.unknownConfirmed>0 {
+                Banner(icon:"questionmark.circle",tone:.warn,text:L("\(s.unknownConfirmed) igazolt átvétel típusa vagy mennyisége bizonytalan; nincs beleszámolva a statösszegekbe.",
+                                                                   "\(s.unknownConfirmed) confirmed claims have an uncertain kind or amount; not included in the totals."))
+            }
+        }
+    }
+}
+
+private struct Tile<Value:View>:View {
+    let label:String,note:String
+    @ViewBuilder var value:Value
+    var body:some View {
+        Card(padding:14) {
+            VStack(alignment:.leading,spacing:4) {
+                Text(label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary).lineLimit(1)
+                value.font(.system(size:26,weight:.bold,design:.rounded).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.7)
+                Text(note).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
         }
     }
 }

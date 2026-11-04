@@ -26,7 +26,7 @@ import RewardAutomationCore
     private var task:Task<Void,Never>?
     private var stopRequested=false
     private var lockFD:Int32 = -1
-    let interval:TimeInterval=1
+    let interval:TimeInterval=1,idleInterval:TimeInterval=2
 
     var isRunning:Bool {task != nil}
 
@@ -96,6 +96,8 @@ import RewardAutomationCore
         var inputDeferred=false,diagnosticSaves=0
         var lastReadableAt=started,lastIdleDiagnosticAt=started
         var lastCandidateReadableAt:TimeInterval?,lastLostFingerprint:String?
+        var lastActivityAt=started
+        var manualPanelSince:TimeInterval?
 
         func diagnostic(_ frame:Frame,_ observation:RewardObservation,_ event:String,_ id:String?,_ message:String)throws {
             guard diagnosticSaves<40 else{return};diagnosticSaves+=1
@@ -184,6 +186,18 @@ import RewardAutomationCore
                 if co.screen != .hud && co.screen != .unknown {status.screenState="crystal"}
                 // A manually opened panel is not ours to close, and suppresses Free input.
                 if CrystalInputPolicy.isManualPanel(screen:co.screen,active:crystal.active) {
+                    // A panel left open (e.g. our own flow interrupted by an app restart) is
+                    // adopted after 2 quiet minutes while the user is not playing the game.
+                    if manualPanelSince==nil {manualPanelSince=tick}
+                    let userPlaying=NSWorkspace.shared.frontmostApplication?.bundleIdentifier==GameIO.bundleID
+                    if let since=manualPanelSince,tick-since>=120,!userPlaying,pending==nil,let resume=Self.adoption(for:co.screen) {
+                        crystal=CrystalFlow(recovering:resume,now:tick)
+                        crystalID=UUID().uuidString;crystalScreen=nil;crystalFailure=nil;manualPanelSince=nil
+                        try crystalJournal.append("crystal_adopted",claimID:crystalID,
+                            message:"Panel \(co.screen.rawValue) open for \(Int(tick-since))s without the user playing; finishing it as \(resume.map(\.rawValue))")
+                        await sleep(interval-(ProcessInfo.processInfo.systemUptime-tick))
+                        continue
+                    }
                     status.screenState="manual_crystal"
                     if let p=pending {
                         try journal.append("claim_unconfirmed",claimID:p.id,reward:p.reward,message:"Manual crystal panel interrupted verification; not counted")
@@ -195,6 +209,7 @@ import RewardAutomationCore
                     await sleep(interval-(ProcessInfo.processInfo.systemUptime-tick))
                     continue
                 }
+                manualPanelSince=nil
                 let wasActive=crystal.active,completed=crystal.completed
                 let action=crystal.observe(co,now:tick,inputReady:HumanInput.ready,mayStart:pending==nil)
                 status.crystalPhase=crystal.phase.rawValue
@@ -220,7 +235,9 @@ import RewardAutomationCore
                             guard fresh.window.windowID==frame.window.windowID else{throw AppError("Crystal window changed")}
                             let current=try crystalVision.observe(fresh.image,hudVisible:try vision.observe(fresh.image).gameHUDVisible)
                             guard action.permits(current) else{throw AppError("Crystal preclick rejected: \(action.rawValue)/\(current.screen.rawValue)")}
-                            let proof=try crystalJournal.image(fresh.image,id:crystalID ?? crystalJournal.runID,suffix:"before-\(action.rawValue)-\(UUID().uuidString)")
+                            // One image per geode is enough; saving one per strike slowed striking down.
+                            let proof=action == .strike && crystal.strikes>0 ? nil:
+                                try crystalJournal.image(fresh.image,id:crystalID ?? crystalJournal.runID,suffix:"before-\(action.rawValue)-\(UUID().uuidString)")
                             try crystalJournal.append("crystal_click_validated",claimID:crystalID,evidence:proof,message:"\(action.rawValue); \(current.texts)")
                             let geometry=try await GameIO.click(normalized:action.point(in:current),in:fresh)
                             try crystalJournal.append("input_geometry",claimID:crystalID,message:geometry)
@@ -242,7 +259,9 @@ import RewardAutomationCore
                     } else if wasActive && !crystal.active {
                         try crystalJournal.append("crystal_finished_no_reward",claimID:crystalID,message:"HUD returned without a fully observed result flow; not counted")
                     }
-                    await sleep(interval-(ProcessInfo.processInfo.systemUptime-tick))
+                    // Look again quickly while striking a geode.
+                    let period=crystal.phase == .breaking ? CrystalFlow.strikeSpacing:interval
+                    await sleep(period-(ProcessInfo.processInfo.systemUptime-tick))
                     continue
                 }
 
@@ -331,7 +350,21 @@ import RewardAutomationCore
                 if (error as NSError).domain==NSCocoaErrorDomain {throw error}
             }
             let now=ProcessInfo.processInfo.systemUptime
-            await sleep(max(interval-(now-tick),pending.map{max(0,$0.verification.sentAt+1-now)} ?? 0))
+            // Adaptive sampling: every second while anything is on screen or pending,
+            // every 2 s after 10 quiet seconds (a new Free card waits at most 1 s longer).
+            if pending != nil || stableKey != nil || crystal.active || eventFlow.active {lastActivityAt=now}
+            let period=now-lastActivityAt>10 ? idleInterval:interval
+            await sleep(max(period-(now-tick),pending.map{max(0,$0.verification.sentAt+1-now)} ?? 0))
+        }
+    }
+
+    /// Which already-sent actions an adopted panel corresponds to, so the flow continues from there.
+    private static func adoption(for screen:CrystalScreen)->[CrystalAction]? {
+        switch screen {
+        case .inventoryReady,.inventoryEmpty,.inventoryUnavailable:[.openInventory]
+        case .geode:[.openInventory,.openOne]
+        case .result:[.openInventory,.openOne,.strike]
+        default:nil
         }
     }
 

@@ -10,7 +10,8 @@ import SwiftUI
     @Published private(set) var accessibilityGranted=AXIsProcessTrusted()
     @Published private(set) var screenCaptureGranted=CGPreflightScreenCaptureAccess()
     @Published private(set) var legacyRunning=LegacyCollector.isRunning
-    @Published private(set) var now=Date()
+    /// No new capture for >10 s while collecting (re-checked by the slow health tick).
+    @Published private(set) var captureStale=false
     /// Remembered across launches: if collecting was on, it resumes when the app starts.
     @AppStorage("collectorEnabled") var collectorEnabled=false
     private var timer:Timer?,bag:Set<AnyCancellable>=[]
@@ -20,26 +21,26 @@ import SwiftUI
             if domain == .free {self?.stats.append(e)}
             self?.diagnostics.append(domain,e)
         }
-        // Re-publish child changes so views observing the model refresh.
-        // The engine updates its status every second; only re-render for changes a user can see.
-        // (The capture time shown in the UI refreshes with the 2 s tick.)
+        // Event-driven UI: the model re-publishes only changes a user can see. The engine
+        // updates its status every tick, so it is reduced to its visible fields first.
+        // Statistics and diagnostics are observed directly by their own views.
         engine.$status.map{s in "\(s.running)|\(s.captureStatus)|\(s.screenState)|\(s.crystalPhase)|\(s.eventEndPhase)|\(s.waitingForInput)|\(s.waitReason ?? "")|\(s.lastError ?? "")"}
             .removeDuplicates().dropFirst()
             .sink{[weak self] _ in self?.objectWillChange.send()}.store(in:&bag)
         game.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
-        stats.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
-        diagnostics.objectWillChange.sink{[weak self] in self?.objectWillChange.send()}.store(in:&bag)
-        timer=Timer.scheduledTimer(withTimeInterval:2,repeats:true){[weak self] _ in Task{@MainActor in self?.tick()}}
+        // Slow health tick for things that have no notification (permissions, old CLI, stalls).
+        timer=Timer.scheduledTimer(withTimeInterval:5,repeats:true){[weak self] _ in Task{@MainActor in self?.tick()}}
         if collectorEnabled {engine.start()}
         tick()
     }
 
     func tick() {
-        now=Date()
-        accessibilityGranted=AXIsProcessTrusted()
-        screenCaptureGranted=CGPreflightScreenCaptureAccess()
-        legacyRunning=LegacyCollector.isRunning
-        if stats.range != .custom {stats.recompute(now:now)}
+        // Assign only on change: every @Published write re-renders observers.
+        func update<T:Equatable>(_ path:ReferenceWritableKeyPath<AppModel,T>,_ value:T) {if self[keyPath:path] != value {self[keyPath:path]=value}}
+        update(\.accessibilityGranted,AXIsProcessTrusted())
+        update(\.screenCaptureGranted,CGPreflightScreenCaptureAccess())
+        update(\.legacyRunning,LegacyCollector.isRunning)
+        update(\.captureStale,engine.isRunning && (engine.status.lastCheckedAt.map{Date().timeIntervalSince($0)>10} ?? false))
         // Resume after a permission was granted or the old collector stopped.
         if collectorEnabled && !engine.isRunning && CollectorEngine.blocker()==nil {engine.start()}
         updateDockBadge()
@@ -81,8 +82,7 @@ import SwiftUI
         case .running:break
         }
         guard let checked=s.lastCheckedAt else{return .starting}
-        let age=Int(now.timeIntervalSince(checked))
-        if age>10 {return .stale(age)}
+        if captureStale {return .stale(Int(Date().timeIntervalSince(checked)))}
         if s.captureStatus=="error" {return .captureError(s.lastError ?? "")}
         if s.crystalPhase=="blocked" || s.eventEndPhase=="blocked" {return .crystalBlocked}
         if s.screenState=="manual_crystal" {return .manualPanel}

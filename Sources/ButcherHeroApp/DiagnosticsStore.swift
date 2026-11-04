@@ -73,6 +73,7 @@ import Foundation
         case "capture_recovered":L("Képrögzítés helyreállt","Capture recovered")
         case "observation_diagnostic","idle_observation":L("Diagnosztikai kép","Diagnostic frame")
         case "crystal_started":L("Kristálynyitás indul","Crystal opening started")
+        case "crystal_adopted":L("Nyitva hagyott panel átvéve","Open panel adopted")
         case "crystal_screen","event_screen":L("Képernyő felismerve","Screen recognised")
         case "crystal_click_validated","event_click_validated":L("Kattintás ellenőrizve","Click validated")
         case "crystal_click_sent","event_click_sent":L("Kattintás elküldve","Click sent")

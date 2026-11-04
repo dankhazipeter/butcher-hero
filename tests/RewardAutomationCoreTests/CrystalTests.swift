@@ -103,6 +103,29 @@ final class CrystalTests:XCTestCase {
         let close=try XCTUnwrap(actual.closePoint)
         XCTAssertTrue(CGRect(x:418,y:112,width:66,height:30).contains(.init(x:close.x*623,y:close.y*863)))
     }
+    func testStrikesFollowQuicklyButOtherStepsStillWaitASecond()throws {
+        var flow=CrystalFlow(recovering:[.openInventory,.openOne],now:0)
+        XCTAssertEqual(flow.observe(observation(.geode),now:1,inputReady:true),.strike)
+        flow.sent(.strike,now:1)
+        XCTAssertNil(flow.observe(observation(.geode),now:1.2,inputReady:true),"Too soon even for a strike")
+        XCTAssertEqual(flow.observe(observation(.geode),now:1.35,inputReady:true),.strike)
+        flow.sent(.strike,now:1.35)
+        XCTAssertNil(flow.observe(observation(.result),now:1.7,inputReady:true),"Continue still waits a full second")
+        XCTAssertEqual(flow.observe(observation(.result),now:2.4,inputReady:true),.proceed)
+    }
+    func testLowQualityGraphicsInventoryFindsCrystalsAndX1()throws {
+        // "Low Quality" draws the pink close X ~2px wider, so the inferred scale is
+        // over-estimated; the grid title and gold button must still be found exactly.
+        let url=root.appendingPathComponent("docs/references/2026-11-04/low-quality-crystal-inventory-ready.png")
+        let source=try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL,nil))
+        let png=try XCTUnwrap(CGImageSourceCreateImageAtIndex(source,0,nil))
+        let actual=try CrystalVision().observe(png,hudVisible:false)
+        XCTAssertEqual(actual.screen,.inventoryReady,actual.texts.joined(separator:";"))
+        XCTAssertTrue(actual.texts.contains("CRYSTALS"))
+        XCTAssertTrue(actual.texts.contains("X1"))
+        let open=CrystalAction.openOne.point(in:actual)
+        XCTAssertTrue(CGRect(x:250,y:500,width:125,height:37).contains(.init(x:open.x*637,y:open.y*882)))
+    }
     private func masked623Inventory(_ rect:CGRect)throws->CGImage {
         let png=try image("inventory-ready-623-live"),p=try Pixels(png)
         var data=p.data
