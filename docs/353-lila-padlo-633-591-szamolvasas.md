@@ -37,5 +37,19 @@ három új, vizuálisan ellenőrzött glyphet kap, a korábbi 60 bájtra azonos:
   551/552/554, most ezek is jók). A 2 eltérés régi, ismert naplóhiba
   (817 = a 346-ban már korrigált tétel, és egy 8→525), mindkét mintakészlettel
   ugyanaz, tehát nem új regresszió.
-- A két mostani „?” tétel naplóját NEM írtuk át; `reward_corrected`
-  csak külön felhasználói engedéllyel kerülhet be.
+
+## Utólagos javítás (felhasználói kérésre, állandó szabály)
+
+A felhasználó kérte a korábbi „?” tételek javítását, és hogy ez mindig így
+történjen. A `reconcile` parancs ehhez bővült: `--root` (az app naplója),
+`--dry-run`, és csak akkor ír, ha a claim minden mentett kattintás előtti képe
+ugyanazt az ismert típust és összeget adja, és az eredeti ismert típus nem
+változik. Már teljes korrekcióval rendelkező claimet kihagy, így ismételhető.
+
+Az appban 16 „?” tétel volt (21:52–22:10Z): 6 × Pierce Defense 633 és
+10 × Pierce Damage 591, mind 2-2 egyező képpel. Két nem kalibrált tétel
+(1483B4CF, D3206C0F) kártyáját és „+633”/„+591” utóképét vizuálisan is
+ellenőriztük. 16 `reward_corrected` sor hozzáfűzve flock + O_APPEND + fsync
+mellett; az eredeti napló bájtjai prefixként változatlanok, ismételt próbafutás
+0 javítható tételt talál. Appújraindítás után a „bizonytalan” jelzés eltűnt,
+0 „?” maradt, a gyűjtés fut.

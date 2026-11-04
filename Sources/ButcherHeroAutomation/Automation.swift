@@ -695,35 +695,70 @@ private final class Journal {
             "note":"One reward per UI-confirmed claim, attributed to its final click attempt; attempts are counted separately. No independent account-stat verification."]
         print(String(decoding:try JSONSerialization.data(withJSONObject:result,options:[.prettyPrinted,.sortedKeys]),as:UTF8.self))
     }
-    static func reconcile(root:URL,args:[String]=[])throws {
-        guard args.isEmpty || args==["--current-run"] else{throw AutomationError("reconcile [--current-run]")}
+    /// Re-reads saved evidence of claims whose kind or amount is still unknown ("?" in the app)
+    /// with the current recogniser and appends reward_corrected lines; nothing is rewritten.
+    /// A correction needs every saved pre-click frame of the claim to agree on one known kind
+    /// and amount, and a known original kind must not change.
+    static func reconcile(root defaultRoot:URL,args:[String]=[])throws {
+        let usage="reconcile [--current-run] [--dry-run] [--root <journal folder>]"
+        var root=defaultRoot,currentRun=false,dryRun=false,rest=args[...]
+        while let arg=rest.popFirst() {
+            switch arg {
+            case "--current-run":currentRun=true
+            case "--dry-run":dryRun=true
+            case "--root":
+                guard let path=rest.popFirst() else{throw AutomationError(usage)}
+                root=URL(fileURLWithPath:(path as NSString).expandingTildeInPath,isDirectory:true)
+            default:throw AutomationError(usage)
+            }
+        }
         let path=root.appendingPathComponent("events.jsonl")
         let events=try String(contentsOf:path,encoding:.utf8).split(separator:"\n").compactMap{try? JSONDecoder().decode(JournalEvent.self,from:Data($0.utf8))}
-        let already=Set(events.filter{$0.event=="reward_corrected"}.compactMap(\.claimID))
+        func complete(_ reward:FreeReward?)->Bool {reward.map{$0.kind != "unknown" && $0.amount != nil} ?? false}
+        var corrected:[String:FreeReward]=[:]
+        for event in events where event.event=="reward_corrected" {
+            if let id=event.claimID,let reward=event.reward {corrected[id]=reward}
+        }
         let formatter=ISO8601DateFormatter();formatter.formatOptions=[.withInternetDateTime,.withFractionalSeconds]
         func date(_ text:String)->Date? {formatter.date(from:text) ?? ISO8601DateFormatter().date(from:text)}
         var since:Date?
-        if args==["--current-run"] {
+        if currentRun {
             guard let start=events.last(where:{$0.event=="watcher_started"}),let parsed=date(start.timestamp) else{throw AutomationError("Nincs azonosítható aktuális gyűjtési futás.")}
             since=parsed
         }
-        var latest:[String:JournalEvent]=[:]
-        for event in events where event.event=="click_sent" {
-            if let id=event.claimID {latest[id]=event}
+        var latest:[String:JournalEvent]=[:],frames:[String:[String]]=[:]
+        for event in events {
+            guard let id=event.claimID else{continue}
+            if event.event=="click_sent" {latest[id]=event}
+            // Pre-click frames only: the after-frame no longer shows the card.
+            if ["click_intent","click_validated","click_sent"].contains(event.event),let evidence=event.evidence,
+               !(frames[id] ?? []).contains(evidence) {frames[id,default:[]].append(evidence)}
         }
-        let journal=try Journal(root:root),vision=RewardVision()
-        var count=0
+        let journal:Journal?=dryRun ? nil:try Journal(root:root),vision=RewardVision()
+        var count=0,skipped=0
         for event in latest.values.sorted(by:{$0.timestamp<$1.timestamp}) {
             if let since {guard let at=date(event.timestamp),at>=since else{continue}}
-            guard let id=event.claimID,!already.contains(id),let old=event.reward,
-                  old.kind=="unknown" || old.amount==nil,let evidence=event.evidence,
-                  let source=CGImageSourceCreateWithURL(root.appendingPathComponent(evidence) as CFURL,nil),let image=CGImageSourceCreateImageAtIndex(source,0,nil),
-                  let reward=try vision.observe(image).reward,reward.kind != "unknown",reward.amount != nil else{continue}
-            try journal.append("reward_corrected",claimID:id,reward:reward,evidence:evidence,message:"Offline reinspection of original pre-click image with labelled icon references; original event and confirmation status preserved")
-            print("\(id): \(old.kind)→\(reward.kind), \(reward.amount ?? "?")")
+            guard let id=event.claimID,let old=corrected[id] ?? event.reward,!complete(old) else{continue}
+            var readings:[FreeReward?]=[]
+            for evidence in frames[id] ?? [] {
+                guard let source=CGImageSourceCreateWithURL(root.appendingPathComponent(evidence) as CFURL,nil),
+                      let image=CGImageSourceCreateImageAtIndex(source,0,nil) else{continue}
+                readings.append(try vision.observe(image).reward)
+            }
+            let described=readings.map{"\($0?.kind ?? "-")/\($0?.amount ?? "?")"}.joined(separator:", ")
+            guard let reward=readings.first ?? nil,complete(reward),
+                  readings.allSatisfy({$0?.kind==reward.kind && $0?.amount==reward.amount}),
+                  old.kind=="unknown" || old.kind==reward.kind else {
+                skipped+=1
+                print("\(event.timestamp) \(id): \(old.kind)/\(old.amount ?? "?") not corrected (\(readings.count) frames: \(described))")
+                continue
+            }
+            try journal?.append("reward_corrected",claimID:id,reward:reward,evidence:event.evidence,
+                message:"Offline reinspection of all \(readings.count) saved pre-click frames with the current recogniser; original event and confirmation status preserved")
+            print("\(event.timestamp) \(id): \(old.kind)→\(reward.kind), ?→\(reward.amount ?? "?") (\(readings.count) agreeing frames)")
             count+=1
         }
-        print("Bizonyítékkép alapján pontosítva: \(count). Eredeti kattintási sorok megőrizve.")
+        print(dryRun ? "Dry run, nothing written. Correctable: \(count), not correctable: \(skipped).":"Corrected from evidence: \(count), not correctable: \(skipped). Original lines preserved.")
     }
     /// Explicit operator-only experiment: never called by watch-free or a restart.
     @MainActor static func probeBackgroundFree()async throws {
@@ -858,7 +893,7 @@ private final class Journal {
     ButcherHeroAutomation snapshot <output.png>  # passive single window capture
     ButcherHeroAutomation probe-background-free  # operator-only one-shot; collector MUST be stopped
     ButcherHeroAutomation stats [--from 2026-10-29T22:00:00+02:00] [--to 2026-10-30T08:00:00+02:00]
-    ButcherHeroAutomation reconcile [--current-run]  # offline re-read of uncertain saved rewards
+    ButcherHeroAutomation reconcile [--current-run] [--dry-run] [--root <journal folder>]  # re-read "?" rewards from evidence; appends reward_corrected
     Local append-only journal: data/free-rewards/events.jsonl. Ctrl+C stops.
     """
 }

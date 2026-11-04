@@ -1,5 +1,17 @@
 # Butcher Hero — aktív projektutasítások
 
+## ÁLLANDÓ — „?” jutalmak utólagos javítása — 2026-11-04 (353)
+
+User: a korábbi „?” számokat is javítani kell, és mindig így kell eljárni.
+Minden olvasójavítás után ugyanabban a körben: `ButcherHeroAutomation reconcile
+--dry-run --root ~/Library/Application\ Support/Butcher\ Hero/free-rewards`,
+néhány kártya+„+N” utókép vizuális szúrópróbája, majd ugyanez `--dry-run` nélkül.
+Csak append-only reward_corrected; minden mentett kattintás előtti kép egyezzen,
+ismert eredeti típus nem változhat; olvashatatlanból nincs kitalált szám. Az app
+bizonyítékképei 24 óráig maradnak, ezért nem halasztható. Utána rövid appújraindítás
+(a napló csak induláskor töltődik). A „ne futtasd lazán a reconcile-t” régi
+korlát erre a szűk, engedélyezett esetre nem vonatkozik. Részletek: docs/353.
+
 ## ELSŐBBSÉG — normál gyűjtés újra — 2026-11-03 (351)
 
 A felhasználó a gyűjtő indítását kérte; ez feloldja a 350-es STOP-ot.
