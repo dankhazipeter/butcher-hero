@@ -19,11 +19,11 @@ struct DiagnosticsView:View {
             Grid(alignment:.leading,horizontalSpacing:16,verticalSpacing:6) {
                     GridRow {
                         Text(L("Gyűjtő","Collector")).foregroundStyle(Theme.steel)
-                        Text("\(model.collectorStatus.title). \(model.collectorStatus.detail)")
+                        Text("\(model.collectorStatus.title). \(model.collectorStatus.detail)").lineLimit(1).help(model.collectorStatus.detail)
                     }
                     GridRow {
                         Text(L("Várakozás oka","Wait reason")).foregroundStyle(Theme.steel)
-                        Text(model.engine.status.waitReason ?? L("nincs","none"))
+                        Text(model.engine.status.waitReason ?? L("nincs","none")).lineLimit(1).help(model.engine.status.waitReason ?? "")
                     }
                     GridRow {
                         Text(L("Kattintási mód","Click mode")).foregroundStyle(Theme.steel)
@@ -31,7 +31,7 @@ struct DiagnosticsView:View {
                     }
                     GridRow {
                         Text(L("Fázisok","Phases")).foregroundStyle(Theme.steel)
-                        Text(L("képernyő: ","screen: ")+model.engine.status.screenState+L(", kristály: ",", crystal: ")+model.engine.status.crystalPhase+L(", esemény: ",", event: ")+model.engine.status.eventEndPhase)
+                        Text(L("képernyő: ","screen: ")+model.engine.status.screenState+L(", kristály: ",", crystal: ")+model.engine.status.crystalPhase+L(", esemény: ",", event: ")+model.engine.status.eventEndPhase).lineLimit(1)
                     }
                 }
                 .font(.callout)

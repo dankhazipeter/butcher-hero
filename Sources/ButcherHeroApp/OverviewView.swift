@@ -16,13 +16,9 @@ struct OverviewView:View {
                                text:L("A régi parancssoros gyűjtő (ButcherHeroAutomation) még fut. Amíg fut, ez az app nem kattint.","The old command-line collector (ButcherHeroAutomation) is still running. This app won't click while it runs."))
                     }
                     if stats.range == .custom {CustomRange(stats:stats)}
-                    if stats.summary.unknownConfirmed>0 {
-                        Notice(icon:"questionmark.circle",tone:.warn,
-                               text:L("\(stats.summary.unknownConfirmed) átvétel típusa vagy mennyisége bizonytalan, ezek nincsenek az összegekben.",
-                                      "\(stats.summary.unknownConfirmed) claims have an uncertain kind or amount and are left out of the totals."))
-                    }
                     VStack(alignment:.leading,spacing:14) {
-                        SectionTitle(title:L("Mit fogtunk","What we caught"),note:L("\(stats.summary.confirmed) igazolt átvétel típusonként","\(stats.summary.confirmed) confirmed claims by kind"))
+                        SectionTitle(title:L("Mit fogtunk","What we caught"),note:L("\(stats.summary.confirmed) igazolt átvétel típusonként","\(stats.summary.confirmed) confirmed claims by kind"),
+                                     warning:stats.summary.unknownConfirmed>0 ? L("\(stats.summary.unknownConfirmed) bizonytalan típusú vagy mennyiségű, kimarad az összegekből","\(stats.summary.unknownConfirmed) with uncertain kind or amount, left out of the totals"):nil)
                         ShareBar(summary:stats.summary,hidden:$hidden)
                     }
                     VStack(alignment:.leading,spacing:10) {
@@ -57,28 +53,33 @@ private struct StatusBand:View {
                 Text(collector.title)
                     .font(Theme.display(52)).foregroundStyle(collector.tone == .bad ? Theme.blood:Theme.ink)
                     .lineLimit(1).minimumScaleFactor(0.6)
+                    .frame(height:62,alignment:.leading)
                     .contentTransition(.opacity)
                 Text(collector.detail).font(.callout).foregroundStyle(Theme.ink.opacity(0.8))
-                    .fixedSize(horizontal:false,vertical:true).frame(maxWidth:420,alignment:.leading)
+                    .lineLimit(2,reservesSpace:true).truncationMode(.tail)
+                    .frame(maxWidth:420,alignment:.topLeading)
+                    .help(collector.detail)
                 HStack(spacing:8) {
                     Image(systemName:game.tone == .good ? "gamecontroller.fill":"gamecontroller")
-                    Text(game.title).font(.callout.weight(.semibold))
+                    Text(game.title).font(.callout.weight(.semibold)).lineLimit(1)
                     if model.game.state == .notRunning {
                         Button(L("Játék indítása","Launch game")){model.game.launch()}.controlSize(.small)
                     }
                 }
+                .frame(height:22)
                 .foregroundStyle(game.tone == .bad ? Theme.blood:Theme.ink)
                 .padding(.top,8)
                 .help(game.detail)
-                if model.engine.isRunning {LastCapture(engine:model.engine).padding(.top,2)}
+                LastCapture(engine:model.engine,visible:model.engine.isRunning).padding(.top,2)
             }
             Spacer(minLength:12)
             VStack(alignment:.leading,spacing:2) {
                 Text("\(s.confirmed)")
                     .font(Theme.display(64)).foregroundStyle(Theme.ink)
+                    .lineLimit(1).minimumScaleFactor(0.5).frame(height:72,alignment:.leading)
                     .contentTransition(.numericText(value:Double(s.confirmed))).animation(.default,value:s.confirmed)
                 Text(L("átvétel – \(stats.range.label.lowercased())","claims – \(stats.range.label.lowercased())"))
-                    .font(.callout.weight(.semibold)).foregroundStyle(Theme.ink)
+                    .font(.callout.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(1)
                 Group {
                     if stats.range == .custom {
                         Text(Format.duration(s.to.timeIntervalSince(s.from)))
@@ -87,12 +88,13 @@ private struct StatusBand:View {
                         Text(timerInterval:s.from...Date.distantFuture,countsDown:false)
                     }
                 }
-                .font(.callout.monospacedDigit()).foregroundStyle(Theme.ink.opacity(0.7))
-                Text(L("kezdete: ","since ")+Format.dateTime(s.from)).font(.caption).foregroundStyle(Theme.ink.opacity(0.6))
-                if s.pending>0 {
-                    Text(L("\(s.pending) függőben","\(s.pending) pending")).font(.caption).foregroundStyle(Theme.ink.opacity(0.6))
-                }
+                .font(.callout.monospacedDigit()).foregroundStyle(Theme.ink.opacity(0.7)).lineLimit(1)
+                Text(L("kezdete: ","since ")+Format.dateTime(s.from)).font(.caption).foregroundStyle(Theme.ink.opacity(0.6)).lineLimit(1)
+                // Always laid out, only shown when something is pending, so the band never grows.
+                Text(L("\(s.pending) függőben","\(s.pending) pending")).font(.caption).foregroundStyle(Theme.ink.opacity(0.6))
+                    .lineLimit(1).opacity(s.pending>0 ? 1:0)
             }
+            .frame(width:200,alignment:.leading)
             .padding(.top,6)
             PriceTag(row:latest).padding(.top,-2)
         }
@@ -107,11 +109,14 @@ private struct StatusBand:View {
 /// Re-renders only itself once a second; the rest of the page stays untouched.
 private struct LastCapture:View {
     let engine:CollectorEngine
+    let visible:Bool
     var body:some View {
         TimelineView(.periodic(from:.now,by:1)) {_ in
-            if let at=engine.status.lastCheckedAt {
-                Text(L("Utoljára nézett rá: ","Last looked: ")+Format.time(at)).font(.caption.monospacedDigit()).foregroundStyle(Theme.ink.opacity(0.6))
-            }
+            let at=visible ? engine.status.lastCheckedAt:nil
+            // The line keeps its height even before the first capture.
+            Text(L("Utoljára nézett rá: ","Last looked: ")+(at.map(Format.time) ?? "–"))
+                .font(.caption.monospacedDigit()).foregroundStyle(Theme.ink.opacity(0.6))
+                .lineLimit(1).opacity(at == nil ? 0:1)
         }
     }
 }

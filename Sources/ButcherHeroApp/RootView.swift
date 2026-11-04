@@ -83,8 +83,8 @@ private struct SidebarStatus:View {
         HStack(spacing:8) {
             Circle().fill(status.tone.color).frame(width:8,height:8)
             VStack(alignment:.leading,spacing:1) {
-                Text(title).font(.caption).foregroundStyle(.secondary)
-                Text(status.title).font(.callout.weight(.medium))
+                Text(title).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text(status.title).font(.callout.weight(.medium)).lineLimit(1)
             }
         }
         .help(status.detail)
