@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [CI-hibák november 4-én: GitHub-kapacitás és zombi csoport az indítóban](352-ci-indito-zombi-csoport.md)
 - [Normál gyűjtés újra november 3-án](351-gyujtes-ujra.md)
 
 - [Minden automatizáció leállítása november3-án](350-minden-automatizacio-stop.md)

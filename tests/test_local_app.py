@@ -128,6 +128,20 @@ class LocalAppTests(unittest.TestCase):
         with patch("builtins.print", side_effect=BrokenPipeError):
             app.report("stopping")
 
+    def test_cleanup_tolerates_a_service_group_of_only_zombies(self):
+        # macOS killpg reports EPERM, not ESRCH, while a group's only members
+        # have exited but are not reaped yet. On a loaded CI runner this made
+        # a normal Ctrl+C end with "ERROR" and exit 1.
+        child = subprocess.Popen([sys.executable, "-c", "pass"], start_new_session=True)
+        self.addCleanup(lambda: child.poll() is None and child.kill())
+        os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)  # exited, still a zombie
+        with self.assertRaises(PermissionError):
+            os.killpg(child.pid, 0)
+        app.stop_children([child], grace=1)
+        self.assertEqual(child.returncode, 0)
+        with self.assertRaises(ProcessLookupError):
+            os.killpg(child.pid, 0)
+
     def test_no_screen_is_not_reported_as_successful_collection(self):
         with patch.object(app, "read_json", return_value={"pid": 7, "running": True}), \
                 patch.object(app, "process_identity", return_value="fixture"):
@@ -256,8 +270,24 @@ time.sleep(60)
         for key in ("dashboardPID", "supervisorPID"):
             with self.assertRaises(ProcessLookupError):
                 os.kill(self.state[key], 0)
-            with self.assertRaises(ProcessLookupError):
-                os.killpg(self.state[key], 0)
+            self.assert_group_gone(self.state[key])
+
+    def assert_group_gone(self, pgid, timeout=5):
+        # An exited descendant is reaped by launchd asynchronously; until then
+        # macOS killpg reports EPERM for a group of only zombies. Wait for the
+        # reaping, but still require the group to disappear completely.
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                os.killpg(pgid, 0)
+            except ProcessLookupError:
+                return
+            except PermissionError:
+                if time.monotonic() >= deadline:
+                    self.fail(f"process group {pgid} still has unreaped members after {timeout}s")
+            else:
+                self.fail(f"process group {pgid} still has a live member")
+            time.sleep(0.05)
 
     def test_ctrl_c_stops_both_services_and_descendants(self):
         self.process.send_signal(signal.SIGINT)

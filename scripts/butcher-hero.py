@@ -121,14 +121,24 @@ def wait_dashboard(child, port, stopping, timeout=8):
     raise RuntimeError("Dashboard did not become ready (or startup was stopped); collector was not started.")
 
 
+def signal_group(pgid, sig):
+    """Signal one of our own service groups; a group that already ended is not an error.
+
+    macOS reports EPERM rather than ESRCH while the group's remaining members
+    have exited but are not reaped yet (zombies). These groups are our own
+    same-user children, so EPERM here means nothing is left to signal.
+    """
+    try:
+        os.killpg(pgid, sig)
+    except (ProcessLookupError, PermissionError):
+        pass
+
+
 def stop_children(children, grace=10):
     # Each Popen below creates a new session: these groups contain only our
     # services and their descendants, never the user's Terminal or game.
     for child in reversed(children):
-        try:
-            os.killpg(child.pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
+        signal_group(child.pid, signal.SIGTERM)
     deadline = time.monotonic() + grace
     for child in reversed(children):
         try:
@@ -137,10 +147,7 @@ def stop_children(children, grace=10):
             pass
     # Also reap descendants if their service leader exited unexpectedly.
     for child in reversed(children):
-        try:
-            os.killpg(child.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
+        signal_group(child.pid, signal.SIGKILL)
         child.wait(timeout=2)
 
 
