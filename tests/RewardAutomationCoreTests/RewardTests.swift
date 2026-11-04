@@ -176,6 +176,30 @@ final class RewardTests:XCTestCase {
             XCTAssertEqual(observed.reward?.amount,amount,path)
         }
     }
+    func testPurpleFloorAmountsWithThreeFiveAndNine()throws {
+        // Live 2026-11-04 claims left "?" in the app: 633's middle 3 and 591's 5 missed the
+        // 0.035 margin over 9. Only those glyphs are calibrated, plus the 9 of one reviewed
+        // 598 claim that the new 3 crowded. The other frames below are checks, never inputs;
+        // the "same-claim" ones are a second frame of the calibrated claim, not independent.
+        for (path,kind,amount) in [
+            ("docs/references/2026-11-04/piercedef633-calibration.png","piercing_defense","633"),
+            ("docs/references/2026-11-04/piercedef633-same-claim-before.png","piercing_defense","633"),
+            ("docs/references/2026-11-04/pierce591-calibration.png","piercing_damage","591"),
+            ("docs/references/2026-11-04/pierce591-same-claim-before.png","piercing_damage","591"),
+            ("docs/references/2026-11-04/cutdef598-nine-calibration.png","cutting_defense","598"),
+            ("docs/references/2026-11-04/cutdef598-check-a.png","cutting_defense","598"),
+            ("docs/references/2026-11-04/cutdef598-check-b.png","cutting_defense","598")
+        ] {
+            let observed=try RewardVision().observe(try image(path))
+            XCTAssertTrue(observed.freeCardVisible,path)
+            XCTAssertEqual(observed.reward?.kind,kind,path)
+            XCTAssertEqual(observed.reward?.amount,amount,path)
+        }
+        let calibrator=try String(contentsOf:project.appendingPathComponent("tools/build-reward-digit-templates.swift"),encoding:.utf8)
+        for check in ["piercedef633-same-claim-before","pierce591-same-claim-before","cutdef598-check-a","cutdef598-check-b"] {
+            XCTAssertFalse(calibrator.contains(check),"Check frames must never become calibration inputs")
+        }
+    }
     func testLowQualityGraphicsFreeBadgeReadsWithPixels()throws {
         for path in ["docs/references/2026-11-04/low-quality-pierce588-free-a.png",
                      "docs/references/2026-11-04/low-quality-pierce588-free-b.png"] {
