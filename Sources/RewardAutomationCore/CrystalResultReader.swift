@@ -25,7 +25,7 @@ public struct CrystalResult:Codable,Equatable {
 /// OCR renderings agreed on 2.97K for a reviewed 2.37K, too risky for a small number.)
 /// Pure image analysis plus the local Tesseract process; never sends input.
 public enum CrystalResultReader {
-    public static let version="crystal-result-v1"
+    public static let version="crystal-result-v2"
     public static let stats=["Health Regen","Health","Lifesteal","Pierce Damage","Cut Damage","Smash Damage",
                              "Pierce Defense","Cut Defense","Smash Defense"]
 
@@ -161,9 +161,10 @@ public enum CrystalResultReader {
         return row[b.count]
     }
 
-    /// Known stat name for the letters before "+": at most 2 OCR letter errors, unique best.
+    /// Known stat name for the letters before the amount (its sign or first digit): at most
+    /// 2 OCR letter errors, unique best.
     public static func statName(_ text:String)->String? {
-        let head=text.split(separator:"+",maxSplits:1).first.map(String.init) ?? text
+        let head=String(text.prefix{!$0.isNumber && !"+#«*".contains($0)})
         let letters=Array(head.lowercased().filter(\.isLetter))
         guard letters.count>=4 else{return nil}
         let scored=stats.map{($0,distance(letters,Array($0.lowercased().filter(\.isLetter))))}.sorted{$0.1<$1.1}
@@ -171,11 +172,14 @@ public enum CrystalResultReader {
         return scored[0].0
     }
 
-    /// "Cut Defense +148K" → ("Cut Defense","148K"); tolerant to a stray icon glyph in front.
+    /// "Cut Defense +148K" → ("Cut Defense","148K"). OCR often turns the "+" into "#", "«" or
+    /// "*", or drops it, so the sign is not required. The unit is: every crystal stat is shown
+    /// with K/M/B/T, and "Health +1.574" is a misread 1.57M, not 1.574. No letter or digit may
+    /// touch the number ("2S1K", "G26K" are not amounts).
     public static func parseStatLine(_ text:String)->(stat:String,raw:String)? {
         guard let stat=statName(text),
-              let range=text.range(of:#"\+\s*\d+(?:[.,]\d+)?\s*[KMBT]?(?![A-Za-z0-9.,])"#,options:.regularExpression) else{return nil}
-        let raw=text[range].replacingOccurrences(of:"+",with:"").replacingOccurrences(of:" ",with:"")
+              let range=text.range(of:#"(?<![A-Za-z0-9.,])\d+(?:[.,]\d+)?\s*[KMBT](?![A-Za-z0-9.,])"#,options:.regularExpression) else{return nil}
+        let raw=text[range].replacingOccurrences(of:" ",with:"")
         guard RewardAmount.parse(raw) != nil else{return nil}
         return (stat,raw)
     }

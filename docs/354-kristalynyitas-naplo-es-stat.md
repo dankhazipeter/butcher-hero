@@ -63,3 +63,21 @@ A CRYSTAL STATS eredménynél középen egy négyzetes csempe:
   tesztek az ismételt eredményképernyőt és az új ütést, az idempotens
   hozzáfűzést és a hiányzó képet is lefedik.
 - Átlagosan kb. 1 s/kép háttérben (9 Tesseract-hívás).
+
+## v2 — 2026-11-05: „#12.7K” és utólagos újraolvasás
+
+A felhasználó jelezte: a 09:41-es Health Regen kristály összege „?” lett. A képen
+„+12.7K”, de a három előkészítésből kettő „#12.7K”-t olvasott, és a parser
+„+” jelet követelt. A javítás:
+
+- Az előjel nem kötelező (OCR-ban „+”, „#”, „«” vagy „*”), a mértékegység viszont igen:
+  minden kristálystat K/M/B/T-vel jelenik meg. Így a „Health +1.574” (rosszul
+  olvasott 1.57M) továbbra is elutasított. Számhoz tapadó betű vagy számjegy
+  (2S1K, G26K) sem lehet összeg. A statnév az első számjegyig vagy előjelig tart.
+- A 77 kép (76 korábban ellenőrzött + az új) mind olvasott, 0 hibás érték;
+  3 új összeg (20.2K, 12.5K, 12.7K), 9 marad üres (főleg „M”-es Health).
+- `crystal-result-v2`. Egy újabb olvasó a hiányos bejegyzéseket egyszer
+  újraolvassa (ha a kép még megvan), és új sort fűz hozzá. Betöltéskor
+  ugyanarra a képre a legutolsó sor érvényes, a korábban kiolvasott mezők
+  nem vesznek el. Ez a 353-as állandó szabály kristályokra alkalmazott
+  változata.

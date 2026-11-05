@@ -48,10 +48,36 @@ public enum CrystalResultLog {
         return found
     }
 
-    public static func load(_ results:URL)->[CrystalResultEntry] {
+    /// Every line of the log, oldest first, including superseded re-reads.
+    public static func lines(_ results:URL)->[CrystalResultEntry] {
         guard let text=try? String(contentsOf:results,encoding:.utf8) else{return []}
         let decoder=JSONDecoder()
         return text.split(separator:"\n").compactMap{try? decoder.decode(CrystalResultEntry.self,from:Data($0.utf8))}
+    }
+
+    /// One entry per opened crystal: a later line for the same frame (a re-read by a newer
+    /// reader) supersedes the earlier one, so corrections stay append-only.
+    public static func load(_ results:URL)->[CrystalResultEntry] {
+        var latest:[String:Int]=[:],entries:[CrystalResultEntry]=[]
+        for entry in lines(results) {
+            let key=entry.source+"/"+entry.evidence
+            if let index=latest[key] {entries[index]=entry} else {latest[key]=entries.count;entries.append(entry)}
+        }
+        return entries
+    }
+
+    static func complete(_ r:CrystalResult)->Bool {
+        r.rarity != nil && r.gem != nil && r.level != nil && r.stat != nil && r.amount != nil
+    }
+
+    /// Fields read before are kept; the newer reading only fills what was missing.
+    static func merged(_ old:CrystalResult,_ new:CrystalResult)->CrystalResult {
+        var r=new
+        r.rarity=old.rarity ?? new.rarity;r.gem=old.gem ?? new.gem;r.level=old.level ?? new.level
+        if old.stat != nil {r.stat=old.stat;r.amount=old.amount ?? (new.stat==old.stat ? new.amount:nil)
+            r.rawAmount=old.rawAmount ?? (new.stat==old.stat ? new.rawAmount:nil)}
+        r.statLine=old.statLine ?? new.statLine
+        return r
     }
 
     static func stamp(_ date:Date=Date())->String {
@@ -71,18 +97,31 @@ public enum CrystalResultLog {
         guard written==data.count,fsync(fd)==0 else{throw NSError(domain:"CrystalResultLog",code:3,userInfo:[NSLocalizedDescriptionKey:"results.jsonl write failed"])}
     }
 
-    /// Reads every not yet logged crystal of `root/events.jsonl` and appends it to `results`.
+    /// Reads every not yet logged crystal of `root/events.jsonl` and appends it to `results`;
+    /// incomplete entries of an older reader are re-read once and superseded by a new line.
     /// A frame that is missing is logged as missing only once it is older than `missingAfter`
     /// (it may still be being written). Returns the new entries.
     @discardableResult
     public static func update(root:URL,results:URL,source:String,missingAfter:TimeInterval=600,now:Date=Date())throws->[CrystalResultEntry] {
-        let done=Set(load(results).filter{$0.source==source}.map(\.evidence))
+        var existing:[String:CrystalResultEntry]=[:]
+        for entry in load(results) where entry.source==source {existing[entry.evidence]=entry}
         let parser=ISO8601DateFormatter();parser.formatOptions=[.withInternetDateTime,.withFractionalSeconds]
         var added:[CrystalResultEntry]=[]
-        for item in pending(journal:root.appendingPathComponent("events.jsonl")) where !done.contains(item.evidence) {
+        for item in pending(journal:root.appendingPathComponent("events.jsonl")) {
             let url=root.appendingPathComponent(item.evidence)
+            let image=CGImageSourceCreateWithURL(url as CFURL,nil).flatMap{CGImageSourceCreateImageAtIndex($0,0,nil)}
+            if let old=existing[item.evidence] {
+                // Re-read an incomplete entry once per newer reader, if its frame still exists.
+                guard old.evidenceMissing != true,!complete(old.result),old.reader != CrystalResultReader.version,let image else{continue}
+                let entry=CrystalResultEntry(openedAt:old.openedAt,claimID:old.claimID,evidence:old.evidence,source:source,
+                                             reader:CrystalResultReader.version,readAt:stamp(now),evidenceMissing:nil,
+                                             result:merged(old.result,CrystalResultReader.read(image)))
+                try append(entry,to:results)
+                added.append(entry)
+                continue
+            }
             var result=CrystalResult(),missing:Bool?=nil
-            if let source=CGImageSourceCreateWithURL(url as CFURL,nil),let image=CGImageSourceCreateImageAtIndex(source,0,nil) {
+            if let image {
                 result=CrystalResultReader.read(image)
             } else {
                 guard let at=parser.date(from:item.timestamp),now.timeIntervalSince(at)>missingAfter else{continue}

@@ -24,6 +24,8 @@ final class CrystalResultTests:XCTestCase {
             ("green-red-smashdmg189k-623.png","green","red",40,"Smash Damage","189K"),
             ("grey-green-lifesteal6430-788.png","grey","green",40,"Lifesteal","6.43K"),
             ("blue-blue-piercedef291k-642.png","blue","blue",40,"Pierce Defense","291K"),
+            // 2026-11-05: two of three renderings read "#12.7K"; the sign is not required.
+            ("grey-green-healthregen12700-l41-637.png","grey","green",41,"Health Regen","12.7K"),
         ]
         var amounts=0
         for (name,rarity,gem,level,stat,shown) in samples {
@@ -35,7 +37,7 @@ final class CrystalResultTests:XCTestCase {
             if let amount=r.amount {XCTAssertEqual(amount,RewardAmount.parse(shown),name);amounts+=1}
             XCTAssertEqual(CrystalResultReader.gemColour(forStat:stat),gem,"gem colour follows the stat group: \(name)")
         }
-        XCTAssertGreaterThanOrEqual(amounts,5,"Most amounts are read, not just left empty")
+        XCTAssertGreaterThanOrEqual(amounts,7,"Most amounts are read, not just left empty")
     }
 
     func testStatLineToleratesOCRLettersButNotDigits() {
@@ -46,6 +48,10 @@ final class CrystalResultTests:XCTestCase {
         XCTAssertEqual(CrystalResultReader.parseStatLine("Smash Defense +275K")?.raw,"275K")
         XCTAssertNil(CrystalResultReader.parseStatLine("Health +3.78h"),"An unreadable unit is no amount")
         XCTAssertNil(CrystalResultReader.parseStatLine("Pierce Defense +2S1K"))
+        XCTAssertEqual(CrystalResultReader.parseStatLine("Health Regen #12.7K")?.raw,"12.7K","OCR turns + into #")
+        XCTAssertEqual(CrystalResultReader.parseStatLine("Health Regen 14.7K")?.raw,"14.7K")
+        XCTAssertNil(CrystalResultReader.parseStatLine("Health +1.574"),"A crystal amount always has a unit; this is a misread 1.57M")
+        XCTAssertNil(CrystalResultReader.parseStatLine("Cut Defense +G26K"))
     }
 
     private func journal(_ lines:[[String:String]])throws->URL {
@@ -80,6 +86,30 @@ final class CrystalResultTests:XCTestCase {
         ])
         let found=CrystalResultLog.pending(journal:root.appendingPathComponent("events.jsonl"))
         XCTAssertEqual(found.map(\.evidence),["evidence/A-result-1.png","evidence/B-result-1.png","evidence/B-result-2.png"])
+    }
+
+    func testNewerReaderSupersedesAnIncompleteEntryOnceAndKeepsWhatWasRead()throws {
+        let root=try journal([
+            ["claimID":"A","event":"crystal_click_sent","message":"strike","timestamp":"2026-11-05T00:00:01.000Z"],
+            ["claimID":"A","event":"crystal_screen","message":"result; []","timestamp":"2026-11-05T00:00:02.000Z","evidence":"evidence/A-result.png"],
+        ])
+        try FileManager.default.copyItem(at:project.appendingPathComponent("docs/references/2026-11-05/crystal-results/grey-green-healthregen12700-l41-637.png"),
+                                         to:root.appendingPathComponent("evidence/A-result.png"))
+        let results=root.appendingPathComponent("results.jsonl")
+        let old=CrystalResultEntry(openedAt:"2026-11-05T00:00:02.000Z",claimID:"A",evidence:"evidence/A-result.png",source:"app",
+                                   reader:"crystal-result-v1",readAt:"2026-11-05T00:00:07.000Z",evidenceMissing:nil,
+                                   result:CrystalResult(rarity:"grey",gem:"green",level:41,stat:"Health Regen",statLine:"Health Regen #12.7K"))
+        try CrystalResultLog.append(old,to:results)
+        let before=try Data(contentsOf:results)
+        let reread=try CrystalResultLog.update(root:root,results:results,source:"app")
+        XCTAssertEqual(reread.count,1)
+        XCTAssertTrue(try Data(contentsOf:results).starts(with:before),"The original line stays")
+        let loaded=CrystalResultLog.load(results)
+        XCTAssertEqual(loaded.count,1,"One crystal, not two")
+        XCTAssertEqual(loaded.first?.result.amount,"12700")
+        XCTAssertEqual(loaded.first?.result.level,41)
+        XCTAssertEqual(CrystalResultLog.lines(results).count,2)
+        XCTAssertTrue(try CrystalResultLog.update(root:root,results:results,source:"app").isEmpty,"Each reader version re-reads once")
     }
 
     func testLogIsAppendOnlyIdempotentAndWaitsForMissingFrames()throws {
