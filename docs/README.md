@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Kristálynyitások naplója: ritkaság, szín, szint, stat](354-kristalynyitas-naplo-es-stat.md)
 - [„?” összeg: 633 és 591 olvasása lila padlón, 598 védelme](353-lila-padlo-633-591-szamolvasas.md)
 - [CI-hibák november 4-én: GitHub-kapacitás és zombi csoport az indítóban](352-ci-indito-zombi-csoport.md)
 - [Normál gyűjtés újra november 3-án](351-gyujtes-ujra.md)

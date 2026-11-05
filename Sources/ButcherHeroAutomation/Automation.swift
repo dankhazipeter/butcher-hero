@@ -332,6 +332,26 @@ private final class Journal {
         let root=URL(fileURLWithPath:FileManager.default.currentDirectoryPath).appendingPathComponent("data/free-rewards")
         if command=="stats" {try stats(root:root,args:Array(args.dropFirst()));return}
         if command=="reconcile" {try reconcile(root:root,args:Array(args.dropFirst()));return}
+        if command=="crystal-results" {
+            // Offline: logs opened crystals from saved result frames; no capture, no input.
+            var rest=Array(args.dropFirst())[...],folder:URL?,out:URL?,source="cli"
+            func path(_ text:String)->URL {URL(fileURLWithPath:(text as NSString).expandingTildeInPath)}
+            while let arg=rest.popFirst() {
+                switch arg {
+                case "--root":guard let v=rest.popFirst() else{throw AutomationError(usage)};folder=path(v)
+                case "--out":guard let v=rest.popFirst() else{throw AutomationError(usage)};out=path(v)
+                case "--source":guard let v=rest.popFirst() else{throw AutomationError(usage)};source=v
+                default:throw AutomationError(usage)
+                }
+            }
+            let crystalRoot=folder ?? URL(fileURLWithPath:FileManager.default.currentDirectoryPath).appendingPathComponent("data/crystal-rewards")
+            let added=try CrystalResultLog.update(root:crystalRoot,results:out ?? crystalRoot.appendingPathComponent("results.jsonl"),source:source)
+            for e in added {
+                let r=e.result
+                print("\(e.openedAt) \(e.claimID.prefix(8)) \(r.rarity ?? "?")/\(r.gem ?? "?") L\(r.level.map(String.init) ?? "?") \(r.stat ?? "?") \(r.rawAmount ?? "?")\(e.evidenceMissing == true ? " (frame missing)":"")")
+            }
+            print("Logged \(added.count) crystals.");return
+        }
         guard command=="watch-free" else{throw AutomationError(usage)}
         var interval=1.0,seconds=Double.infinity,dryRun=false,resumeRun=false,recoverCrystal=false
         var i=1
@@ -894,6 +914,7 @@ private final class Journal {
     ButcherHeroAutomation probe-background-free  # operator-only one-shot; collector MUST be stopped
     ButcherHeroAutomation stats [--from 2026-10-29T22:00:00+02:00] [--to 2026-10-30T08:00:00+02:00]
     ButcherHeroAutomation reconcile [--current-run] [--dry-run] [--root <journal folder>]  # re-read "?" rewards from evidence; appends reward_corrected
+    ButcherHeroAutomation crystal-results [--root <crystal journal folder>] [--out <results.jsonl>] [--source cli|app]  # log opened crystals from saved result frames
     Local append-only journal: data/free-rewards/events.jsonl. Ctrl+C stops.
     """
 }

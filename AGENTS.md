@@ -1,5 +1,15 @@
 # Butcher Hero — aktív projektutasítások
 
+## Kristálynyitás-napló — 2026-11-05 (354)
+
+User kérte: minden nyitott kristály színe/fajtája és szintje időponttal +
+stat. Az app a mentett result-képből háttérben olvas (CrystalResultReader),
+kimenet `crystal-rewards/results.jsonl` (append-only, a gyűjtőnaplót nem írja).
+Ritkaság = csempe háttérszíne (szürke/zöld/kék/lila/narancs), kristályszín =
+statcsoport (kék védelem, zöld élet, piros sebzés), szint, stat+összeg 2/3
+egyező OCR-ral; eladási ár nem rögzített. Új „Kristályok” oldal. 55 régi CLI-s
+kristály importálva `source: cli`. Gyűjtési útvonal változatlan. Részletek: 354.
+
 ## ÁLLANDÓ — „?” jutalmak utólagos javítása — 2026-11-04 (353)
 
 User: a korábbi „?” számokat is javítani kell, és mindig így kell eljárni.
@@ -1016,6 +1026,9 @@ Local files (not committed to Git):
   boundary, written only after explicit confirmation; never reward data.
 - `data/free-rewards/supervisor.json` and `supervisor-events.jsonl`: supervision.
 - `data/crystal-rewards/events.jsonl` and `evidence/`: crystal flow and images.
+- Native app: `~/Library/Application Support/Butcher Hero/crystal-rewards/results.jsonl`:
+  one line per opened crystal (tile colour/rarity, crystal colour, level, stat, amount;
+  unread parts stay null). `ButcherHeroAutomation crystal-results` builds it offline.
 - `data/event-dismissals/events.jsonl` and `evidence/`: known event-popup
   dismissal attempts and HUD-return verification, never FREE reward totals.
 

@@ -1,17 +1,18 @@
 import SwiftUI
 
 enum Page:String,CaseIterable,Identifiable {
-    case overview,ledger,diagnostics
+    case overview,ledger,crystals,diagnostics
     var id:String {rawValue}
     var title:String {
         switch self {
         case .overview:L("Áttekintés","Overview")
         case .ledger:L("Napló","Ledger")
+        case .crystals:L("Kristályok","Crystals")
         case .diagnostics:L("Diagnosztika","Diagnostics")
         }
     }
     var icon:String {
-        switch self {case .overview:"chart.xyaxis.line";case .ledger:"list.bullet.rectangle";case .diagnostics:"stethoscope"}
+        switch self {case .overview:"chart.xyaxis.line";case .ledger:"list.bullet.rectangle";case .crystals:"diamond";case .diagnostics:"stethoscope"}
     }
 }
 
@@ -40,6 +41,7 @@ struct RootView:View {
                 switch page {
                 case .overview:OverviewView(model:model,stats:model.stats)
                 case .ledger:LedgerView(stats:model.stats)
+                case .crystals:CrystalsView(crystals:model.crystals,stats:model.stats)
                 case .diagnostics:DiagnosticsView(model:model,diagnostics:model.diagnostics)
                 }
             }

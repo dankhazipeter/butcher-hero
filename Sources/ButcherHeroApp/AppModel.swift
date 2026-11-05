@@ -6,7 +6,7 @@ import SwiftUI
 
 /// Ties the collector, the game monitor and the statistics together for the UI.
 @MainActor final class AppModel:ObservableObject {
-    let engine=CollectorEngine(),game=GameMonitor(),stats=StatsStore(),diagnostics=DiagnosticsStore()
+    let engine=CollectorEngine(),game=GameMonitor(),stats=StatsStore(),diagnostics=DiagnosticsStore(),crystals=CrystalStore()
     @Published private(set) var accessibilityGranted=AXIsProcessTrusted()
     @Published private(set) var screenCaptureGranted=CGPreflightScreenCaptureAccess()
     @Published private(set) var legacyRunning=LegacyCollector.isRunning
@@ -19,6 +19,10 @@ import SwiftUI
     init() {
         engine.onEvent={[weak self] domain,e in
             if domain == .free {self?.stats.append(e)}
+            // A crystal result frame was saved: read it in the background, off the collector.
+            if domain == .crystal && (e.event=="crystal_completed_ui" || (e.event=="crystal_screen" && (e.message ?? "").hasPrefix("result"))) {
+                self?.crystals.refresh()
+            }
             self?.diagnostics.append(domain,e)
         }
         // Event-driven UI: the model re-publishes only changes a user can see. The engine
