@@ -200,6 +200,20 @@ final class RewardTests:XCTestCase {
             XCTAssertFalse(calibrator.contains(check),"Check frames must never become calibration inputs")
         }
     }
+    func testSmallFontNineIsToldFromThreeAndEightByItsCounter()throws {
+        // 623×863 Health 19.2K (2026-11-05): the 15 px 9 was only 0.025 ahead of 8, and a new
+        // 9 template would have crowded 636's 3. The counter count decides only such near-ties.
+        for name in ["health19200-a","health19200-b","health19200-c"] {
+            let observed=try RewardVision().observe(try image("docs/references/2026-11-05/\(name).png"))
+            XCTAssertEqual(observed.reward?.kind,"hp",name)
+            XCTAssertEqual(observed.reward?.amount,"19200",name)
+        }
+        // 598: 5 (none), 9 (one), 8 (two); 633: 6 (one), 3 (none), 3 (none).
+        let nine=try RewardNumberReader.shapes(try image("docs/references/2026-11-04/cutdef598-nine-calibration.png"))
+        XCTAssertEqual(nine.map{RewardNumberReader.counters($0.bits)},[0,1,2])
+        let three=try RewardNumberReader.shapes(try image("docs/references/2026-11-04/piercedef633-calibration.png"))
+        XCTAssertEqual(three.map{RewardNumberReader.counters($0.bits)},[1,0,0])
+    }
     func testLowQualityGraphicsFreeBadgeReadsWithPixels()throws {
         for path in ["docs/references/2026-11-04/low-quality-pierce588-free-a.png",
                      "docs/references/2026-11-04/low-quality-pierce588-free-b.png"] {

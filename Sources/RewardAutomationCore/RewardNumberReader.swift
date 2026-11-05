@@ -95,6 +95,27 @@ final class RewardNumberReader {
             return DigitShape(rect:CGRect(x:(area.minX+Double(x0))/Double(image.width),y:(area.minY+Double(y0))/Double(image.height),width:Double(width)/Double(image.width),height:Double(height)/Double(image.height)),aspect:Double(width)/Double(height),bits:bits)
         }
     }
+    /// Closed counters of a glyph: background regions of its 24×32 mask that do not touch the
+    /// mask border (a 9 has one, an 8 two, a 3 none).
+    static func counters(_ bits:[UInt8])->Int {
+        guard bits.count==24*32 else{return -1}
+        var seen=[Bool](repeating:false,count:bits.count),count=0
+        for start in bits.indices where bits[start]==0 && !seen[start] {
+            var queue=[start],head=0,border=false;seen[start]=true
+            while head<queue.count {
+                let p=queue[head],x=p%24,y=p/24;head+=1
+                if x==0 || y==0 || x==23 || y==31 {border=true}
+                for (dx,dy) in [(1,0),(-1,0),(0,1),(0,-1)] {
+                    let nx=x+dx,ny=y+dy
+                    guard nx>=0,ny>=0,nx<24,ny<32 else{continue}
+                    let n=ny*24+nx
+                    if bits[n]==0 && !seen[n] {seen[n]=true;queue.append(n)}
+                }
+            }
+            if !border {count+=1}
+        }
+        return count
+    }
     func read(_ image:CGImage,diagnostics:(([String])->Void)?=nil)throws->RewardText? {
         let shapes=try Self.shapes(image)
         guard !shapes.isEmpty,!templates.isEmpty else{return nil}
@@ -115,8 +136,19 @@ final class RewardNumberReader {
                 return (character,error)
             }.sorted{$0.1<$1.1}
             diagnostics?(scores.prefix(3).map{"\($0.0)=\($0.1)"})
-            guard scores.count>=2,scores[0].1<0.30,scores[1].1-scores[0].1>0.035 else{return nil}
-            text+=scores[0].0;confidence=min(confidence,1-scores[0].1)
+            guard scores.count>=2 else{return nil}
+            var pick=scores[0]
+            if !(scores[0].1<0.30 && scores[1].1-scores[0].1>0.035) {
+                // Near-tie between 3, 8 and 9 (small 15–16 px fonts): the shape decides, not a
+                // looser margin. In this font 3 has no closed counter, 9 one, 8 two. Only a tie
+                // that would otherwise stay unknown is resolved; a clear match never changes.
+                let counters=Self.counters(shape.bits)
+                let expected=["3":0,"9":1,"8":2]
+                let pair=[scores[0],scores[1]].filter{expected[$0.0]==counters}
+                guard expected[scores[0].0] != nil,expected[scores[1].0] != nil,pair.count==1,pair[0].1<0.30 else{return nil}
+                pick=pair[0]
+            }
+            text+=pick.0;confidence=min(confidence,1-pick.1)
         }
         guard RewardAmount.parse(text) != nil,let first=shapes.first else{return nil}
         let rect=shapes.dropFirst().reduce(first.rect){$0.union($1.rect)}
