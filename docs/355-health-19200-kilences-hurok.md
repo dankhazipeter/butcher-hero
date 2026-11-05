@@ -35,3 +35,11 @@ változtat meg, küszöb és minták változatlanok.
   19.2K claim, valamint a 598/633 glyphek hurokszáma (0,1,2 / 1,0,0).
 - A „?” sorokat a 353-as állandó szabály szerint utólag `reconcile`
   javítja; az eredmény itt alább.
+
+## Utólagos javítás és telepítés
+
+Telepítés 09:09 (helyi idő), a gyűjtő magától folytatta, utána nem jött új „?”.
+`reconcile --dry-run`: 18 javítható tétel, mind Health → 19200, 2-2 egyező
+képpel. Egy nem tesztelt claim (A3FBD2A0) kártyáját és „+19.2K” utóképét
+vizuálisan is ellenőriztük. 18 `reward_corrected` sor került be, az eredeti
+napló prefixként változatlan, az ismételt próba 0 tételt talál, az appban 0 „?” maradt.
