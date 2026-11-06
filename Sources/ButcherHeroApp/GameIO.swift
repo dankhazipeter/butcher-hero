@@ -20,9 +20,10 @@ struct HumanInputBusy:LocalizedError {
 /// does a held or just-released mouse button defer input, so the two never collide.
 enum HumanInput {
     enum Busy:Equatable,CustomStringConvertible {
-        case buttonHeld,recentClick(Double)
+        case buttonHeld,recentClick(Double),spotlightOpen
         var description:String {
             switch self {
+            case .spotlightOpen:L("A Spotlight nyitva van; bezárása után kattintok (a kattintás bezárná).","Spotlight is open; clicking after it closes (a click would close it).")
             case .buttonHeld:L("A játékban épp lenyomva tartod az egérgombot; elengedés után kattintok.","You are holding a mouse button in the game; clicking after release.")
             case .recentClick(let s):L("Épp kattintottál a játékban (\(String(format:"%.2f",s)) mp); rövid szünet után kattintok.","You just clicked in the game (\(String(format:"%.2f",s)) s ago); clicking after a short pause.")
             }
@@ -32,6 +33,9 @@ enum HumanInput {
         (0..<5).contains{CGEventSource.buttonState(.combinedSessionState,button:CGMouseButton(rawValue:UInt32($0))!)}
     }
     @MainActor static var busy:Busy? {
+        // The game raises/keys its window when told it is active, and Spotlight's panel closes
+        // as soon as another window takes focus: wait while it is on screen.
+        if spotlightOpen {return .spotlightOpen}
         guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier==GameIO.bundleID else{return nil}
         if buttonDown {return .buttonHeld}
         let buttons:[CGEventType]=[.leftMouseDown,.leftMouseUp,.leftMouseDragged,
@@ -41,6 +45,21 @@ enum HumanInput {
         return nil
     }
     @MainActor static var ready:Bool {busy==nil}
+
+    /// Spotlight shows no window while closed (not even in the menu bar), so any on-screen
+    /// window of com.apple.Spotlight larger than a few points is its open panel.
+    static var spotlightOpen:Bool {
+        guard let rows=CGWindowListCopyWindowInfo([.optionOnScreenOnly,.excludeDesktopElements],kCGNullWindowID) as? [[String:Any]] else{return false}
+        let spotlight=Set(NSRunningApplication.runningApplications(withBundleIdentifier:"com.apple.Spotlight").map(\.processIdentifier))
+        guard !spotlight.isEmpty else{return false}
+        return rows.contains {row in
+            guard let pid=(row[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value,spotlight.contains(pid),
+                  ((row[kCGWindowAlpha as String] as? NSNumber)?.doubleValue ?? 1)>0,
+                  let raw=row[kCGWindowBounds as String] as? [String:Any],
+                  let bounds=CGRect(dictionaryRepresentation:raw as CFDictionary) else{return false}
+            return bounds.width>40 && bounds.height>20
+        }
+    }
 }
 
 struct Frame {

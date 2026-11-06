@@ -11,16 +11,20 @@ import CoreGraphics
 /// - UIKit only turns mouse events into touches while the app believes it is active, so the
 ///   game is *told* it was activated (an AppKit `applicationActivated` event posted to it
 ///   alone) and told it was deactivated afterwards. The system's frontmost app never changes,
-///   so typing, open menus and the user's window are untouched.
+///   so typing and open menus are untouched.
+/// Two side effects of that activation (2026-11-06): the game raises its window, which the
+/// system allows only above this app's own windows (we post while frontmost), so those are
+/// put back on top after the click; and Spotlight's panel closes when a window takes focus,
+/// so `HumanInput` waits while Spotlight is open.
 /// Works with the game window covered.
 @MainActor enum BackgroundInput {
     struct Failure:LocalizedError {let errorDescription:String?}
 
     /// What happened around one click, for the journal.
     struct Receipt {
-        var frontBefore:String?,frontAfter:String?,milliseconds=0,toldActive=false
+        var frontBefore:String?,frontAfter:String?,milliseconds=0,toldActive=false,restoredOwnWindows=false
         var summary:String {
-            "front=\(frontBefore ?? "-")→\(frontAfter ?? "-");toldActive=\(toldActive);ms=\(milliseconds)"
+            "front=\(frontBefore ?? "-")→\(frontAfter ?? "-");toldActive=\(toldActive);ownWindowsRestored=\(restoredOwnWindows);ms=\(milliseconds)"
         }
     }
 
@@ -57,6 +61,13 @@ import CoreGraphics
         post(.leftMouseUp)
         try? await Task.sleep(nanoseconds:releaseNanos)
         if receipt.toldActive {appKitEvent(.applicationDeactivated)?.postToPid(pid)}
+        // Told it is active, the game raises its window. Above other apps the system refuses,
+        // but this app is the one posting while it is frontmost, so the game lands above our
+        // own window: put our visible windows back on top, in their original order.
+        if front?.processIdentifier==ProcessInfo.processInfo.processIdentifier {
+            for window in NSApp.orderedWindows.reversed() where window.isVisible {window.orderFront(nil)}
+            receipt.restoredOwnWindows=true
+        }
         receipt.frontAfter=NSWorkspace.shared.frontmostApplication?.localizedName
         receipt.milliseconds=Int((DispatchTime.now().uptimeNanoseconds-started)/1_000_000)
         return receipt
