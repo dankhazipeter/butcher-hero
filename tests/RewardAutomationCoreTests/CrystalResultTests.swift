@@ -26,6 +26,8 @@ final class CrystalResultTests:XCTestCase {
             ("blue-blue-piercedef291k-642.png","blue","blue",40,"Pierce Defense","291K"),
             // 2026-11-05: two of three renderings read "#12.7K"; the sign is not required.
             ("grey-green-healthregen12700-l41-637.png","grey","green",41,"Health Regen","12.7K"),
+            // 2026-11-06: the M looks like an H; OCR read "1.574"/"1.574"/"1.574".
+            ("grey-green-health1570k-l41-637.png","grey","green",41,"Health","1.57M"),
         ]
         var amounts=0
         for (name,rarity,gem,level,stat,shown) in samples {
@@ -37,7 +39,17 @@ final class CrystalResultTests:XCTestCase {
             if let amount=r.amount {XCTAssertEqual(amount,RewardAmount.parse(shown),name);amounts+=1}
             XCTAssertEqual(CrystalResultReader.gemColour(forStat:stat),gem,"gem colour follows the stat group: \(name)")
         }
-        XCTAssertGreaterThanOrEqual(amounts,7,"Most amounts are read, not just left empty")
+        XCTAssertGreaterThanOrEqual(amounts,9,"Most amounts are read, not just left empty")
+    }
+
+    func testUnitIsReadFromTheGlyphShape()throws {
+        // K: only its arms reach the right edge; M (drawn like an H): a full right stem.
+        for (name,unit) in [("grey-blue-cutdef148k-l41-637.png","K"),("purple-green-health3780k-623.png","M"),
+                            ("grey-green-health1570k-l41-637.png","M"),("grey-green-lifesteal6430-788.png","K")] {
+            let p=try XCTUnwrap(CrystalResultReader.Pixels(try image(name))),t=try XCTUnwrap(CrystalResultReader.tile(p))
+            let line=CGRect(x:t.midX-t.width*1.22,y:t.maxY+t.height*1.2,width:t.width*3.1,height:t.height*0.38)
+            XCTAssertEqual(CrystalResultReader.unitShape(p,line),unit,name)
+        }
     }
 
     func testStatLineToleratesOCRLettersButNotDigits() {
@@ -52,6 +64,14 @@ final class CrystalResultTests:XCTestCase {
         XCTAssertEqual(CrystalResultReader.parseStatLine("Health Regen 14.7K")?.raw,"14.7K")
         XCTAssertNil(CrystalResultReader.parseStatLine("Health +1.574"),"A crystal amount always has a unit; this is a misread 1.57M")
         XCTAssertNil(CrystalResultReader.parseStatLine("Cut Defense +G26K"))
+        // With the unit read from the glyph's shape (an M here looks like an H).
+        XCTAssertEqual(CrystalResultReader.parseStatLine("Health +1.51h",unit:"M")?.raw,"1.51M")
+        XCTAssertEqual(CrystalResultReader.parseStatLine("Health +1.574",unit:"M")?.raw,"1.57M")
+        XCTAssertEqual(CrystalResultReader.parseStatLine("Health +3.78\"",unit:"M")?.raw,"3.78M")
+        XCTAssertEqual(CrystalResultReader.parseStatLine("Health +1.51M",unit:"M")?.raw,"1.51M")
+        XCTAssertNil(CrystalResultReader.parseStatLine("Health +1.51K",unit:"M"),"OCR unit must agree with the shape")
+        XCTAssertNil(CrystalResultReader.parseStatLine("Health +1518",unit:"M"),"No decimal point: nothing is guessed away")
+        XCTAssertNil(CrystalResultReader.parseStatLine("Health +1.51hx",unit:"M"))
     }
 
     private func journal(_ lines:[[String:String]])throws->URL {

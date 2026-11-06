@@ -81,3 +81,24 @@ A felhasználó jelezte: a 09:41-es Health Regen kristály összege „?” lett
   ugyanarra a képre a legutolsó sor érvényes, a korábban kiolvasott mezők
   nem vesznek el. Ez a 353-as állandó szabály kristályokra alkalmazott
   változata.
+
+## v3 — 2026-11-06: az „M” egység alakból
+
+A felhasználó kérte, hogy az „M”-es (millió) összegek is olvashatók legyenek.
+Ebben a fontban az M úgy néz ki, mint egy H, ezért a Tesseract h-nak, 4-nek,
+8-nak vagy idézőjelnek olvassa. Egy karakterkészlet-korlátozással (whitelist)
+végzett újraolvasást kipróbáltunk, de rontott: 8/4 lett belőle, és a számjegyek
+is sérültek (153K→133K). Elvetettük.
+
+A megoldás az egység alakja. A statsor utolsó glyphjének jobb negyede a
+középső sorokban: az M-nél teljes magasságú jobb szár (lefedettség 1,00), a
+K-nál csak a két kar, középen üres (0,00), mind a 77 képen 200-as
+fényességküszöbnél. A számjegyeket továbbra is az OCR adja 2/3 szavazással. Ha az
+OCR kiír egységet, annak egyeznie kell az alakkal. Ha nem ír ki: tizedespontos
+számnál a negyedik számjegy (a játék legfeljebb hármat ír) vagy egyetlen
+odatapadt betű maga a félreolvasott egység. Tizedespont nélkül nem találgatunk.
+
+Eredmény 77 képen: 74 helyes összeg, 0 hibás, 3 üres (a 291K, ahol az OCR a
+9-et S-nek olvassa). `crystal-result-v3`, a hiányos bejegyzések egyszer
+újraolvasódnak. Új tesztek: alakalapú egységolvasás 4 képen, 1.57M fixture,
+egységgel paraméterezett parser-esetek.

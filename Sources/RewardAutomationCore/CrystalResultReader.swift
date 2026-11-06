@@ -25,7 +25,7 @@ public struct CrystalResult:Codable,Equatable {
 /// OCR renderings agreed on 2.97K for a reviewed 2.37K, too risky for a small number.)
 /// Pure image analysis plus the local Tesseract process; never sends input.
 public enum CrystalResultReader {
-    public static let version="crystal-result-v2"
+    public static let version="crystal-result-v3"
     public static let stats=["Health Regen","Health","Lifesteal","Pierce Damage","Cut Damage","Smash Damage",
                              "Pierce Defense","Cut Defense","Smash Defense"]
 
@@ -176,12 +176,73 @@ public enum CrystalResultReader {
     /// "*", or drops it, so the sign is not required. The unit is: every crystal stat is shown
     /// with K/M/B/T, and "Health +1.574" is a misread 1.57M, not 1.574. No letter or digit may
     /// touch the number ("2S1K", "G26K" are not amounts).
-    public static func parseStatLine(_ text:String)->(stat:String,raw:String)? {
-        guard let stat=statName(text),
-              let range=text.range(of:#"(?<![A-Za-z0-9.,])\d+(?:[.,]\d+)?\s*[KMBT](?![A-Za-z0-9.,])"#,options:.regularExpression) else{return nil}
-        let raw=text[range].replacingOccurrences(of:" ",with:"")
+    ///
+    /// `unit` is the unit read from the glyph's shape (see `unitShape`). In this font the M
+    /// looks like an H, and Tesseract reads it as h, 4, 8 or a quote. With a shape unit, an
+    /// explicit OCR unit must agree with it; a decimal number with one character too many
+    /// ("1.51h", "1.514", "1.518": the game shows at most three digits) loses that last
+    /// character, which was the misread unit. Without a decimal point nothing is dropped.
+    public static func parseStatLine(_ text:String,unit:String?=nil)->(stat:String,raw:String)? {
+        guard let stat=statName(text) else{return nil}
+        if let range=text.range(of:#"(?<![A-Za-z0-9.,])\d+(?:[.,]\d+)?\s*[KMBT](?![A-Za-z0-9.,])"#,options:.regularExpression) {
+            let raw=text[range].replacingOccurrences(of:" ",with:"")
+            guard unit==nil || raw.hasSuffix(unit!),RewardAmount.parse(raw) != nil else{return nil}
+            return (stat,raw)
+        }
+        guard let unit,["K","M","B","T"].contains(unit),
+              let range=text.range(of:#"(?<![A-Za-z0-9.,])\d+[.,]\d+"#,options:.regularExpression) else{return nil}
+        var number=String(text[range])
+        let rest=text[range.upperBound...]
+        // Digits after the dot beyond what the game prints (X.YZ, XY.Z): one is the unit.
+        let digits=number.filter(\.isNumber).count
+        if digits==4 {number.removeLast()} else if digits>4 {return nil}
+        else if let next=rest.first,next.isLetter || next.isNumber {
+            // A single character in the unit's place ("3.78h") is the misread unit itself;
+            // anything longer is not an amount.
+            guard rest.dropFirst().first.map({$0.isWhitespace}) ?? true else{return nil}
+        }
+        guard number.last?.isNumber == true else{return nil}
+        let raw=number.replacingOccurrences(of:",",with:".")+unit
         guard RewardAmount.parse(raw) != nil else{return nil}
         return (stat,raw)
+    }
+
+    /// K or M from the last glyph of the stat line: in this font an M has a full-height right
+    /// stem (the right quarter covers every middle row), a K only its two arms (none). Measured
+    /// on 77 reviewed frames: K 0.00, M 1.00 at the 200 brightness threshold.
+    static func unitShape(_ p:Pixels,_ r:CGRect)->String? {
+        let x0=max(0,Int(r.minX)),y0=max(0,Int(r.minY)),w=min(p.width,Int(r.maxX))-x0,h=min(p.height,Int(r.maxY))-y0
+        guard w>8,h>8 else{return nil}
+        var mask=[Bool](repeating:false,count:w*h)
+        for y in 0..<h {for x in 0..<w {let c=p.rgb(x0+x,y0+y);mask[y*w+x]=min(c.0,min(c.1,c.2))>=200}}
+        var seen=[Bool](repeating:false,count:w*h)
+        var glyphs:[(minX:Int,minY:Int,maxX:Int,maxY:Int)]=[]
+        for start in 0..<(w*h) where mask[start] && !seen[start] {
+            var queue=[start],head=0;seen[start]=true
+            var box=(minX:w,minY:h,maxX:0,maxY:0)
+            while head<queue.count {
+                let i=queue[head],x=i%w,y=i/w;head+=1
+                box=(min(box.minX,x),min(box.minY,y),max(box.maxX,x),max(box.maxY,y))
+                for dy in -1...1 {for dx in -1...1 {
+                    let nx=x+dx,ny=y+dy
+                    guard nx>=0,ny>=0,nx<w,ny<h else{continue}
+                    let n=ny*w+nx
+                    if mask[n] && !seen[n] {seen[n]=true;queue.append(n)}
+                }}
+            }
+            if queue.count>=4 {glyphs.append(box)}
+        }
+        let tallest=glyphs.map{$0.maxY-$0.minY+1}.max() ?? 0
+        guard tallest>=6,let last=glyphs.filter({Double($0.maxY-$0.minY+1)>=Double(tallest)*0.6}).max(by:{$0.maxX<$1.maxX}) else{return nil}
+        let width=last.maxX-last.minX+1,height=last.maxY-last.minY+1
+        guard height>=6,width>=3 else{return nil}
+        var hit=0,rows=0
+        for y in (last.minY+height/3)...(last.maxY-height/3) {
+            rows+=1
+            if ((last.maxX-max(1,width/4)+1)...last.maxX).contains(where:{mask[y*w+$0]}) {hit+=1}
+        }
+        let coverage=Double(hit)/Double(max(1,rows))
+        return coverage>=0.8 ? "M":coverage<=0.2 ? "K":nil
     }
 
     /// Which gem colour each stat group shows (all 76 reviewed result frames agree).
@@ -210,9 +271,11 @@ public enum CrystalResultReader {
         let levels=texts(CGRect(x:t.midX+t.width*0.02,y:t.minY+t.height*0.6,width:t.width*0.45,height:t.height*0.36))
         result.level=agreed(levels.map{text in text.flatMap{Int($0.filter(\.isNumber))}.flatMap{(1...999).contains($0) ? $0:nil}})
         // First CRYSTAL STATS line below the tile, right of its small icon.
-        let lines=texts(CGRect(x:t.midX-t.width*1.22,y:t.maxY+t.height*1.2,width:t.width*3.1,height:t.height*0.38))
+        let lineRect=CGRect(x:t.midX-t.width*1.22,y:t.maxY+t.height*1.2,width:t.width*3.1,height:t.height*0.38)
+        let lines=texts(lineRect)
         result.statLine=lines.compactMap{$0}.first
-        let parsed=lines.map{$0.flatMap(parseStatLine)}
+        let unit=unitShape(p,lineRect)
+        let parsed=lines.map{$0.flatMap{parseStatLine($0,unit:unit)}}
         if let stat=agreed(lines.map{$0.flatMap(statName)}),result.gem.map({$0==gemColour(forStat:stat)}) ?? true {
             result.stat=stat
             if let raw=agreed(parsed.map{$0.flatMap{$0.stat==stat ? $0.raw:nil}}) {
