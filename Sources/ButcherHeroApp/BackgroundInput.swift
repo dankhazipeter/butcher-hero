@@ -14,8 +14,8 @@ import CoreGraphics
 ///   so typing and open menus are untouched.
 /// Two side effects of that activation (2026-11-06): the game raises its window, which the
 /// system allows only above this app's own windows (we post while frontmost), so those are
-/// put back on top after the click; and Spotlight's panel closes when a window takes focus,
-/// so `HumanInput` waits while Spotlight is open.
+/// put back on top after the click; and an open Spotlight panel closes. The user accepts the
+/// latter: input does not wait for Spotlight (2026-11-06).
 /// Works with the game window covered.
 @MainActor enum BackgroundInput {
     struct Failure:LocalizedError {let errorDescription:String?}

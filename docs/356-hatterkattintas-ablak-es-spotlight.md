@@ -36,3 +36,11 @@ Fordítás és teljes tesztkapu. A nyitott Spotlightot és az előtérben lévő
 Autoplayert élőben nem nyitottuk meg helyetted; ezt a felhasználó a következő
 gyűjtéseknél látja. A naplóban az `ownWindowsRestored` és a várakozási ok
 ellenőrizhető.
+
+## Visszavonva: Spotlight-várakozás — 2026-11-06 délután
+
+A felhasználó jelezte, hogy nyitott Spotlightnál továbbra is kattint és bezárja,
+de nem akarja, hogy emiatt várjon: a bezáródást elfogadja. A Spotlight-ellenőrzést
+(`HumanInput.spotlightOpen`) kivettük, a kattintás nem vár rá. Hogy az észlelés
+miért nem fogta meg a nyitott panelt, nem vizsgáltuk tovább. Az ablakaink
+visszahozása megmarad.

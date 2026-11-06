@@ -90,10 +90,12 @@ import SwiftUI
         if s.captureStatus=="error" {return .captureError(s.lastError ?? "")}
         if s.crystalPhase=="blocked" || s.eventEndPhase=="blocked" {return .crystalBlocked}
         if s.screenState=="manual_crystal" {return .manualPanel}
-        if !["hud","crystal","event"].contains(s.screenState) {return .unrecognized}
         if s.waitingForInput {return .waitingInput}
-        if s.screenState=="crystal" {return .processing(L("Kristály/geode nyitása folyamatban.","Opening crystals/geodes."))}
-        if s.screenState=="event" {return .processing(L("Esemény végi ablak kezelése.","Handling an event-end screen."))}
+        // A flow in progress decides, not the single frame: between strikes the geode animation
+        // is no known crystal screen, and the sign used to flip to Running every second.
+        if s.crystalPhase != "idle" || s.screenState=="crystal" {return .processing(L("Kristály/geode nyitása folyamatban.","Opening crystals/geodes."))}
+        if s.eventEndPhase != "idle" || s.screenState=="event" {return .processing(L("Esemény végi ablak kezelése.","Handling an event-end screen."))}
+        if s.screenState != "hud" {return .unrecognized}
         return .running
     }
 
