@@ -129,20 +129,22 @@ private struct StatusMark:View {
 }
 
 /// Ink dot with a ring that keeps expanding outward; still when Reduce Motion is on.
+/// The ring is computed from the clock (TimelineView), not a repeatForever animation: such an
+/// animation leaked into the sign's title change and kept cross-fading the old and new title
+/// forever (2026-11-07: "A játék fut" / "A játék nem fut" flickering while the game was closed).
 private struct LivePulse:View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var expanded=false
     var body:some View {
         ZStack {
             if !reduceMotion {
-                Circle().stroke(Theme.ink,lineWidth:1.5).frame(width:8,height:8)
-                    .scaleEffect(expanded ? 2.2:1).opacity(expanded ? 0:0.7)
+                TimelineView(.animation(minimumInterval:1/30)) {context in
+                    let t=context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy:1.6)/1.6
+                    let eased=1-pow(1-t,2)
+                    Circle().stroke(Theme.ink,lineWidth:1.5).frame(width:8,height:8)
+                        .scaleEffect(1+1.2*eased).opacity(0.7*(1-eased))
+                }
             }
             Circle().fill(Theme.ink).frame(width:8,height:8)
-        }
-        .onAppear {
-            guard !reduceMotion else{return}
-            withAnimation(.easeOut(duration:1.6).repeatForever(autoreverses:false)) {expanded=true}
         }
     }
 }

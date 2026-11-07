@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Állapottábla: végtelenül ismétlődő feliratváltás](358-tabla-vegtelen-atusztatas.md)
 - [Gyűjtő tábla: Dolgozik ↔ Fut villogás kristálynyitáskor](357-gyujto-tabla-villogas.md)
 - [Háttérkattintás: játék az Autoplayer fölött, bezáródó Spotlight](356-hatterkattintas-ablak-es-spotlight.md)
 - [„?” Health 19.2K: a 9 zárt hurka dönt 3/8/9 között](355-health-19200-kilences-hurok.md)
