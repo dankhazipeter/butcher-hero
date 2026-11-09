@@ -26,6 +26,12 @@ public struct CrystalResultEntry:Codable,Equatable {
 public enum CrystalResultLog {
     public struct Pending:Equatable {
         public let claimID:String,timestamp:String,evidence:String
+        /// Journalled as HUD right after strikes. Before docs/360 a result screen on a large
+        /// window could be misread as HUD; such a frame counts only if it re-reads as a result.
+        public var verify=false
+        public init(claimID:String,timestamp:String,evidence:String,verify:Bool=false) {
+            self.claimID=claimID;self.timestamp=timestamp;self.evidence=evidence;self.verify=verify
+        }
     }
 
     /// Result screens that are new crystals. Within one transaction a result counts only if a
@@ -42,6 +48,12 @@ public enum CrystalResultLog {
             if event=="crystal_screen",message.hasPrefix("result"),struck[id]==true,
                let evidence=object["evidence"] as? String,let timestamp=object["timestamp"] as? String {
                 found.append(.init(claimID:id,timestamp:timestamp,evidence:evidence))
+                struck[id]=false
+            }
+            // Only the first HUD frame after strikes is a candidate; it is re-checked from its image.
+            if event=="crystal_screen",message.hasPrefix("hud"),struck[id]==true,
+               let evidence=object["evidence"] as? String,let timestamp=object["timestamp"] as? String {
+                found.append(.init(claimID:id,timestamp:timestamp,evidence:evidence,verify:true))
                 struck[id]=false
             }
         }
@@ -119,6 +131,10 @@ public enum CrystalResultLog {
                 try append(entry,to:results)
                 added.append(entry)
                 continue
+            }
+            if item.verify {
+                // Never logged from the journal alone: the saved frame must read as a result now.
+                guard let image,(try? CrystalVision().observe(image,hudVisible:true).screen) == .result else{continue}
             }
             var result=CrystalResult(),missing:Bool?=nil
             if let image {

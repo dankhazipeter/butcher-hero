@@ -179,6 +179,21 @@ final class CrystalTests:XCTestCase {
             XCTAssertFalse(CrystalAction.openInventory.permits(actual),name)
         }
     }
+    func testLargeWindowGreenTileResultIsNotMistakenForHUD()throws {
+        // 1024×1398 window on a large display: the green-rarity tile and the Continue
+        // button's orange rim satisfy the HUD heuristic, so the result screen used to be
+        // classified as HUD and the flow timed out on it (docs/360).
+        let url=root.appendingPathComponent("docs/references/2026-11-09/crystal-result-green-tile-large.png")
+        let source=try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL,nil))
+        let png=try XCTUnwrap(CGImageSourceCreateImageAtIndex(source,0,nil))
+        XCTAssertTrue(try RewardVision().observe(png).gameHUDVisible,"documents the cause: the HUD heuristic accepts this frame")
+        let actual=try CrystalVision().observe(png,hudVisible:true)
+        XCTAssertEqual(actual.screen,.result,actual.texts.joined(separator:";"))
+        XCTAssertFalse(actual.notification)
+        XCTAssertTrue(CrystalAction.proceed.permits(actual))
+        let point=CrystalAction.proceed.point
+        XCTAssertTrue(CGRect(x:350,y:1245,width:325,height:65).contains(.init(x:point.x*1024,y:point.y*1398)))
+    }
     func testSmallResultRequiresExactTitleAndContinueWithoutDecorativeBorderOCR()throws {
         let png=try image("result-small-live"),vision=CrystalVision()
         let animation=try vision.observe(image("result-small-animation-live"),hudVisible:false)

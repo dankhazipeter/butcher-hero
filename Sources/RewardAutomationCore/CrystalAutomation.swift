@@ -78,6 +78,23 @@ public final class CrystalVision {
                     closePoint:layout.close,openPoint:layout.point(.init(x:0.49,y:0.585)))
             }
         }
+        // Result is a different overlay, with a bottom yellow CONTINUE button. It is
+        // checked before the HUD: a green-rarity tile in the middle and the button's
+        // orange rim at the bottom satisfy the HUD heuristic's green+red test, so on a
+        // large window the result screen read as HUD and was never continued (docs/360).
+        // Exact CONTINUE + CRYSTAL STATS text still decides.
+        if fraction(.init(x:0.33,y:0.89,width:0.34,height:0.05),yellow)>0.28 {
+            let button=try words(.init(x:0.335,y:0.898,width:0.33,height:0.030))
+            var header=try words(.init(x:0.34,y:0.562,width:0.33,height:0.037),white:false)
+            if compact(button)=="CONTINUE",compact(header) != "CRYSTALSTATS" {
+                // Exclude the bevel's decorative marks, not arbitrary words.
+                header=try words(.init(x:0.365,y:0.562,width:0.275,height:0.037),white:false)
+            }
+            diagnostics += ["result",button,header]
+            if compact(button)=="CONTINUE", compact(header)=="CRYSTALSTATS" {
+                return .init(screen:.result,texts:[header,button])
+            }
+        }
         if hudVisible {
             // The red notification must have its white ring AND blue crystals
             // immediately below it. A red enemy/map marker alone is insufficient.
@@ -94,19 +111,6 @@ public final class CrystalVision {
         if purple>0.28 {
             let hint=try words(.init(x:0.32,y:0.837,width:0.37,height:0.039))
             if compact(hint)=="TAPTOOPENGEODE" {return .init(screen:.geode,texts:[hint,"purpleStone=\(purple)"])}
-        }
-        // Result is a different overlay, with a bottom yellow CONTINUE button.
-        if fraction(.init(x:0.33,y:0.89,width:0.34,height:0.05),yellow)>0.28 {
-            let button=try words(.init(x:0.335,y:0.898,width:0.33,height:0.030))
-            var header=try words(.init(x:0.34,y:0.562,width:0.33,height:0.037),white:false)
-            if compact(button)=="CONTINUE",compact(header) != "CRYSTALSTATS" {
-                // Exclude the bevel's decorative marks, not arbitrary words.
-                header=try words(.init(x:0.365,y:0.562,width:0.275,height:0.037),white:false)
-            }
-            diagnostics += ["result",button,header]
-            if compact(button)=="CONTINUE", compact(header)=="CRYSTALSTATS" {
-                return .init(screen:.result,texts:[header,button])
-            }
         }
         // The geode's own close button is NEVER the inventory close target.
         if fraction(.init(x:0.68,y:0.24,width:0.12,height:0.035),pink)>0.35 {

@@ -1,5 +1,15 @@
 # Butcher Hero — aktív projektutasítások
 
+## Kristály-eredmény nagy ablakban — 2026-11-09 (360)
+
+User: nagy kijelzőn (1024×1398) a kristálynyitás a CRYSTAL STATS képernyőn állt.
+Ok: a HUD-heurisztika a zöld csempe + Continue narancs pereme miatt igazat adott,
+és a CrystalVision a HUD-ágat az eredmény előtt nézte. Most az eredmény (pontos
+CONTINUE + CRYSTAL STATS) a HUD előtt; küszöbök változatlanok. 1685 kép
+visszajátszása: csak a 8 beragadt kép változott hud→result. A kristálynapló a
+HUD-nak naplózott eredményképet képből újraellenőrizve pótolja (2 kimaradt kristály).
+Részletek: 360.
+
 ## FREE-jelvény világos háttéren — 2026-11-09 (359)
 
 User: 33→42 s átlagos felszedés, homokon ott maradt Cut Defense 867. Ok: a

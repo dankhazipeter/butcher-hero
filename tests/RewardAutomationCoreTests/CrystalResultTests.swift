@@ -108,6 +108,34 @@ final class CrystalResultTests:XCTestCase {
         XCTAssertEqual(found.map(\.evidence),["evidence/A-result-1.png","evidence/B-result-1.png","evidence/B-result-2.png"])
     }
 
+    func testResultJournalledAsHUDIsLoggedOnlyIfItsFrameReadsAsResult()throws {
+        // Before docs/360 a large-window result screen was journalled as HUD and the flow timed
+        // out on it. Its frame is re-checked; a real HUD frame after strikes is not a crystal.
+        let root=try journal([
+            ["claimID":"L","event":"crystal_click_sent","message":"strike","timestamp":"2026-11-09T11:29:36.186Z"],
+            ["claimID":"L","event":"crystal_screen","message":"hud; [ringDot=absent;blue=0.0]","timestamp":"2026-11-09T11:29:38.044Z","evidence":"evidence/L-hud.png"],
+            ["claimID":"L","event":"crystal_screen","message":"hud; [ringDot=absent;blue=0.4]","timestamp":"2026-11-09T11:29:40.000Z","evidence":"evidence/L-hud-2.png"],
+            ["claimID":"H","event":"crystal_click_sent","message":"strike","timestamp":"2026-11-09T11:30:00.000Z"],
+            ["claimID":"H","event":"crystal_screen","message":"hud; [ringDot=absent;blue=0.4]","timestamp":"2026-11-09T11:30:02.000Z","evidence":"evidence/H-hud.png"],
+        ])
+        let fm=FileManager.default
+        try fm.copyItem(at:project.appendingPathComponent("docs/references/2026-11-09/crystal-result-green-tile-large.png"),
+                        to:root.appendingPathComponent("evidence/L-hud.png"))
+        try fm.copyItem(at:project.appendingPathComponent("docs/references/2026-10-31/crystals/hud-without-notification-live.png"),
+                        to:root.appendingPathComponent("evidence/H-hud.png"))
+        let pending=CrystalResultLog.pending(journal:root.appendingPathComponent("events.jsonl"))
+        XCTAssertEqual(pending.map(\.evidence),["evidence/L-hud.png","evidence/H-hud.png"],"only the first HUD frame after strikes")
+        XCTAssertTrue(pending.allSatisfy(\.verify))
+        let results=root.appendingPathComponent("results.jsonl")
+        let added=try CrystalResultLog.update(root:root,results:results,source:"app")
+        XCTAssertEqual(added.map(\.claimID),["L"])
+        XCTAssertEqual(added.first?.openedAt,"2026-11-09T11:29:38.044Z")
+        XCTAssertEqual(added.first?.result.rarity,"green")
+        XCTAssertEqual(added.first?.result.gem,"blue")
+        XCTAssertEqual(added.first?.result.stat,"Pierce Defense")
+        XCTAssertTrue(try CrystalResultLog.update(root:root,results:results,source:"app").isEmpty,"idempotent")
+    }
+
     func testNewerReaderSupersedesAnIncompleteEntryOnceAndKeepsWhatWasRead()throws {
         let root=try journal([
             ["claimID":"A","event":"crystal_click_sent","message":"strike","timestamp":"2026-11-05T00:00:01.000Z"],
