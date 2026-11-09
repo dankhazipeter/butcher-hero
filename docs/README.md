@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [FREE-jelvény világos háttéren: elutasított, késve felvett kártyák](359-free-jelveny-vilagos-korvonal.md)
 - [Állapottábla: végtelenül ismétlődő feliratváltás](358-tabla-vegtelen-atusztatas.md)
 - [Gyűjtő tábla: Dolgozik ↔ Fut villogás kristálynyitáskor](357-gyujto-tabla-villogas.md)
 - [Háttérkattintás: játék az Autoplayer fölött, bezáródó Spotlight](356-hatterkattintas-ablak-es-spotlight.md)

@@ -167,8 +167,11 @@ struct Pixels {
             let rect=CGRect(x:Double(x0+minX-1)/Double(w),y:Double(y0+minY-1)/Double(h),
                 width:Double(bw+2)/Double(w),height:Double(bh+2)/Double(h))
             let white=count(in:rect){r,g,b in min(r,min(g,b))>190 && max(r,max(g,b))-min(r,min(g,b))<65}
-            // Over bright grass the badge outline is dark green (max ≈96), not near-black.
-            let darkLimit=vivid ? 100:90
+            // The badge outline is translucent: over sand, bright grass or light stone it is only
+            // medium dark (max ≈125–150), so a near-black limit left 7–14 pixels and the same
+            // still card passed on one frame and failed the next. White text, the card border
+            // and the FREE pixel match still have to agree (docs/359).
+            let darkLimit=140
             let dark=count(in:rect){r,g,b in max(r,max(g,b))<darkLimit}
             if Double(white)>=Double(w*h)*0.000020 && Double(dark)>=Double(w*h)*0.000025 && hasCardBorder(below:rect) {found.append(rect)}
         }

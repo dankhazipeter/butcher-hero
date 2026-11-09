@@ -1,5 +1,15 @@
 # Butcher Hero — aktív projektutasítások
 
+## FREE-jelvény világos háttéren — 2026-11-09 (359)
+
+User: 33→42 s átlagos felszedés, homokon ott maradt Cut Defense 867. Ok: a
+jelvény áttetsző körvonala homokon/világos fűn/kövön csak közepesen sötét, a
+`darkLimit` 90/100 mellett 7–14 pixel volt a kért 15 helyett, így az álló kártya
+képkockánként be-ki esett (`badge_shape_missing`, 117 s késés). Most 140; a fehér
+szöveg, kártyaszegély és FREE-egyezés feltétele változatlan. 4819 kép
+visszajátszása: csak 58 hibás diagnosztikai kép változott, mind helyesre, 0 új
+hamis jelenlét. Korpusz +4 pozitív/+1 negatív. Részletek: 359.
+
 ## Kristálynyitás-napló — 2026-11-05 (354)
 
 User kérte: minden nyitott kristály színe/fajtája és szintje időponttal +
