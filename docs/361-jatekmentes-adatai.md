@@ -158,6 +158,30 @@ data.player.items[] → key: "crystal_jar"
   tömörítettek, sima szövegkereséssel nem található bennük a tárgy
   definíciója; ehhez Unity-bundle-olvasó kellene, ezt nem telepítettük.
 
+## Próba: Crystal Jar 360 → 361 (felhasználói kérésre, 2026-11-14)
+
+A felhasználó kifejezetten kérte, hogy próbaként írjuk át a 360-at 361-re,
+majd ő elindítja a játékot. Előtte:
+
+- A játék nem futott (folyamatellenőrzés).
+- Mentés: `~/Library/Application Support/Butcher Hero/save-backups/20261114-before-jar-361/`
+  (`game_data.bin`, `game_data_backup.bin`, `game_data_pre_cloud.bin`,
+  `com.multicastgames.butcher.plist`, SHA-256 egyezés ellenőrizve).
+
+Integritásmező: a gyökér `hash` egy 16 bájtos érték `XX-XX-…` alakban, és
+minden mentéskor új véletlen `salt` kerül mellé. A prefs `cloud_save_local_hash`
+ugyanezt az értéket tárolja. MD5/SHA1/SHA256 a `data`-ra, a teljes térképre,
+salttal elöl/hátul és HMAC-kel sem reprodukálható, tehát valószínűleg a
+programba fordított kulcs is része. Ezt nem fejtettük vissza és nem
+hamisítottuk.
+
+Módosítás: kizárólag a `game_data.bin` egyetlen bájtja (offset 10197,
+`0x68` → `0x69`, uint16 360 → 361). A `hash`, a `salt`, a `backup`, a
+`pre_cloud` és a prefs változatlan. Ezért a próba egyben azt is méri, hogy a
+játék észleli-e a hash-eltérést (például a backup betöltésével, felhőből
+visszatöltéssel vagy a mentés elvetésével). Az eredményt a felhasználó
+játékindítása után rögzítjük.
+
 ## Amit nem csináltunk
 
 - Nem írtunk a játék konténerébe, nem módosítottunk mentést, plist-et vagy
