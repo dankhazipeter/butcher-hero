@@ -203,6 +203,26 @@ kézi módosítást a játék nem fogad el, hanem a backupra áll vissza. A hash
 hamisítását nem vállaltuk. Az eredeti, érvényes 12:26:10Z-s mentés a
 `save-backups/20261114-before-jar-361/game_data.bin` fájlban megmaradt.
 
+## Külső forrás: S3M4RiL YouTube-videó (2026-10-27)
+
+A felhasználó küldte: „Butcher Hero: How to Edit Your Save & Fix Broken
+Timers”. A videó Androidon, a 2.0.4-es verzión mutatja be, hogyan lehet a
+`game_data.bin`-t (MessagePack) JSON-ná alakítani és visszaalakítani, hogy
+az óraállítás után a jövőbe került időbélyegeket javítsák. A mi
+megállapításainkat megerősíti:
+
+- Ugyanaz a formátum. Az időmezők: Unix-másodperc (`last_tickets_restore_timestamp`,
+  `daily_chest_cooldown_timestamp`), .NET ticks (`last_geode_timestamp`,
+  `last_stones_reset_day`), olvasható dátum (`next_free_claim_reset`,
+  `free_chest_claim_reset`).
+- A szerző kitűzött megjegyzése szerint a módszer a **2.1-es verzióban már nem
+  működik**. Egy hozzászóló szerint a 2.1 hash-ellenőrzést kapott, egy másik
+  pontosan a mi eredményünket írja le (a játék visszaáll a backupra). A mi
+  iPad-es mentésünkben `user.app_version` = `2.1`, tehát ez nem a régi verzió.
+- Egy hozzászóló azt állítja, hogy reprodukálta a hash-t, és felajánlja, hogy
+  idegenek mentését átszerkeszti. Ezt nem használjuk és nem ajánljuk
+  (fiók- és adatbiztonsági kockázat).
+
 ## Amit nem csináltunk
 
 - Nem írtunk a játék konténerébe, nem módosítottunk mentést, plist-et vagy
