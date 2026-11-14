@@ -133,6 +133,31 @@ könyvelt, mint amennyit a kártyán látott értékekből a napló összead.
 A gyűjtő naplóját és statisztikáját ebből **nem módosítjuk**: a napló a
 kártyán látott értéket rögzíti, és ez továbbra is így marad.
 
+## Crystal Jar: tárolt event-lelkek (kiegészítés, 2026-11-14 délután)
+
+A felhasználó képén a Crystal Jar (Mythic accessory, „Soul Jar” képesség)
+CLAIM gombja mellett 360 áll. Ez a mentésben itt van:
+
+```
+data.player.items[] → key: "crystal_jar"
+  ability_counters["accessory_crystal_jar_ability_1"] = 360
+```
+
+- **Egyetlen egész szám**, nincs külön piros/kék bontás. A gomb melletti
+  piros+kék kristálykép az Event Crystals ikonja; hogy beváltáskor milyen
+  arányban és milyen event-valutára vált, az a mentésből nem derül ki
+  (a `events.currencies` most üres, az event nem aktív).
+- Időbeli alakulás a három mentésben: 235 (11-13 09:04Z) → 360 (11-14
+  09:53Z) → 360 (11-14 12:25Z). A +125 pontosan egyezik az
+  `event_analytics.event_mobs_killed` = 125 értékkel. Ez erős egybeesés, de
+  nem bizonyítja, hogy minden event-mob egy lelket ad.
+- A tárgy most **nincs felszerelve**: az accessory-slotokban `gem_ring` és
+  `soul_essence` van, a harmadik VIP-slot zárt. A tárgy szintje 1,
+  `accessory_experience` 3500 (a képen 3.5K/1.5K, LEVEL UP elérhető).
+- A játék erőforrásai (`Data/data.unity3d`, Addressables-bundle-ök)
+  tömörítettek, sima szövegkereséssel nem található bennük a tárgy
+  definíciója; ehhez Unity-bundle-olvasó kellene, ezt nem telepítettük.
+
 ## Amit nem csináltunk
 
 - Nem írtunk a játék konténerébe, nem módosítottunk mentést, plist-et vagy

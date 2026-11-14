@@ -8,7 +8,9 @@ User Teljes lemezhozzáférést adott, csak értelmezést kért. Konténer:
 Cut/Smash Damage, 14/16/20 Pierce/Cut/Smash Defense, 22 Lifesteal; FREE-
 forrás neve `no_ads`. Kristálynapló+FREE-napló igazolja. Mentés ~20%-kal
 többet könyvel, mint a napló kártyaértéke; ok nem bizonyított. Konténerbe
-nem írunk, gyűjtő/napló változatlan. Részletek: 361.
+nem írunk, gyűjtő/napló változatlan. Crystal Jar tárolt lelkei:
+player.items[key=crystal_jar].ability_counters.accessory_crystal_jar_ability_1
+(egy szám, nincs piros/kék bontás). Részletek: 361.
 
 ## Kristály-eredmény nagy ablakban — 2026-11-09 (360)
 
