@@ -1,5 +1,23 @@
 # Butcher Hero — aktív projektutasítások
 
+## A bizalmi réteg feltárva — 2026-11-14 (363)
+
+A 362 folytatása (user: „folytasd"): statikusan végigkövettük, mi történik egy
+hash-konzisztensen módosított mentéssel a fájl-saját MD5-ellenőrzés UTÁN.
+MainSceneInitializer.Start → CloudSavesService.CheckLocalSave(CommittedSaveHash)
+→ CloudSaveLocalTrust.Check: a fájl hash-jét a PlayerPrefs cloud_save_local_hash
+(emlékezett, felhővel szinkronizált) értékkel hasonlítja Ordinal módon; eltérés
+→ Distrust (IsUntrusted=true, warning). Felhő-szinkronnál a Sync a lokális
+SHA256 (CloudSaveHash.Compute) és a felhői CloudSaveMetadata.Sha256 összehasonlítása
+után időbélyeg szerint letöltés+HandleOverwritten (lokális felülírás) vagy
+feltöltés ágra megy; Trust a sikeres felhői művelet után áll helyre. Egy
+konzisztens lokális szerkesztés tehát átmegy a fájl-ellenőrzésen, de a trust-
+réteg distrustálja és aktív szinkronnál a felhői mentés felülírhatja; tartós
+módosításhoz a cloud_save_local_hash PlayerPrefs is összehangolandó (ezt nem
+próbáltuk, a plist TCC-védett ehhez a folyamathoz). Csak olvasó elemzés:
+konténerbe nem írtunk, játékot nem indítottunk, gyűjtőt nem érintettünk.
+Részletek: docs/363-bizalmi-reteg-felho-szinkron.md.
+
 ## A mentés-hash visszafejtve — 2026-11-14 (362)
 
 User REA-toolt telepített és a mentés integritás-hash visszefejtését kérte a
