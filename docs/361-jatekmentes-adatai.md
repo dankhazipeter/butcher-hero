@@ -179,8 +179,29 @@ Módosítás: kizárólag a `game_data.bin` egyetlen bájtja (offset 10197,
 `0x68` → `0x69`, uint16 360 → 361). A `hash`, a `salt`, a `backup`, a
 `pre_cloud` és a prefs változatlan. Ezért a próba egyben azt is méri, hogy a
 játék észleli-e a hash-eltérést (például a backup betöltésével, felhőből
-visszatöltéssel vagy a mentés elvetésével). Az eredményt a felhasználó
-játékindítása után rögzítjük.
+visszatöltéssel vagy a mentés elvetésével).
+
+### Eredmény: a játék észlelte és elvetette a módosítást
+
+A felhasználó kérésére 14:04-kor (helyi idő) `open -b`-vel indítottuk a
+játékot. A Terms/Privacy ablak Continue gombját nem tudtuk megnyomni, mert a
+Mac zárolva volt (előtérben a `loginwindow`). A feloldás jelszót igényel,
+ezért azt nem csináltuk meg. Az eredmény viszont a fájlokból kiolvasható:
+
+- A játék már a betöltéskor (14:04:22) ellenőrizte a mentést. A módosított
+  fájlt `game_data_corrupted.bin` néven félretette; ez bájtra azonos a mi
+  egybájtos módosításunkkal.
+- A `game_data.bin` helyére a `game_data_backup.bin` tartalma került
+  (SHA-256 egyezik, belső idő 12:23:54Z, hash `97-73-…`). A Crystal Jar
+  értéke ebben **360**.
+- Ez 2 perccel régebbi állapot, mint az utolsó valódi mentés (12:26:10Z).
+  A különbség csak a geode-egyenleg (4 a 6 helyett) és a karakter pozíciója;
+  statok, tárgyak, kristályok és ölések azonosak.
+
+Következtetés: a `hash` mező valódi integritás-ellenőrzés. Hash nélküli
+kézi módosítást a játék nem fogad el, hanem a backupra áll vissza. A hash
+hamisítását nem vállaltuk. Az eredeti, érvényes 12:26:10Z-s mentés a
+`save-backups/20261114-before-jar-361/game_data.bin` fájlban megmaradt.
 
 ## Amit nem csináltunk
 

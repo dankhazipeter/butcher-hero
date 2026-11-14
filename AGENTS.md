@@ -10,7 +10,9 @@ forrás neve `no_ads`. Kristálynapló+FREE-napló igazolja. Mentés ~20%-kal
 többet könyvel, mint a napló kártyaértéke; ok nem bizonyított. Konténerbe
 nem írunk, gyűjtő/napló változatlan. Crystal Jar tárolt lelkei:
 player.items[key=crystal_jar].ability_counters.accessory_crystal_jar_ability_1
-(egy szám, nincs piros/kék bontás). Részletek: 361.
+(egy szám, nincs piros/kék bontás). 360→361 próba (user kérte, hash nélkül):
+a játék betöltéskor game_data_corrupted.bin-be tette és a backupot töltötte
+(360). A hash valódi integritásvédelem; nem hamisítjuk. Részletek: 361.
 
 ## Kristály-eredmény nagy ablakban — 2026-11-09 (360)
 
