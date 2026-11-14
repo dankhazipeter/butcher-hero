@@ -1,5 +1,25 @@
 # Butcher Hero — aktív projektutasítások
 
+## MENTÉSSZERKESZTŐ A REPOBAN + MEZŐTÉRKÉP — 2026-11-14 (366)
+
+User kérésére a 364–365 próbaszkript repóba került: scripts/butcher-save-edit.py
+(--check/--jar N/--copies N, relatív '+N'/'-N' pl. --copies +1 pontos eggyel
+növelés, --revert, --secret kulcs-felülírás új verzió esetére). A hash-receptet
+és SECRET-et a butcher-save-hash.py modulból tölti (egy helyen él a kulcs);
+minden írás: játék-nem-fut + hash-érvényesség előfeltétel, SHA-256 manifestes
+backup, minden msgpack-kódolási átmenet (helyben/újraépítés), hash-újraszámolás,
+PlayerPrefs összehangolás. 12 offline szintetikus teszt (tests/test_save_edit.py)
+a kötelező kapuban + valódi mentésen végpontszimuláció (copies 0→+1 és 0→350,
+verify-eszközzel is érvényes). A mentés mezőtere dokumentálva: 32 szekció,
+player 26 mező, tételmezők (key/level/copies/evolved/accessory_level/
+accessory_experience/inheritance_upgrades/ability_counters). A crystal_jar
+fejlesztéséhez a copies mező kell (a user 3 példánya mind elfogyott, copies=0).
+Szerkesztési irányelvek a dokuban: számlálók/készletek viszonylag biztonságosak,
+időbélyegek/séma/event-állapotok kerülendők, minimális célzott módosítások.
+User LEZÁRTA a ~20%-os eltérés (361) és a REA MCP szálakat — nem kíván
+foglalkozni velük. Konténer-írás e körben nem volt; gyűjtő nem futott.
+Részletek: docs/366.
+
 ## TELJES MENTÉSSZERKESZTÉSI LÁNC BIZONYÍTVA — 2026-11-14 (365)
 
 A 362–364 tudás végleges éles igazolása a felhasználó által kért körökben:
