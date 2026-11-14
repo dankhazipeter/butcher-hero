@@ -1,5 +1,22 @@
 # Butcher Hero — aktív projektutasítások
 
+## ÉLŐ MENTÉSPRÓBA SIKERES — 2026-11-14 (364)
+
+A 362–363 tudás élesben igazolva. A 361-es Crystal Jar 360→361 módosítás
+újrapróbálva konzisztens hash-szel (362 recept) és a PlayerPrefs
+cloud_save_local_hash/cloud_save_local_untrusted összehangolásával (363).
+A próbaszkript (session temp, jar_experiment.py) minden előfeltételt ellenőrzött,
+SHA-256 manifestes biztonsági mentést készített, dinamikusan találta a
+Jar-számlálót (offset 0x27D5, bájtra a 361-es doksival egyezik), 1 bájtot
+módosított + a hash-mezőt írta át. Eredmény: hibátlan betöltés, Jar=361 a
+játékban, a játék SAJÁT újramentése (új salt/hash) érvényes a recept szerint,
+Jar=361 persistálódott, cloud_save_local_hash=az aktuális fájl hash-e,
+untrusted=0 — nincs distrust, a módosított mentés valószínűleg fel is került a
+felhőre (Remember nyoma). Visszaállítás bármikor a save-backups mappából.
+Következő kör (365): játék-frissítés utáni megfigyelés — a felhői kör végső
+bizonyítéka. Konténer-írás CSAK ebben az explicit próbakörben történt; a
+gyűjtő nem futott és nem érintettük. Részletek: docs/364.
+
 ## A bizalmi réteg feltárva — 2026-11-14 (363)
 
 A 362 folytatása (user: „folytasd"): statikusan végigkövettük, mi történik egy

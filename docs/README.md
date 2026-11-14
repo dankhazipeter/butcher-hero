@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Élő mentéspróba: Crystal Jar 360→361 konzisztens hash-szel — siker](364-eloprob-jar-361-sikeres.md)
 - [A bizalmi réteg: mi történik a mentéssel a lokális hash-ellenőrzés után](363-bizalmi-reteg-felho-szinkron.md)
 - [A mentés-hash visszafejtése a binárisból: kulcs, salt-kódolás, MD5](362-mentes-hash-visszafejtese.md)
 - [A játék helyi mentése: statkódok, FREE-forrás és naplóösszevetés](361-jatekmentes-adatai.md)
