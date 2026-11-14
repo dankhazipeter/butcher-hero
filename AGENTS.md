@@ -1,5 +1,15 @@
 # Butcher Hero — aktív projektutasítások
 
+## Játékmentés olvasása (csak olvasás) — 2026-11-14 (361)
+
+User Teljes lemezhozzáférést adott, csak értelmezést kért. Konténer:
+~/Library/Containers/com.multicastgames.butcher/Data/Documents/game_data.bin
+= MessagePack. player.stats: stat_type 1 Health, 2 Regen, 6/8/12 Pierce/
+Cut/Smash Damage, 14/16/20 Pierce/Cut/Smash Defense, 22 Lifesteal; FREE-
+forrás neve `no_ads`. Kristálynapló+FREE-napló igazolja. Mentés ~20%-kal
+többet könyvel, mint a napló kártyaértéke; ok nem bizonyított. Konténerbe
+nem írunk, gyűjtő/napló változatlan. Részletek: 361.
+
 ## Kristály-eredmény nagy ablakban — 2026-11-09 (360)
 
 User: nagy kijelzőn (1024×1398) a kristálynyitás a CRYSTAL STATS képernyőn állt.

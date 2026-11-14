@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [A játék helyi mentése: statkódok, FREE-forrás és naplóösszevetés](361-jatekmentes-adatai.md)
 - [Kristály-eredményképernyő nagy ablakban: HUD-nak olvasva](360-kristaly-eredmeny-nagy-ablakban.md)
 - [FREE-jelvény világos háttéren: elutasított, késve felvett kártyák](359-free-jelveny-vilagos-korvonal.md)
 - [Állapottábla: végtelenül ismétlődő feliratváltás](358-tabla-vegtelen-atusztatas.md)
