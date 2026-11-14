@@ -223,6 +223,29 @@ megállapításainkat megerősíti:
   idegenek mentését átszerkeszti. Ezt nem használjuk és nem ajánljuk
   (fiók- és adatbiztonsági kockázat).
 
+## Memóriaszerkesztés megvalósíthatósága macOS-en (felmérés, 2026-11-14)
+
+A felhasználó a futásidejű memóriaszerkesztés lehetőségére kíváncsi, mert
+akkor a játék maga mentené a helyes hash-sel. Csak olvasó ellenőrzéseket
+végeztünk, a memóriába nem írtunk.
+
+- SIP: bekapcsolva. Developer mode: kikapcsolva.
+- A játék aláírása: `flags=0x0`, vagyis nincs hardened runtime és nincs
+  `get-task-allow`. A jogosultságai csak Game Center és associated domains.
+- Titkosítás: a fő stub (`ButcherherohooknchewRPG`, 4 KB) `cryptid 1`, de a
+  valódi kódot tartalmazó `UnityFramework` (90 MB) `cryptid 0`, tehát nem
+  titkosított. A `Data/Managed/Metadata/global-metadata.dat` olvasható, benne
+  vannak az osztály- és metódusnevek (például `LocalSaveHash`,
+  `CommittedSaveHash`, `CloudSaveHash`, `ComputeHash`). A statikus elemzés
+  tehát könnyebb, mint elsőre gondoltuk.
+- Nincs Code Stage Anti-Cheat Toolkit nyoma (`Obscured*`, `CodeStage`,
+  `*CheatingDetector`: mind 0 találat). A memóriabeli értékek valószínűleg
+  nincsenek külön kódolva.
+- Memóriahozzáférés: saját, aláíratlan teszttel `task_for_pid` a játékra
+  normál felhasználóként `KERN_FAILURE`. Rootként (sudo) nem próbáltuk, mert
+  az a felhasználó jelszavát igényli. Hogy SIP mellett rootként engedélyezi-e
+  a rendszer ennél az iOS-appnál, az nyitott.
+
 ## Amit nem csináltunk
 
 - Nem írtunk a játék konténerébe, nem módosítottunk mentést, plist-et vagy
