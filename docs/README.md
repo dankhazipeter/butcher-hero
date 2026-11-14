@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [A mentés-hash visszafejtése a binárisból: kulcs, salt-kódolás, MD5](362-mentes-hash-visszafejtese.md)
 - [A játék helyi mentése: statkódok, FREE-forrás és naplóösszevetés](361-jatekmentes-adatai.md)
 - [Kristály-eredményképernyő nagy ablakban: HUD-nak olvasva](360-kristaly-eredmeny-nagy-ablakban.md)
 - [FREE-jelvény világos háttéren: elutasított, késve felvett kártyák](359-free-jelveny-vilagos-korvonal.md)

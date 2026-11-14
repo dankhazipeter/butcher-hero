@@ -12,6 +12,7 @@ python3 -m unittest discover -s tests -p 'test_git_test_gate.py'
 python3 -m unittest discover -s tests -p 'test_free_supervisor.py'
 python3 -m unittest discover -s tests -p 'test_local_app.py' -v
 python3 -m unittest discover -s tests -p 'test_geode_probe.py'
+python3 -m unittest discover -s tests -p 'test_save_hash.py'
 node --test tests/reward_format.test.cjs tests/reward_status.test.cjs tests/reward_animation.test.cjs tests/reward_i18n.test.cjs
 node --check dashboard/app.js
 node --check dashboard/format.js

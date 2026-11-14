@@ -1,5 +1,23 @@
 # Butcher Hero — aktív projektutasítások
 
+## A mentés-hash visszafejtve — 2026-11-14 (362)
+
+User REA-toolt telepített és a mentés integritás-hash visszefejtését kérte a
+binárisból (361 folytatása). Saját Mach-O/chained-fixups dekóderrel + IL2CPP v39
+metaadat-leltárral (REA npx-cache könyvtára, MCP Node-kapu miatt közvetlenül)
+feloldottuk a metóduscímeket és az annotált disassembly-ből a teljes recept:
+hash = BitConverter.ToString(MD5(data_nyers_bájtok + msgpack_str
+("5b5496vn7456oodw976d95mo") + optimális_int_kódolású_salt)). A salt
+UnityEngine.Random.Range(int32), a fájlban 0xD3+int64, a hash-ben optimális
+int kódolással (pozitív nagy → 0xCE+u32, negatív nagy → 0xD2+i32 — ez volt a
+hiányzó darab). Version/time NEM része a hash-nek. Három valódi mentésen
+bájtra pontos egyezés (main/backup/pre_cloud), a 361-es jar-361 elutasítás és a
+backup érvényessége tisztázva. Felhős SHA256-hash és CloudSaveLocalTrust réteg
+külön, nem fejtve/tésve. Új offline eszköz scripts/butcher-save-hash.py (verify/
+hash/hash-data, csak olvasás) + tests/test_save_hash.py 9 szintetikus teszt a
+kötelező kapuban. Konténerbe nem írtunk, játékot nem indítottunk, gyűjtőt nem
+állítottuk le/újra. Részletek: docs/362-mentes-hash-visszafejtese.md.
+
 ## Játékmentés olvasása (csak olvasás) — 2026-11-14 (361)
 
 User Teljes lemezhozzáférést adott, csak értelmezést kért. Konténer:
