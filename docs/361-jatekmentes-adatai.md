@@ -198,6 +198,13 @@ ezért azt nem csináltuk meg. Az eredmény viszont a fájlokból kiolvasható:
   A különbség csak a geode-egyenleg (4 a 6 helyett) és a karakter pozíciója;
   statok, tárgyak, kristályok és ölések azonosak.
 
+A felhasználó által feloldott gépen a betöltéskor a játék „SAVE DATA ERROR
+— damaged or modified … will try to restore your progress from the Cloud
+Save” üzenetet mutatott. A 19:24-es (helyi idő) mentés szerint a haladás
+ép: a statok, gemek, kristályok és ölések egyeznek a 12:26:10Z-s utolsó jó
+mentéssel, a Jar 360, a geode 9 (azóta újratöltődött), és csak 2 perc
+játékidő veszett el.
+
 Következtetés: a `hash` mező valódi integritás-ellenőrzés. Hash nélküli
 kézi módosítást a játék nem fogad el, hanem a backupra áll vissza. A hash
 hamisítását nem vállaltuk. Az eredeti, érvényes 12:26:10Z-s mentés a
