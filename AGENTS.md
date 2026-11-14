@@ -1,5 +1,19 @@
 # Butcher Hero — aktív projektutasítások
 
+## TELJES MENTÉSSZERKESZTÉSI LÁNC BIZONYÍTVA — 2026-11-14 (365)
+
+A 362–364 tudás végleges éles igazolása a felhasználó által kért körökben:
+(1) a játék verziófrissítése után az új verzió saját mentése a 2.1-es
+MD5-recepttel és `5b5496vn…` kulccsal validál — a recept verziófüggetlen;
+(2) a telefones állapot letöltése után Jar=7 → --to 10 (helyben, fixnum) és
+10 → 350 (kódolásváltás fixnum→uint16, a fájl +2 bájt, újraépítési út élesben,
+offline előre validálva) — mindkettő hibátlan betöltés, persistálódás;
+(3) a 10-es módosítás a felhőn át a TELEFONRA is átkerült — a teljes kör
+(Mac-szerkesztés → játék saját újramentése → feltöltés → telefon) lezárult.
+A próbaszkript session temp-ben bővült --to N/--secret módokkal; a repó kódja
+nem változott. Konténer-írás csak e körökben, SHA-256 manifestes mentéssel;
+--revert bármikor. A gyűjtő nem futott. Részletek: docs/365.
+
 ## ÉLŐ MENTÉSPRÓBA SIKERES — 2026-11-14 (364)
 
 A 362–363 tudás élesben igazolva. A 361-es Crystal Jar 360→361 módosítás
