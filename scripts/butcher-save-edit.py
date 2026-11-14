@@ -10,12 +10,16 @@ cloud_save_local_untrusted kulcsokat is összehangolja, hogy a módosított
 mentést a trust-réteg elfogadja és a felhői szinkron vigye.
 
 Módok (csak olvasás, ha nincs mód megadva; írás csak a felsorolt módokkal):
-    butcher-save-edit.py --check             # állapot: hash, Jar, copies, plist
+    butcher-save-edit.py --check             # állapot: hash, a --item tárgy adatai, plist
+    butcher-save-edit.py --items             # a mentés összes tárgya (key, level, copies)
     butcher-save-edit.py --jar N             # Jar-számláló N-re ('+N'/'-N' relatív)
-    butcher-save-edit.py --copies N          # crystal_jar példányszám N-re
-    butcher-save-edit.py --copies +1         # példányszám pontosan eggyel növelése
+    butcher-save-edit.py --copies N          # a --item tárgy példányszáma N-re
+    butcher-save-edit.py --item gem_ring --copies +1   # pl. gem_ring +1 példány
     butcher-save-edit.py --revert            # utolsó biztonsági mentés vissza
-    butcher-save-edit.py --check --secret S  # más hash-kulccsal (új verzió)
+    butcher-save-edit.py … --secret KULCS    # más hash-kulccsal (új verzió)
+
+Az alapértelmezett tárgy a crystal_jar; a --item bármelyik tárgykulcsra
+átvált (a kulcsok listája: --items).
 
 A --jar/--copies minden MessagePack-kódolási átmenetet kezel (fixnum, uint8,
 uint16, uint32, int8/16/32): azonos hossz esetén helyben cserél, változó
@@ -204,57 +208,78 @@ class Save:
     def is_valid(self):
         return self.stored_hash == self.computed_hash()
 
-    def jar_item_fields(self):
-        """A crystal_jar tétel mező-listája (pozíciókkal)."""
+    def items(self):
+        """A player.items tömb (pozíciókkal)."""
         data_fields, _, _ = MP(self.buf).read(self.data_off)
         player = next(v for k, v, *_ in data_fields if k == "player")
-        items = next(v for k, v, *_ in player if k == "items")
-        for item, _, _ in items:
+        return next(v for k, v, *_ in player if k == "items")
+
+    def item_fields(self, item_key):
+        """A megadott kulcsú tétel mező-listája (pozíciókkal)."""
+        for item, _, _ in self.items():
             if isinstance(item, list):
                 d = {k: v for k, v, *_ in item}
-                if d.get("key") == JAR_ITEM:
+                if d.get("key") == item_key:
                     return item
-        raise ValueError(f"nincs {JAR_ITEM} tárgy a mentésben")
+        raise ValueError(f"nincs {item_key!r} tárgy a mentésben (lásd --items)")
 
-    def find_item_int(self, field):
-        """A crystal_jar tétel egy int mezője: (érték, kezdő, vég, kód)."""
-        for k, v, ks, ke, vs, ve in self.jar_item_fields():
+    def find_item_int(self, item_key, field):
+        """A megadott tétel egy int mezője: (érték, kezdő, vég, kód)."""
+        for k, v, ks, ke, vs, ve in self.item_fields(item_key):
             if k == field and isinstance(v, int) and not isinstance(v, bool):
                 return v, vs, ve, self.buf[vs]
-        raise ValueError(f"a(z) {JAR_ITEM} tételben nincs {field} int mező")
+        raise ValueError(f"a(z) {item_key} tételben nincs {field} int mező")
 
     def find_jar_counter(self):
-        """A Jar-számláló (ability_counters): (érték, kezdő, vég, kód)."""
-        for k, v, ks, ke, vs, ve in self.jar_item_fields():
+        """A crystal_jar Jar-számlálója: (érték, kezdő, vég, kód)."""
+        for k, v, ks, ke, vs, ve in self.item_fields(JAR_ITEM):
             if k == "ability_counters":
                 for k2, v2, ks2, ke2, vs2, ve2 in v:
                     if k2 == JAR_COUNTER:
                         return v2, vs2, ve2, self.buf[vs2]
         raise ValueError(f"nincs {JAR_COUNTER} számláló")
 
-    def describe(self):
+    def describe(self, item_key=JAR_ITEM):
         try:
             jar = self.find_jar_counter()[0]
         except ValueError:
             jar = None
         try:
-            copies = self.find_item_int("copies")[0]
+            copies = self.find_item_int(item_key, "copies")[0]
         except ValueError:
             copies = None
         try:
-            level = self.find_item_int("level")[0]
+            level = self.find_item_int(item_key, "level")[0]
         except ValueError:
             level = None
         try:
-            acc_level = self.find_item_int("accessory_level")[0]
+            acc_level = self.find_item_int(item_key, "accessory_level")[0]
         except ValueError:
             acc_level = None
         xp = None
-        for k, v, *_ in self.jar_item_fields():
+        for k, v, *_ in self.item_fields(item_key):
             if k == "accessory_experience":
                 xp = v
-        return dict(jar=jar, copies=copies, level=level,
+        return dict(jar=jar, item=item_key, copies=copies, level=level,
                     accessory_level=acc_level, accessory_xp=xp)
+
+    def list_items(self):
+        """(key, level, copies) az összes tárgyhoz, hiányzó mező None. """
+        out = []
+        for item, _, _ in self.items():
+            if not isinstance(item, list):
+                continue
+            d = {}
+            for k, v, *_ in item:
+                d[k] = v
+            key = d.get("key")
+            if not isinstance(key, str):
+                continue
+            level = d.get("level")
+            copies = d.get("copies")
+            out.append((key, level if isinstance(level, int) else None,
+                        copies if isinstance(copies, int) else None))
+        return out
 
 
 # ------------------------------ Byte-sebészet ------------------------------
@@ -374,7 +399,7 @@ def write_save_and_align(buf, new_hash):
     print(f"             {UNTRUSTED_KEY}: -> 0")
 
 
-def cmd_edit(field_name, value_spec, finder):
+def cmd_edit(field_name, value_spec, finder, item_key):
     preflight()
     make_backup()
     path = os.path.join(DOCS, "game_data.bin")
@@ -389,8 +414,11 @@ def cmd_edit(field_name, value_spec, finder):
             "verzió más hash-kulcsot használhat; próbáld --secret-tel")
     print("  -> érvényes ✓")
 
-    value, vs, ve, code = finder(save)
-    label = f"{field_name}"
+    try:
+        value, vs, ve, code = finder(save)
+    except ValueError as err:
+        die(str(err))
+    label = f"{field_name} [{item_key}]"
     print(f"\n{label}: érték={value}, offset=0x{vs:X}, kód=0x{code:02X} ({ve-vs} bájt)")
     try:
         new_value = resolve_value(value, value_spec)
@@ -414,7 +442,7 @@ hagyj időt a mentésnek és szinkronnak, majd zárd be és futtasd --check-et.
 Visszaállítás: --revert""")
 
 
-def cmd_check():
+def cmd_check(item_key):
     path = os.path.join(DOCS, "game_data.bin")
     if not os.path.exists(path):
         die("game_data.bin nem található")
@@ -425,10 +453,20 @@ def cmd_check():
     print(f"  tárolt hash={save.stored_hash}")
     print(f"  számolt hash={save.computed_hash()}")
     print(f"  -> {'ÉRVÉNYES ✓' if save.is_valid() else 'ELTÉR ✗'}")
-    info = save.describe()
-    print(f"  crystal_jar: Jar-számláló={info['jar']}, copies={info['copies']}, "
-          f"level={info['level']}, accessory_level={info['accessory_level']}, "
-          f"accessory_xp={info['accessory_xp']}")
+    try:
+        info = save.describe(item_key)
+        print(f"  {item_key}: copies={info['copies']}, level={info['level']}, "
+              f"accessory_level={info['accessory_level']}, "
+              f"accessory_xp={info['accessory_xp']}")
+    except ValueError as err:
+        print(f"  {item_key}: {err}")
+    if item_key != JAR_ITEM:
+        try:
+            print(f"  {JAR_ITEM}: Jar-számláló={save.find_jar_counter()[0]}")
+        except ValueError:
+            pass
+    else:
+        print(f"  crystal_jar: Jar-számláló={save.describe()['jar']}")
     if os.path.exists(PLIST):
         plist = plistlib.load(open(PLIST, "rb"))
         print(f"PlayerPrefs {HASH_KEY} = {plist.get(HASH_KEY)!r}")
@@ -438,6 +476,17 @@ def cmd_check():
         if os.path.exists(p):
             print(f"  {name}: létezik ({os.path.getsize(p)} bájt, módosítva: "
                   f"{datetime.datetime.fromtimestamp(os.path.getmtime(p)):%H:%M:%S})")
+
+
+def cmd_items():
+    path = os.path.join(DOCS, "game_data.bin")
+    if not os.path.exists(path):
+        die("game_data.bin nem található")
+    save = Save(open(path, "rb").read())
+    rows = save.list_items()
+    print(f"Tárgyak a mentésben ({len(rows)}):")
+    for key, level, copies in rows:
+        print(f"  {key:32} level={str(level):>4}  copies={str(copies):>4}")
 
 
 def cmd_revert():
@@ -464,13 +513,23 @@ def cmd_revert():
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+    item_key = JAR_ITEM
+    if "--item" in args:
+        i = args.index("--item")
+        if i + 1 >= len(args):
+            die("--item után tárgykulcs kell (pl. --item gem_ring; lista: --items)")
+        item_key = args[i + 1]
+        if not item_key or item_key.startswith("--"):
+            die("üres vagy érvénytelen tárgykulcs")
+        args = args[:i] + args[i + 2:]
     if "--secret" in args:
         i = args.index("--secret")
         if i + 1 >= len(args):
             die("--secret után kulcs kell")
         _bsh.SECRET = args[i + 1].encode()
         args = args[:i] + args[i + 2:]
-    if not args or args[0] not in ("--check", "--jar", "--copies", "--revert"):
+    modes = ("--check", "--items", "--jar", "--copies", "--revert")
+    if not args or args[0] not in modes:
         print(__doc__)
         raise SystemExit(0)
     mode = args[0]
@@ -478,7 +537,11 @@ if __name__ == "__main__":
     if mode == "--check":
         if rest:
             die("--check nem vár további paramétert")
-        cmd_check()
+        cmd_check(item_key)
+    elif mode == "--items":
+        if rest:
+            die("--items nem vár további paramétert")
+        cmd_items()
     elif mode == "--revert":
         if rest:
             die("--revert nem vár további paramétert")
@@ -488,7 +551,8 @@ if __name__ == "__main__":
                                   (rest[0][:1] in "+-" and rest[0][1:].isdigit())):
             die(f"{mode} után pontosan egy szám kell (pl. {mode} 5, {mode} +1)")
         if mode == "--jar":
-            cmd_edit("Jar-számláló (ability_counters)", rest[0], Save.find_jar_counter)
+            cmd_edit("Jar-számláló (ability_counters)", rest[0],
+                     Save.find_jar_counter, JAR_ITEM)
         else:
-            cmd_edit("crystal_jar copies (példányszám)", rest[0],
-                     lambda s: s.find_item_int("copies"))
+            cmd_edit(f"copies (példányszám)", rest[0],
+                     lambda s, ik=item_key: s.find_item_int(ik, "copies"), item_key)

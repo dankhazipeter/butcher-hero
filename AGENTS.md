@@ -1,5 +1,23 @@
 # Butcher Hero — aktív projektutasítások
 
+## TÁRGYVÁLASZTHATÓ COPIES + MAKEFILE-HELP — 2026-11-14 (367)
+
+A 366-os --copies +1 éles sikerét követő user-kérés: (a) --item KULCS
+kapcsolóval bármelyik tárgy copies-a szerkeszthető (alap a crystal_jar), új
+--items mód listázza az összes tárgyat (key/level/copies). A gem_ring (felszerelt
+kiegészítő, acc_level 6) ugyanazt a sémát használja — copies 0, a user ezt
+szeretné növelni: make save-copies ITEM=gem_ring COUNT=+1. (b) A gyökér Makefile
+új help célja ##-megjegyzésekből épülő súgólistát ad (új eszköz = egy cél + egy
+## sor); a sima make alapértelmezett céle VÁLTOZATLANUL a setup (326-os szabály;
+az ezt feloldó első kísérletünket a test_plain_make_still_only_sets_up_hooks_
+never_starts_collection regressziós teszt joggal elutasította — a kapu működik);
+save-check/save-items/save-copies/save-jar/save-revert célok PORT/ITEM/
+COUNT/SECRET változókkal hívják a python-eszközöket (dry-runokkal ellenőrizve);
+a meglévő start/stop/status/install-cli/setup/test/test-vision célok változatlanok.
+Tesztek: 16 offline szintetikus (két tárgyas mentés; a NEM választott tárgy és
+a Jar-számláló változatlansága is) a kötelező kapuban. Konténer-írás nem volt;
+gyűjtő nem futott. Részletek: docs/367.
+
 ## MENTÉSSZERKESZTŐ A REPOBAN + MEZŐTÉRKÉP — 2026-11-14 (366)
 
 User kérésére a 364–365 próbaszkript repóba került: scripts/butcher-save-edit.py

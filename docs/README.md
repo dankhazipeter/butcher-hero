@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Tárgyválasztható copies, `make` súgó és a Makefile](367-targyvalaszthato-copies-es-makefile.md)
 - [Mentésszerkesztő a repóban és a mentés teljes mezőtere](366-mentesszerkeszto-repo-es-mezoterkep.md)
 - [Verziófrissítés, telefon-kör és tetszőleges érték: a mentésszerkesztés teljes láncban](365-verziofrissites-telefon-kor-tetszoleges-ertek.md)
 - [Élő mentéspróba: Crystal Jar 360→361 konzisztens hash-szel — siker](364-eloprob-jar-361-sikeres.md)
