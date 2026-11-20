@@ -1,5 +1,21 @@
 # Butcher Hero — aktív projektutasítások
 
+## TÖRT (FLOAT) MEZŐK TÁMOGATÁSA; VIP-PONTOK MEGTALÁLVA — 2026-11-20 (369)
+
+User a 368-as nézelődővel megtalálta a VIP-pontjait: user.in_apps_bought_value_
+in_rewarded = 3350.0 (float64, a user szekcióban — nem a vip szekcióban).
+A módosítás elbukott, mert a mező tört és a --set-field int-only volt. Most:
+resolve_value törtspecifikumokat fogad (N.N/+N.N; tört int mezőn hibát ad),
+új patch_float/patch_value az eredeti float32/float64 kódolást megtartva
+helyben cserél (float32 precízióvesztésnél hibát ad), a CLI minden módban
+elfogad tört alakokat. Élő parancs: make save-field FIELD=user.in_apps_bought_
+value_in_rewarded COUNT=+100. Mellékfelismerés: a 362-es hash-recept a 2.1.3-as
+verzión is érvényes (user saját futása bizonyította); a user szekcióban tört
+Unix-időbélyegek is vannak (ts/time nevekre a --set-field figyelmeztet).
+Tesztek 22→27 (float64/32 keresés+kódolás, precízióguard, int-védelem, teljes
+folyamát). Konténer-írás nem volt; személyes azonosító nem került repóba.
+Részletek: docs/369.
+
 ## SZEKCIÓ-NÉZELŐDŐ + ÁLTALÁNOS MEZŐSZERKESZTŐ — 2026-11-20 (368)
 
 User-kérés (VIP-pont 3350 hol tárolódik; listázó/módosító más értékekhez):

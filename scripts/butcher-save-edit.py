@@ -17,14 +17,16 @@ Módok (csak olvasás, ha nincs mód megadva; írás csak a felsorolt módokkal)
     butcher-save-edit.py --jar N             # Jar-számláló N-re ('+N'/'-N' relatív)
     butcher-save-edit.py --copies N          # a --item tárgy példányszáma N-re
     butcher-save-edit.py --item gem_ring --copies +1   # pl. gem_ring +1 példány
-    butcher-save-edit.py --set-field vip.points +100   # tetszőleges int-mező
+    butcher-save-edit.py --set-field vip.points +100   # tetszőleges szám-mező
+    butcher-save-edit.py --set-field user.in_apps_bought_value_in_rewarded +100  # tört mező is
     butcher-save-edit.py --revert            # utolsó biztonsági mentés vissza
     butcher-save-edit.py … --secret KULCS    # más hash-kulccsal (új verzió)
 
 Az alapértelmezett tárgy a crystal_jar; a --item bármelyik tárgykulcsra
 átvált (a kulcsok listája: --items). A --set-field pontozott útvonalon
-(szekció.mező[.almező…]) állít bármely int-mezőt — időbélyeg- és
-verziószerű neveknél figyelmeztet.
+(szekció.mező[.almező…]) állít bármely int- vagy tört- (float32/64) mezőt —
+tört mezőnél az eredeti kódolást megtartja, tört érték int mezőn hibát ad;
+időbélyeg- és verziószerű neveknél figyelmeztet.
 
 A --jar/--copies minden MessagePack-kódolási átmenetet kezel (fixnum, uint8,
 uint16, uint32, int8/16/32): azonos hossz esetén helyben cserél, változó
@@ -308,8 +310,8 @@ class Save:
                 raise ValueError(f"'{part}' nincs a(z) {'.'.join(walked)} map-ben")
             value, vs, ve = found
             walked.append(part)
-        if isinstance(value, bool) or not isinstance(value, int):
-            raise ValueError(f"'{path}' nem int mező (érték: {self._scalar(value)})")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"'{path}' nem szám mező (érték: {self._scalar(value)})")
         return value, vs, ve, self.buf[vs]
 
     def item_fields(self, item_key):
@@ -385,6 +387,8 @@ class Save:
 def patch_int(buf, vs, ve, new_value):
     """Int mező cseréje optimális kódolással; azonos hossznál helyben,
     változó hosszál újraépítéssel. Visszaadja az új puffert."""
+    if isinstance(new_value, float):
+        raise ValueError("tört érték int mezőn nem engedélyezett")
     if not (-2147483648 <= new_value <= 4294967295):
         raise ValueError("az új érték kívül esik a támogatott tartományon")
     enc = msgpack_write_int(new_value)
@@ -395,20 +399,60 @@ def patch_int(buf, vs, ve, new_value):
     return bytes(buf[:vs]) + enc + bytes(buf[ve:])
 
 
+def is_number_spec(text):
+    """'N', '+N', '-N', 'N.N', '+N.N' alakok elfogadása (int és tört)."""
+    body = text[1:] if text[:1] in "+-" else text
+    return bool(body) and body.count(".") <= 1 and body.replace(".", "", 1).isdigit()
+
+
+def patch_float(buf, vs, ve, new_value):
+    """Tört (float32/float64) mező cseréje, az eredeti kódolást megtartva."""
+    value = float(new_value)
+    code = buf[vs]
+    if code == 0xCA:
+        enc = b"\xca" + struct.pack(">f", value)
+        if struct.unpack(">f", enc[1:])[0] != value:
+            raise ValueError(f"a(z) {value!r} érték nem ábrázolható pontosan "
+                             "float32-ban (float32 mező)")
+    elif code == 0xCB:
+        enc = b"\xcb" + struct.pack(">d", value)
+    else:
+        raise ValueError(f"a mező nem tört típusú (kód 0x{code:02X})")
+    if len(enc) == ve - vs:
+        out = bytearray(buf)
+        out[vs:ve] = enc
+        return bytes(out)
+    return bytes(buf[:vs]) + enc + bytes(buf[ve:])
+
+
+def patch_value(buf, vs, ve, new_value):
+    """Int vagy tört mező cseréje a mező típusa szerint."""
+    if buf[vs] in (0xCA, 0xCB):
+        return patch_float(buf, vs, ve, new_value)
+    return patch_int(buf, vs, ve, new_value)
+
+
 def resolve_value(current, spec):
-    """'+N' = növelés, '-N' = csökkentés, 'N' = abszolút érték.
+    """'+N' = növelés, '-N' = csökkentés, 'N' = abszolút érték; tört is lehet.
 
     A Jar-számláló és a copies sosem negatív; a részhalmazra igazolunk.
+    Tört érték csak tört mezőn engedélyezett (int mezőn hibát ad).
     """
-    text = str(spec)
-    if text[:1] in "+-" and text[1:].isdigit():
-        new_value = current + int(text)
-    elif text.isdigit():
-        new_value = int(text)
-    else:
-        raise ValueError(f"érvénytelen érték: {spec!r} (elfogadott: N, +N, -N)")
+    text = str(spec).strip()
+    relative = text[:1] in "+-"
+    body = text[1:] if relative else text
+    if not body or body.count(".") > 1 or not body.replace(".", "", 1).isdigit():
+        raise ValueError(f"érvénytelen érték: {spec!r} (elfogadott: N, +N, -N, tört is)")
+    number = float(body)
+    if relative and text[0] == "-":
+        number = -number
+    if "." in body and isinstance(current, int):
+        raise ValueError(f"tört érték ({text}) int mezőn nem engedélyezett")
+    new_value = current + number if relative else number
     if new_value < 0:
         raise ValueError(f"az eredmény negatív lenne ({current} + {text})")
+    if isinstance(current, float):
+        new_value = float(new_value)
     return new_value
 
 
@@ -522,7 +566,7 @@ def cmd_edit(field_name, value_spec, finder, item_key):
         new_value = resolve_value(value, value_spec)
     except ValueError as err:
         die(str(err))
-    patched = patch_int(buf, vs, ve, new_value)
+    patched = patch_value(buf, vs, ve, new_value)
     mode = "helyben" if len(patched) == len(buf) else f"újraépítés ({len(buf)}->{len(patched)} bájt)"
     print(f"  új érték: {new_value} — {mode}")
     out, new_hash = finish_save(patched)
@@ -688,8 +732,7 @@ if __name__ == "__main__":
             die("--revert nem vár további paramétert")
         cmd_revert()
     elif mode == "--set-field":
-        if len(rest) != 2 or not (rest[1].isdigit() or
-                                  (rest[1][:1] in "+-" and rest[1][1:].isdigit())):
+        if len(rest) != 2 or not is_number_spec(rest[1]):
             die("--set-field után útvonal és szám kell (pl. --set-field vip.points +100)")
         path_spec = rest[0]
         risky = any(token in path_spec.lower() for token in ("_ts", "timestamp", "time", "version"))
@@ -699,8 +742,7 @@ if __name__ == "__main__":
         cmd_edit(f"mező", rest[1],
                  lambda s, p=path_spec: s.find_field_path(p), path_spec)
     else:
-        if len(rest) != 1 or not (rest[0].isdigit() or
-                                  (rest[0][:1] in "+-" and rest[0][1:].isdigit())):
+        if len(rest) != 1 or not is_number_spec(rest[0]):
             die(f"{mode} után pontosan egy szám kell (pl. {mode} 5, {mode} +1)")
         if mode == "--jar":
             cmd_edit("Jar-számláló (ability_counters)", rest[0],

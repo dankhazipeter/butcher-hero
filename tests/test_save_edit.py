@@ -54,7 +54,7 @@ def build_item(item_key, copies, jar_value):
 
 
 def build_save(salt, jar_copies, gem_copies, jar_value=360, vip_points=3350,
-               geode=100, red_souls=5):
+               geode=100, red_souls=5, vip_value=3350.0, f32=1.5):
     items = (bytes([0x92]) +                                  # array(2)
              build_item("crystal_jar", jar_copies, jar_value) +
              build_item("gem_ring", gem_copies, None))
@@ -63,11 +63,15 @@ def build_save(salt, jar_copies, gem_copies, jar_value=360, vip_points=3350,
     currency = (bytes([0x81]) + key("geode") + bse.msgpack_write_int(geode))
     events = (bytes([0x81]) + key("currencies") +
               bytes([0x81]) + key("red") + bse.msgpack_write_int(red_souls))
-    data = (bytes([0x84]) +                                    # map(4)
+    user = (bytes([0x82]) + key("in_apps_bought_value_in_rewarded")
+            + b"\xcb" + struct.pack(">d", vip_value)
+            + key("f32_field") + b"\xca" + struct.pack(">f", f32))
+    data = (bytes([0x85]) +                                    # map(5)
             key("player") + bytes([0x81]) + key("items") + items +
             key("vip") + vip +
             key("currency") + currency +
-            key("events") + events)
+            key("events") + events +
+            key("user") + user)
     root = bytearray(b"\x85")
     root += key("version") + b"\xd2" + struct.pack(">i", 2)
     root += key("salt") + b"\xd3" + struct.pack(">q", salt)
@@ -227,6 +231,63 @@ class FieldPathTests(unittest.TestCase):
         self.assertTrue(final.is_valid())
         self.assertEqual(final.find_field_path("events.currencies.red")[0], 1000)
         self.assertEqual(len(out), len(self.buf) + 2)       # fixnum(1) -> uint16(3)
+
+
+class FloatFieldTests(unittest.TestCase):
+    def setUp(self):
+        self.buf = build_save(1742030218, 2, 1, 10)
+        self.save = bse.Save(self.buf)
+
+    def test_find_float_field(self):
+        value, vs, ve, code = self.save.find_field_path(
+            "user.in_apps_bought_value_in_rewarded")
+        self.assertEqual(value, 3350.0)
+        self.assertEqual(code, 0xCB)               # float64
+        value, vs, ve, code = self.save.find_field_path("user.f32_field")
+        self.assertEqual(value, 1.5)
+        self.assertEqual(code, 0xCA)               # float32
+
+    def test_patch_float64_relative(self):
+        value, vs, ve, code = self.save.find_field_path(
+            "user.in_apps_bought_value_in_rewarded")
+        new_value = bse.resolve_value(value, "+100")
+        patched = bse.patch_value(self.buf, vs, ve, new_value)
+        out, _ = bse.finish_save(patched)
+        final = bse.Save(out)
+        self.assertTrue(final.is_valid())
+        got, _, _, code = final.find_field_path("user.in_apps_bought_value_in_rewarded")
+        self.assertEqual(got, 3450.0)
+        self.assertEqual(code, 0xCB)               # a kódolás változatlan
+        self.assertEqual(len(out), len(self.buf))  # helyben, azonos szélesség
+        # a többi érintetlen
+        self.assertEqual(final.find_field_path("currency.geode")[0], 100)
+        self.assertEqual(final.find_jar_counter()[0], 10)
+
+    def test_patch_float32_and_precision_guard(self):
+        value, vs, ve, _ = self.save.find_field_path("user.f32_field")
+        patched = bse.patch_value(self.buf, vs, ve, 7.5)      # float32-ben pontos
+        out, _ = bse.finish_save(patched)
+        got, _, _, code = bse.Save(out).find_field_path("user.f32_field")
+        self.assertEqual((got, code), (7.5, 0xCA))
+        with self.assertRaises(ValueError):                   # float32-ben nem ábrázolható
+            bse.patch_value(self.buf, vs, ve, 3450.7)
+
+    def test_int_field_rejects_fraction_spec(self):
+        with self.assertRaises(ValueError):
+            bse.resolve_value(100, "+2.5")          # tört spec int mezőn
+        with self.assertRaises(ValueError):
+            bse.patch_int(self.buf, 0, 1, 2.5)      # tört érték int patch-en
+
+    def test_resolve_value_fraction_forms(self):
+        self.assertEqual(bse.resolve_value(3350.0, "+100.0"), 3450.0)
+        self.assertEqual(bse.resolve_value(3350.0, "3450.0"), 3450.0)
+        self.assertEqual(bse.resolve_value(3350.0, "+0.5"), 3350.5)
+        self.assertEqual(bse.resolve_value(3350.0, "+100"), 3450.0)  # int delta floaton
+        self.assertEqual(bse.resolve_value(10, "-5"), 5)
+        with self.assertRaises(ValueError):
+            bse.resolve_value(0.5, "-1")            # negatív eredmény
+        with self.assertRaises(ValueError):
+            bse.resolve_value(10, "abc")
 
 
 class ResolveValueTests(unittest.TestCase):
