@@ -1,5 +1,20 @@
 # Butcher Hero — aktív projektutasítások
 
+## SZEKCIÓ-NÉZELŐDŐ + ÁLTALÁNOS MEZŐSZERKESZTŐ — 2026-11-20 (368)
+
+User-kérés (VIP-pont 3350 hol tárolódik; listázó/módosító más értékekhez):
+a mentésben a `vip` szekció (366-os térkép) a valószínű hely — a pontos mezőnevet
+a most elkészült nézelődő mutatja meg. A butcher-save-edit.py új módjai:
+--sections (a 32 szekció listája), --section NÉV [--depth 1..4] (szekció
+kibontása értékekkel), --set-field ÚTVONAL ÉRTÉK (bármely int-mező pontozott
+útvonalon, pl. vip.points +100; ugyanazok a sínek: preflight, hash-ellenőrzés,
+SHA-256 backup, kódolási átmenetek, hash-újracs, PlayerPrefs-összehang, relatív
++N/-N; ts/time/version-szerű útvonalaknál figyelmeztet). Új make célok a
+helpben: save-sections, save-section (SECTION=/DEPTH=), save-field (FIELD=/COUNT=).
+Tesztek 16→22 (vip/currency/events szekciókkal bővült szintetikus mentés;
+útvonal-guardok, patch-folyamát, más szekciók változatlansága, kódolásváltás).
+Konténer-írás nem volt; gyűjtő nem futott. Részletek: docs/368.
+
 ## TÁRGYVÁLASZTHATÓ COPIES + MAKEFILE-HELP — 2026-11-14 (367)
 
 A 366-os --copies +1 éles sikerét követő user-kérés: (a) --item KULCS

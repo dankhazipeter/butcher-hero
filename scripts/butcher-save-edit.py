@@ -12,14 +12,19 @@ mentést a trust-réteg elfogadja és a felhői szinkron vigye.
 Módok (csak olvasás, ha nincs mód megadva; írás csak a felsorolt módokkal):
     butcher-save-edit.py --check             # állapot: hash, a --item tárgy adatai, plist
     butcher-save-edit.py --items             # a mentés összes tárgya (key, level, copies)
+    butcher-save-edit.py --sections          # a mentés 32 adatszekciója
+    butcher-save-edit.py --section vip       # egy szekció kibontása (--depth 1..4)
     butcher-save-edit.py --jar N             # Jar-számláló N-re ('+N'/'-N' relatív)
     butcher-save-edit.py --copies N          # a --item tárgy példányszáma N-re
     butcher-save-edit.py --item gem_ring --copies +1   # pl. gem_ring +1 példány
+    butcher-save-edit.py --set-field vip.points +100   # tetszőleges int-mező
     butcher-save-edit.py --revert            # utolsó biztonsági mentés vissza
     butcher-save-edit.py … --secret KULCS    # más hash-kulccsal (új verzió)
 
 Az alapértelmezett tárgy a crystal_jar; a --item bármelyik tárgykulcsra
-átvált (a kulcsok listája: --items).
+átvált (a kulcsok listája: --items). A --set-field pontozott útvonalon
+(szekció.mező[.almező…]) állít bármely int-mezőt — időbélyeg- és
+verziószerű neveknél figyelmeztet.
 
 A --jar/--copies minden MessagePack-kódolási átmenetet kezel (fixnum, uint8,
 uint16, uint32, int8/16/32): azonos hossz esetén helyben cserél, változó
@@ -210,9 +215,102 @@ class Save:
 
     def items(self):
         """A player.items tömb (pozíciókkal)."""
-        data_fields, _, _ = MP(self.buf).read(self.data_off)
-        player = next(v for k, v, *_ in data_fields if k == "player")
+        player = next(v for k, v, *_ in self.data_sections() if k == "player")
         return next(v for k, v, *_ in player if k == "items")
+
+    def data_sections(self):
+        """A data szekciók mező-listája (k, v, ks, ke, vs, ve) sorrendben."""
+        return MP(self.buf).read(self.data_off)[0]
+
+    def list_sections(self):
+        """(név, típus, darab) a data szekciókról."""
+        out = []
+        for k, v, ks, ke, vs, ve in self.data_sections():
+            if isinstance(v, list) and v and isinstance(v[0], tuple) and len(v[0]) == 6:
+                out.append((k, "map", len(v)))
+            elif isinstance(v, list):
+                out.append((k, "array", len(v)))
+            else:
+                out.append((k, "scalar", None))
+        return out
+
+    def dump_section(self, name, max_depth=2):
+        """Egy szekció olvasható kibontása (sorok listája)."""
+        lines = []
+        for k, v, ks, ke, vs, ve in self.data_sections():
+            if k == name:
+                self._fmt(v, 0, max_depth, "", lines)
+                return lines
+        raise ValueError(f"nincs '{name}' szekció (lásd --sections)")
+
+    def _fmt(self, v, depth, max_depth, prefix, lines):
+        if isinstance(v, list) and v and isinstance(v[0], tuple) and len(v[0]) == 6:
+            if depth >= max_depth:
+                lines.append(f"{prefix}map({len(v)}) …")
+                return
+            for k2, v2, *_ in v:
+                if isinstance(v2, (int, float, str, bool)) or v2 is None:
+                    lines.append(f"{prefix}{k2}: {self._scalar(v2)}")
+                else:
+                    lines.append(f"{prefix}{k2}:")
+                    self._fmt(v2, depth + 1, max_depth, prefix + "  ", lines)
+        elif isinstance(v, list):
+            if not v:
+                lines.append(f"{prefix}array(0)")
+                return
+            heads = []
+            for item, _, _ in v[:6]:
+                if isinstance(item, list) and item and isinstance(item[0], tuple):
+                    heads.append("map" if len(item[0]) == 6 else "elem")
+                else:
+                    heads.append(self._scalar(item))
+            more = "" if len(v) <= 6 else f", … (+{len(v) - 6})"
+            lines.append(f"{prefix}array({len(v)}) [{', '.join(heads)}{more}]")
+        else:
+            lines.append(f"{prefix}{self._scalar(v)}")
+
+    @staticmethod
+    def _scalar(v):
+        if isinstance(v, bool):
+            return "true" if v else "false"
+        if isinstance(v, str):
+            return repr(v) if len(v) <= 48 else repr(v[:45] + "…")
+        if isinstance(v, tuple) and len(v) == 3 and v[0] == "ext":
+            return f"ext(0x{v[2].hex()[:16]}…)"
+        return repr(v)
+
+    def find_field_path(self, path):
+        """Pontozott útvonalú int-mező: 'szekció.mező[.almező…]'.
+
+        Visszaad (érték, kezdő, vég, kód); minden köztes szint map kell legyen.
+        """
+        parts = [p for p in path.split(".") if p]
+        if len(parts) < 2:
+            raise ValueError("az útvonal legalább szekció.mező legyen (pl. vip.points)")
+        entry = None
+        for k, v, ks, ke, vs, ve in self.data_sections():
+            if k == parts[0]:
+                entry = (v, vs, ve)
+                break
+        if entry is None:
+            raise ValueError(f"nincs '{parts[0]}' szekció (lásd --sections)")
+        value, vs, ve = entry
+        walked = [parts[0]]
+        for part in parts[1:]:
+            if not (isinstance(value, list) and value and isinstance(value[0], tuple) and len(value[0]) == 6):
+                raise ValueError(f"'{'.'.join(walked)}' nem map, '{part}' nem kereshető benne")
+            found = None
+            for k2, v2, ks2, ke2, vs2, ve2 in value:
+                if k2 == part:
+                    found = (v2, vs2, ve2)
+                    break
+            if found is None:
+                raise ValueError(f"'{part}' nincs a(z) {'.'.join(walked)} map-ben")
+            value, vs, ve = found
+            walked.append(part)
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(f"'{path}' nem int mező (érték: {self._scalar(value)})")
+        return value, vs, ve, self.buf[vs]
 
     def item_fields(self, item_key):
         """A megadott kulcsú tétel mező-listája (pozíciókkal)."""
@@ -442,6 +540,33 @@ hagyj időt a mentésnek és szinkronnak, majd zárd be és futtasd --check-et.
 Visszaállítás: --revert""")
 
 
+def cmd_sections():
+    path = os.path.join(DOCS, "game_data.bin")
+    if not os.path.exists(path):
+        die("game_data.bin nem található")
+    save = Save(open(path, "rb").read())
+    rows = save.list_sections()
+    print(f"A mentés data szekciói ({len(rows)}):")
+    for name, kind, count in rows:
+        extra = f"({count})" if count is not None else ""
+        print(f"  {name:24} {kind}{extra}")
+    print("\nKibontás: make save-section SECTION=<név> (vagy --section <név>)")
+
+
+def cmd_section(name, depth):
+    path = os.path.join(DOCS, "game_data.bin")
+    if not os.path.exists(path):
+        die("game_data.bin nem található")
+    save = Save(open(path, "rb").read())
+    try:
+        lines = save.dump_section(name, max_depth=depth)
+    except ValueError as err:
+        die(str(err))
+    print(f"[{name}] szekció (mélység {depth}):")
+    for line in lines:
+        print(f"  {line}")
+
+
 def cmd_check(item_key):
     path = os.path.join(DOCS, "game_data.bin")
     if not os.path.exists(path):
@@ -514,6 +639,7 @@ def cmd_revert():
 if __name__ == "__main__":
     args = sys.argv[1:]
     item_key = JAR_ITEM
+    depth = 2
     if "--item" in args:
         i = args.index("--item")
         if i + 1 >= len(args):
@@ -522,13 +648,20 @@ if __name__ == "__main__":
         if not item_key or item_key.startswith("--"):
             die("üres vagy érvénytelen tárgykulcs")
         args = args[:i] + args[i + 2:]
+    if "--depth" in args:
+        i = args.index("--depth")
+        if i + 1 >= len(args) or not args[i + 1].isdigit():
+            die("--depth után 1-4 szám kell")
+        depth = min(4, max(1, int(args[i + 1])))
+        args = args[:i] + args[i + 2:]
     if "--secret" in args:
         i = args.index("--secret")
         if i + 1 >= len(args):
             die("--secret után kulcs kell")
         _bsh.SECRET = args[i + 1].encode()
         args = args[:i] + args[i + 2:]
-    modes = ("--check", "--items", "--jar", "--copies", "--revert")
+    modes = ("--check", "--items", "--sections", "--section", "--set-field",
+             "--jar", "--copies", "--revert")
     if not args or args[0] not in modes:
         print(__doc__)
         raise SystemExit(0)
@@ -542,10 +675,29 @@ if __name__ == "__main__":
         if rest:
             die("--items nem vár további paramétert")
         cmd_items()
+    elif mode == "--sections":
+        if rest:
+            die("--sections nem vár további paramétert")
+        cmd_sections()
+    elif mode == "--section":
+        if len(rest) != 1:
+            die("--section után pontosan egy szekciónév kell (lista: --sections)")
+        cmd_section(rest[0], depth)
     elif mode == "--revert":
         if rest:
             die("--revert nem vár további paramétert")
         cmd_revert()
+    elif mode == "--set-field":
+        if len(rest) != 2 or not (rest[1].isdigit() or
+                                  (rest[1][:1] in "+-" and rest[1][1:].isdigit())):
+            die("--set-field után útvonal és szám kell (pl. --set-field vip.points +100)")
+        path_spec = rest[0]
+        risky = any(token in path_spec.lower() for token in ("_ts", "timestamp", "time", "version"))
+        if risky:
+            print("FIGYELEM: az útvonal időbélyeg-/verziószerű nevű mezőre mutat — "
+                  "a 366-os irányelv szerint ilyen mezőt szerkeszteni kockázatos.")
+        cmd_edit(f"mező", rest[1],
+                 lambda s, p=path_spec: s.find_field_path(p), path_spec)
     else:
         if len(rest) != 1 or not (rest[0].isdigit() or
                                   (rest[0][:1] in "+-" and rest[0][1:].isdigit())):

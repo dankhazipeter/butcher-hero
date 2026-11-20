@@ -53,12 +53,21 @@ def build_item(item_key, copies, jar_value):
     return bytes(out)
 
 
-def build_save(salt, jar_copies, gem_copies, jar_value=360):
+def build_save(salt, jar_copies, gem_copies, jar_value=360, vip_points=3350,
+               geode=100, red_souls=5):
     items = (bytes([0x92]) +                                  # array(2)
              build_item("crystal_jar", jar_copies, jar_value) +
              build_item("gem_ring", gem_copies, None))
-    data = (bytes([0x81]) + key("player") +
-            bytes([0x81]) + key("items") + items)
+    vip = (bytes([0x82]) + key("points") + bse.msgpack_write_int(vip_points)
+           + key("level") + bse.msgpack_write_int(5))
+    currency = (bytes([0x81]) + key("geode") + bse.msgpack_write_int(geode))
+    events = (bytes([0x81]) + key("currencies") +
+              bytes([0x81]) + key("red") + bse.msgpack_write_int(red_souls))
+    data = (bytes([0x84]) +                                    # map(4)
+            key("player") + bytes([0x81]) + key("items") + items +
+            key("vip") + vip +
+            key("currency") + currency +
+            key("events") + events)
     root = bytearray(b"\x85")
     root += key("version") + b"\xd2" + struct.pack(">i", 2)
     root += key("salt") + b"\xd3" + struct.pack(">q", salt)
@@ -160,6 +169,64 @@ class PatchTests(unittest.TestCase):
     def test_gem_ring_copies_growth(self):
         old, new, _ = self.patch_and_check(1742030218, "gem_ring", 2, 5, 10, 300, "copies")
         self.assertEqual(new, old + 2)
+
+
+class FieldPathTests(unittest.TestCase):
+    def setUp(self):
+        self.buf = build_save(1742030218, 2, 1, 10, vip_points=3350,
+                              geode=100, red_souls=5)
+        self.save = bse.Save(self.buf)
+
+    def test_list_sections(self):
+        rows = dict((name, (kind, count)) for name, kind, count in
+                    self.save.list_sections())
+        self.assertEqual(rows["vip"], ("map", 2))
+        self.assertEqual(rows["currency"], ("map", 1))
+        self.assertEqual(rows["player"], ("map", 1))
+
+    def test_dump_section(self):
+        lines = self.save.dump_section("vip")
+        self.assertTrue(any("points: 3350" in ln for ln in lines))
+        self.assertTrue(any("level: 5" in ln for ln in lines))
+        with self.assertRaises(ValueError):
+            self.save.dump_section("nincs_ilyen")
+
+    def test_find_field_paths(self):
+        self.assertEqual(self.save.find_field_path("vip.points")[0], 3350)
+        self.assertEqual(self.save.find_field_path("currency.geode")[0], 100)
+        self.assertEqual(self.save.find_field_path("events.currencies.red")[0], 5)
+
+    def test_path_guards(self):
+        with self.assertRaises(ValueError):
+            self.save.find_field_path("vip")                # túl rövid útvonal
+        with self.assertRaises(ValueError):
+            self.save.find_field_path("nincs.points")       # nincs szekció
+        with self.assertRaises(ValueError):
+            self.save.find_field_path("vip.nincs")          # nincs mező
+        with self.assertRaises(ValueError):
+            self.save.find_field_path("vip.points.még")     # int végű útvonalra lépés
+
+    def test_set_field_patch_flow(self):
+        value, vs, ve, code = self.save.find_field_path("vip.points")
+        patched = bse.patch_int(self.buf, vs, ve, value + 100)
+        out, new_hash = bse.finish_save(patched)
+        final = bse.Save(out)
+        self.assertTrue(final.is_valid())
+        self.assertEqual(final.find_field_path("vip.points")[0], 3450)
+        # a többi szekció érintetlen
+        self.assertEqual(final.find_field_path("currency.geode")[0], 100)
+        self.assertEqual(final.find_jar_counter()[0], 10)
+        self.assertEqual(final.find_item_int("gem_ring", "copies")[0], 1)
+
+    def test_set_field_relative_and_encoding(self):
+        value, vs, ve, code = self.save.find_field_path("events.currencies.red")
+        self.assertEqual(bse.resolve_value(value, "+995"), 1000)
+        patched = bse.patch_int(self.buf, vs, ve, 1000)     # fixnum -> uint16
+        out, _ = bse.finish_save(patched)
+        final = bse.Save(out)
+        self.assertTrue(final.is_valid())
+        self.assertEqual(final.find_field_path("events.currencies.red")[0], 1000)
+        self.assertEqual(len(out), len(self.buf) + 2)       # fixnum(1) -> uint16(3)
 
 
 class ResolveValueTests(unittest.TestCase):

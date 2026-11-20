@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [Szekció-nézelődő és általános mezőszerkesztő](368-szekcio-nezelodo-es-mezoszerkeszto.md)
 - [Tárgyválasztható copies, `make` súgó és a Makefile](367-targyvalaszthato-copies-es-makefile.md)
 - [Mentésszerkesztő a repóban és a mentés teljes mezőtere](366-mentesszerkeszto-repo-es-mezoterkep.md)
 - [Verziófrissítés, telefon-kör és tetszőleges érték: a mentésszerkesztés teljes láncban](365-verziofrissites-telefon-kor-tetszoleges-ertek.md)
