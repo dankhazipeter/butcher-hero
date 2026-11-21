@@ -5,6 +5,7 @@ A scripts/butcher-save-edit.py (364–367) magját rögzíti: tárgyválasztás
 átmeneten, hash-újraszámolás a testvér butcher-save-hash.py receptjével.
 """
 import importlib.util
+import os
 import struct
 import unittest
 from pathlib import Path
@@ -288,6 +289,76 @@ class FloatFieldTests(unittest.TestCase):
             bse.resolve_value(0.5, "-1")            # negatív eredmény
         with self.assertRaises(ValueError):
             bse.resolve_value(10, "abc")
+
+
+class FlattenDiffTests(unittest.TestCase):
+    def setUp(self):
+        self.a = bse.Save(build_save(1742030218, 2, 1, 10))
+
+    def test_flatten_paths(self):
+        flat = self.a.flatten()
+        self.assertIn("user.in_apps_bought_value_in_rewarded", flat)
+        self.assertEqual(flat["user.in_apps_bought_value_in_rewarded"], 3350.0)
+        self.assertIn("player.items[0].copies", flat)
+        self.assertEqual(flat["player.items[1].key"], "gem_ring")
+        self.assertIn("events.currencies.red", flat)
+        self.assertIn("vip.points", flat)
+
+    def test_diff_detects_single_change(self):
+        value, vs, ve, _ = self.a.find_field_path("vip.points")
+        b_buf = bse.patch_value(self.a.buf, vs, ve, 999)
+        b = bse.Save(b_buf)
+        rows = bse.Save.diff(self.a.flatten(), b.flatten())
+        self.assertEqual(rows, [("vip.points", 3350, 999, "változott")])
+
+    def test_diff_detects_appearance_and_disappearance(self):
+        # egy mező "eltűnése": a másik mentésben más értékkel/kulccsal építünk
+        b = bse.Save(build_save(11, 2, 1, 10, geode=250))
+        rows = dict((path, row) for row in
+                    bse.Save.diff(self.a.flatten(), b.flatten())
+                    for path in [row[0]])
+        self.assertIn("currency.geode", rows)
+        self.assertEqual(rows["currency.geode"][3], "változott")
+
+
+class RiskyNoteTests(unittest.TestCase):
+    def test_known_risky_field(self):
+        note = bse.risky_note("user.in_apps_bought_value_in_rewarded")
+        self.assertIsNotNone(note)
+        self.assertIn("VIP-szintet", note)
+
+    def test_timestamp_like(self):
+        self.assertIsNotNone(bse.risky_note("user.install_time"))
+        self.assertIsNotNone(bse.risky_note("player.unstack_cooldown_ts"))
+        self.assertIsNotNone(bse.risky_note("version"))
+
+    def test_safe_field(self):
+        self.assertIsNone(bse.risky_note("vip.points"))
+        self.assertIsNone(bse.risky_note("player.items[0].copies"))
+
+
+class PickBackupTests(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        self.temp = tempfile.TemporaryDirectory(prefix="butcher-backup-test-")
+        self.addCleanup(self.temp.cleanup)
+        self.old_root = bse.BACKUP_ROOT
+        bse.BACKUP_ROOT = self.temp.name
+        for name in ("20261120-161004-save-edit", "20261121-074105-save-edit",
+                     "20261114-223919-jar-361-consistent"):
+            os.makedirs(os.path.join(self.temp.name, name), exist_ok=True)
+
+    def tearDown(self):
+        bse.BACKUP_ROOT = self.old_root
+
+    def test_latest_and_exact_and_prefix(self):
+        self.assertTrue(bse.pick_backup().endswith("20261121-074105-save-edit"))
+        self.assertTrue(bse.pick_backup("20261120-161004-save-edit")
+                        .endswith("20261120-161004-save-edit"))
+        self.assertTrue(bse.pick_backup("20261114-2239")
+                        .endswith("jar-361-consistent"))
+        with self.assertRaises(ValueError):
+            bse.pick_backup("nem-letezo")
 
 
 class ResolveValueTests(unittest.TestCase):

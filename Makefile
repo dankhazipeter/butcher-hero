@@ -10,10 +10,12 @@ FIELD  ?=             # save-field pontozott útvonala (pl. vip.points)
 SECTION ?=            # save-section cél-szekció (lista: make save-sections)
 DEPTH  ?=             # save-section kibontási mélység (1..4, alap 2)
 
+BACKUP ?=             # save-diff/save-revert cél-mentés neve (alap: legutóbbi)
+
 .DEFAULT_GOAL := setup
 .PHONY: help start stop status install-cli setup test test-vision \
         save-check save-items save-sections save-section save-field \
-        save-copies save-jar save-revert
+        save-diff save-copies save-jar save-revert
 
 help: ## Ez a súgó: az elérhető parancsok listája (make help)
 	@printf "Butcher Hero parancsok — make <cél> [VÁLTOZÓ=érték …]\n\n"
@@ -64,11 +66,14 @@ save-section: ## Egy szekció kibontása értékekkel (SECTION=vip [DEPTH=2])
 save-field: ## Int-mező állítása pontozott útvonalon (FIELD=vip.points COUNT=+100)
 	python3 scripts/butcher-save-edit.py --set-field $(FIELD) $(COUNT) $(if $(SECRET),--secret $(SECRET))
 
+save-diff: ## Mostani mentés vs. backup mezőszintű diffje (BACKUP=név, alap: legutóbbi)
+	python3 scripts/butcher-save-edit.py --diff $(BACKUP)
+
 save-copies: ## Az ITEM tárgy példányszáma COUNT-ra (N / +N / -N)
 	python3 scripts/butcher-save-edit.py --item $(ITEM) --copies $(COUNT) $(if $(SECRET),--secret $(SECRET))
 
 save-jar: ## Crystal Jar lelk-számláló COUNT-ra (N / +N / -N)
 	python3 scripts/butcher-save-edit.py --jar $(COUNT) $(if $(SECRET),--secret $(SECRET))
 
-save-revert: ## Utolsó mentés-szerkesztési biztonsági mentés visszaállítása
-	python3 scripts/butcher-save-edit.py --revert
+save-revert: ## Visszaállítás mentésből (BACKUP=név, alap: legutóbbi)
+	python3 scripts/butcher-save-edit.py --revert $(BACKUP)

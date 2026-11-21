@@ -20,6 +20,9 @@ Módok (csak olvasás, ha nincs mód megadva; írás csak a felsorolt módokkal)
     butcher-save-edit.py --set-field vip.points +100   # tetszőleges szám-mező
     butcher-save-edit.py --set-field user.in_apps_bought_value_in_rewarded +100  # tört mező is
     butcher-save-edit.py --revert            # utolsó biztonsági mentés vissza
+    butcher-save-edit.py --revert 20261121-074105-save-edit   # adott mentésből
+    butcher-save-edit.py --diff              # mostani vs. legutóbbi mentés diff
+    butcher-save-edit.py --diff 20261121-074105-save-edit     # adott mentéshez
     butcher-save-edit.py … --secret KULCS    # más hash-kulccsal (új verzió)
 
 Az alapértelmezett tárgy a crystal_jar; a --item bármelyik tárgykulcsra
@@ -72,6 +75,25 @@ UNTRUSTED_KEY = "cloud_save_local_untrusted"
 GAME_PROCESS = "ButcherherohooknchewRPG"
 JAR_ITEM = "crystal_jar"
 JAR_COUNTER = "accessory_crystal_jar_ability_1"
+
+# Ismert, játéklogikát vezető mezők: szerkesztésük a játék reakciójától függ.
+# (2026-11-21: user.in_apps_bought_value_in_rewarded 3450→3950 ugrás a
+#  hammer/kovács játékfunkciót eltörte — 370-es doksiban részletezve.)
+RISKY_FIELDS = {
+    "user.in_apps_bought_value_in_rewarded":
+        "VIP-szintet vezető mező: nagy ugrás játékfunkciókat törhet "
+        "(2026-11-21: 3450→3950 a hammer/kovács funkciót eltörte)",
+}
+
+
+def risky_note(path):
+    """Figyelmeztetés kockázatos mezőútvonalhoz (None, ha nincs kockázat)."""
+    for prefix, note in RISKY_FIELDS.items():
+        if path == prefix or path.startswith(prefix + "."):
+            return note
+    if any(token in path.lower() for token in ("_ts", "timestamp", "time", "version")):
+        return "időbélyeg-/verziószerű mező — a 366-os irányelv szerint kockázatos"
+    return None
 
 
 # ------------------------- MessagePack (pozíciókövető) -------------------------
@@ -280,6 +302,38 @@ class Save:
         if isinstance(v, tuple) and len(v) == 3 and v[0] == "ext":
             return f"ext(0x{v[2].hex()[:16]}…)"
         return repr(v)
+
+    def flatten(self):
+        """{útvonal: érték} a teljes data-fából (szekció.mező[.almező…], tömbindexekkel)."""
+        out = {}
+        for k, v, ks, ke, vs, ve in self.data_sections():
+            self._walk(v, str(k), out)
+        return out
+
+    @classmethod
+    def _walk(cls, value, prefix, out):
+        if isinstance(value, list) and value and isinstance(value[0], tuple) and len(value[0]) == 6:
+            for k2, v2, *_ in value:
+                cls._walk(v2, f"{prefix}.{k2}", out)
+        elif isinstance(value, list):
+            for i, (item, _, _) in enumerate(value):
+                cls._walk(item, f"{prefix}[{i}]", out)
+        else:
+            out[prefix] = value
+
+    @staticmethod
+    def diff(flat_a, flat_b):
+        """Két flatten-eredmény különbsége: (útvonal, régi, új, csak_a/csak_b jelzés)."""
+        rows = []
+        for path in sorted(set(flat_a) | set(flat_b)):
+            a, b = flat_a.get(path), flat_b.get(path)
+            if path not in flat_b:
+                rows.append((path, a, None, "csak_régi"))
+            elif path not in flat_a:
+                rows.append((path, None, b, "csak_új"))
+            elif a != b:
+                rows.append((path, a, b, "változott"))
+        return rows
 
     def find_field_path(self, path):
         """Pontozott útvonalú int-mező: 'szekció.mező[.almező…]'.
@@ -658,16 +712,65 @@ def cmd_items():
         print(f"  {key:32} level={str(level):>4}  copies={str(copies):>4}")
 
 
-def cmd_revert():
+def list_backups():
+    if not os.path.isdir(BACKUP_ROOT):
+        return []
+    return sorted(d for d in os.listdir(BACKUP_ROOT)
+                  if d.endswith(("save-edit", "jar-361-consistent")))
+
+
+def pick_backup(name=None):
+    """Biztonsági mentés kiválasztása: 'latest'/None = legutóbbi; egyébként
+    pontos név vagy előtag. Visszaadja a mappa útvonalát."""
+    candidates = list_backups()
+    if not candidates:
+        raise ValueError("nincs visszaállítható biztonsági mentés")
+    if not name or name == "latest":
+        return os.path.join(BACKUP_ROOT, candidates[-1])
+    matches = [d for d in candidates if d == name or d.startswith(name)]
+    if not matches:
+        tail = ", ".join(candidates[-5:])
+        raise ValueError(f"nincs ilyen mentés: {name} (elérhetők utolsók: {tail})")
+    return os.path.join(BACKUP_ROOT, matches[-1])
+
+
+def cmd_diff(backup_name):
+    cur_path = os.path.join(DOCS, "game_data.bin")
+    if not os.path.exists(cur_path):
+        die("game_data.bin nem található")
+    try:
+        backup_dir = pick_backup(backup_name)
+    except ValueError as err:
+        die(str(err))
+    old_path = os.path.join(backup_dir, "game_data.bin")
+    if not os.path.exists(old_path):
+        die(f"a mentésben nincs game_data.bin: {backup_dir}")
+    old = Save(open(old_path, "rb").read())
+    new = Save(open(cur_path, "rb").read())
+    rows = Save.diff(old.flatten(), new.flatten())
+    changed = [r for r in rows if r[3] == "változott"]
+    only_old = [r for r in rows if r[3] == "csak_régi"]
+    only_new = [r for r in rows if r[3] == "csak_új"]
+    print(f"Összehasonlítás (régiben -> új, azaz backup -> mostani):")
+    print(f"  mentés: {backup_dir}")
+    print(f"  {len(changed)} mező változott, {len(only_old)} csak a régiben, "
+          f"{len(only_new)} csak az újban\n")
+    for path, a, b, kind in rows:
+        if kind == "változott":
+            print(f"  ~ {path}: {Save._scalar(a)} -> {Save._scalar(b)}")
+        elif kind == "csak_régi":
+            print(f"  - {path}: {Save._scalar(a)} (eltűnt)")
+        else:
+            print(f"  + {path}: {Save._scalar(b)} (új)")
+
+
+def cmd_revert(backup_name=None):
     if game_running():
         die("a játék fut — zárd be előbb")
-    if not os.path.isdir(BACKUP_ROOT):
-        die("nincs save-backups mappa")
-    candidates = sorted(d for d in os.listdir(BACKUP_ROOT)
-                        if d.endswith(("save-edit", "jar-361-consistent")))
-    if not candidates:
-        die("nincs visszaállítható biztonsági mentés")
-    src = os.path.join(BACKUP_ROOT, candidates[-1])
+    try:
+        src = pick_backup(backup_name)
+    except ValueError as err:
+        die(str(err))
     print(f"Visszaállítás innen: {src}")
     for name in ("game_data.bin", "game_data_backup.bin", "game_data_pre_cloud.bin",
                  "com.multicastgames.butcher.plist"):
@@ -677,7 +780,8 @@ def cmd_revert():
             shutil.copy2(s, dst + ".reverting")
             os.replace(dst + ".reverting", dst)
             print(f"  {name} visszaállítva")
-    print("Kész — ellenőrizd --check-kel.")
+    print("Kész — ellenőrizd --check-kel. A felhő felülírása ellenére indulás "
+          "után hagyd, hogy a játék újat mentsen és feltöltsön (365).")
 
 
 if __name__ == "__main__":
@@ -705,7 +809,7 @@ if __name__ == "__main__":
         _bsh.SECRET = args[i + 1].encode()
         args = args[:i] + args[i + 2:]
     modes = ("--check", "--items", "--sections", "--section", "--set-field",
-             "--jar", "--copies", "--revert")
+             "--diff", "--jar", "--copies", "--revert")
     if not args or args[0] not in modes:
         print(__doc__)
         raise SystemExit(0)
@@ -727,18 +831,21 @@ if __name__ == "__main__":
         if len(rest) != 1:
             die("--section után pontosan egy szekciónév kell (lista: --sections)")
         cmd_section(rest[0], depth)
+    elif mode == "--diff":
+        if len(rest) > 1:
+            die("--diff legfeljebb egy mentésnevet vár (alap: legutóbbi)")
+        cmd_diff(rest[0] if rest else None)
     elif mode == "--revert":
-        if rest:
-            die("--revert nem vár további paramétert")
-        cmd_revert()
+        if len(rest) > 1:
+            die("--revert legfeljebb egy mentésnevet vár (alap: legutóbbi)")
+        cmd_revert(rest[0] if rest else None)
     elif mode == "--set-field":
         if len(rest) != 2 or not is_number_spec(rest[1]):
             die("--set-field után útvonal és szám kell (pl. --set-field vip.points +100)")
         path_spec = rest[0]
-        risky = any(token in path_spec.lower() for token in ("_ts", "timestamp", "time", "version"))
-        if risky:
-            print("FIGYELEM: az útvonal időbélyeg-/verziószerű nevű mezőre mutat — "
-                  "a 366-os irányelv szerint ilyen mezőt szerkeszteni kockázatos.")
+        note = risky_note(path_spec)
+        if note:
+            print(f"FIGYELEM: {note}")
         cmd_edit(f"mező", rest[1],
                  lambda s, p=path_spec: s.find_field_path(p), path_spec)
     else:

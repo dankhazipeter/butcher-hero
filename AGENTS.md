@@ -1,5 +1,25 @@
 # Butcher Hero — aktív projektutasítások
 
+## VIP-UGRÁS INCIDENS; DIFF-FIGYELÉS + CÉLZOTT REVERT — 2026-11-21 (370)
+
+User éles +500 (3450→3950) a user.in_apps_bought_value_in_rewarded mezőn: a VIP-pont
+a játékban jó, de a hammer/kovács funkció eltörött (korábban jó volt; a +100 még
+rendben). Az eszköz byte-szinten hibátlan volt (1 mező, érvényes hash, backup) —
+a törést a JÁTÉK logikája okozta (VIP-szintet vezető mező, ugrás > határ); offline
+teszt nem jelezheti előre. Válasz-háromság a butcher-save-edit.py-ben: (1)
+RISKY_FIELDS nyilvántartás — a --set-field e mezőnél a konkrét incidensre
+figyelmeztet (ts/time/version-heurisztika változatlan); (2) --diff [MENTÉS] /
+make save-diff [BACKUP=]: mezőszintű régi→új diff a mostani mentés és bármelyik
+backup között (tömbindexelt útvonalakkal) — szerkesztés után pont az 1 mező,
+játék-session után a játék levezetett reakciói látszanak; (3) --revert [MENTÉS] /
+make save-revert [BACKUP=]: célzott visszaállítás bármelyik mentésből (név/előtag).
+Javító recept a dokuban (revert a +500 előtti 074105-ös mentésre → rövid játék,
+hogy a friss mentés felülírja a felhőn a törött állapotot; ha 3450-nél is törött:
+BACKUP=20261120-161004 = eredeti 3350). Nyitott: a törés pontos mechanizmusa
+(user-diagnosztikából zárandó); VIP-növelés biztonságos zónája jelenleg ≤3450.
+Tesztek 27→34 (flatten/diff, risky_note, pick_backup). Konténer-írás nem volt.
+Részletek: docs/370.
+
 ## TÖRT (FLOAT) MEZŐK TÁMOGATÁSA; VIP-PONTOK MEGTALÁLVA — 2026-11-20 (369)
 
 User a 368-as nézelődővel megtalálta a VIP-pontjait: user.in_apps_bought_value_

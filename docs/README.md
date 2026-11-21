@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [VIP-ugrás incidens: játékreakció-törés, diff-figyelés, célzott visszaállítás](370-vip-ugras-incidens-diff-es-celzott-visszaallitas.md)
 - [Tört (float) mezők támogatása és a VIP-pontok megtalálása](369-tort-mezok-tamogatasa-es-vip-pontok.md)
 - [Szekció-nézelődő és általános mezőszerkesztő](368-szekcio-nezelodo-es-mezoszerkeszto.md)
 - [Tárgyválasztható copies, `make` súgó és a Makefile](367-targyvalaszthato-copies-es-makefile.md)
