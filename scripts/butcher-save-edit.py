@@ -77,12 +77,15 @@ JAR_ITEM = "crystal_jar"
 JAR_COUNTER = "accessory_crystal_jar_ability_1"
 
 # Ismert, játéklogikát vezető mezők: szerkesztésük a játék reakciójától függ.
-# (2026-11-21: user.in_apps_bought_value_in_rewarded 3450→3950 ugrás a
-#  hammer/kovács játékfunkciót eltörte — 370-es doksiban részletezve.)
+# (2026-11-21, 371-es javítás: a 370-es "funkciótörés" diagnózis TÉVES volt —
+#  a valós hiba a 369-es resolve_value int→float regresszió volt. A mező
+#  szerkesztése 3950-ig bizonyítottan rendben; a következő VIP-ugrás a
+#  játékban 5000-nél van.)
 RISKY_FIELDS = {
     "user.in_apps_bought_value_in_rewarded":
-        "VIP-szintet vezető mező: nagy ugrás játékfunkciókat törhet "
-        "(2026-11-21: 3450→3950 a hammer/kovács funkciót eltörte)",
+        "VIP-szintet vezető mező (a játék 5000-nél jelzi a következő ugrást); "
+        "nagy ugrásnál a játék reakciója ismeretlen — kis lépések, mentés "
+        "előtti backup, utána save-diff (371)",
 }
 
 
@@ -489,8 +492,9 @@ def patch_value(buf, vs, ve, new_value):
 def resolve_value(current, spec):
     """'+N' = növelés, '-N' = csökkentés, 'N' = abszolút érték; tört is lehet.
 
-    A Jar-számláló és a copies sosem negatív; a részhalmazra igazolunk.
-    Tört érték csak tört mezőn engedélyezett (int mezőn hibát ad).
+    Int mezőnél az eredmény egész szám legyen (értékében tört specifikáció
+    hibát ad; az értékben egész '+2.0' elfogadott és int marad); tört mezőnél
+    lebegőpontos az eredmény. A Jar-számláló és a copies sosem negatív.
     """
     text = str(spec).strip()
     relative = text[:1] in "+-"
@@ -500,14 +504,17 @@ def resolve_value(current, spec):
     number = float(body)
     if relative and text[0] == "-":
         number = -number
-    if "." in body and isinstance(current, int):
-        raise ValueError(f"tört érték ({text}) int mezőn nem engedélyezett")
     new_value = current + number if relative else number
     if new_value < 0:
         raise ValueError(f"az eredmény negatív lenne ({current} + {text})")
     if isinstance(current, float):
-        new_value = float(new_value)
-    return new_value
+        return float(new_value)
+    # Int mező: az eredmény TÍPUSRA is int legyen. (A 369-es újítás a
+    # float(body) miatt minden értéket lebegőpontosított, és a patch_int
+    # elbukott az élő copies/Jar úton — 371-es regresszió javítva.)
+    if new_value != int(new_value):
+        raise ValueError(f"tört eredmény ({new_value:g}) int mezőn nem engedélyezett")
+    return int(new_value)
 
 
 def finish_save(buf):

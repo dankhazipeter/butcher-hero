@@ -321,11 +321,77 @@ class FlattenDiffTests(unittest.TestCase):
         self.assertEqual(rows["currency.geode"][3], "változott")
 
 
+class LivePathRegressionTests(unittest.TestCase):
+    """Az ÉLŐ ÚT regresszió-őrzője (371). A 369-es float-újítás a
+    resolve_value-t úgy alakította, hogy int mezőknél is lebegőpontos
+    eredmény született, és a patch_int elbukott — a korábban működő
+    copies/Jar/set-field szerkesztés élőben elromlott (mythic_hammer
+    +2, 2026-11-21). Ezek a tesztek az ÉLŐ ÚTAT (resolve_value ->
+    patch_value -> finish_save) futtatják minden forgatókönyvre, és
+    TÍPUST is ellenőriznek: az assertEqual önmagában elrejti az
+    int/float cserét (Pythonban 8 == 8.0)."""
+
+    def setUp(self):
+        self.buf = build_save(1742030218, 5, 1, 10)
+
+    def test_item_copies_live_path_stays_int(self):
+        for spec, expected in (("+2", 7), ("-3", 2), ("350", 350), ("+1", 6), ("+2.0", 7)):
+            buf = self.buf
+            save = bse.Save(buf)
+            value, vs, ve, _ = save.find_item_int("crystal_jar", "copies")
+            new_value = bse.resolve_value(value, spec)
+            self.assertIsInstance(new_value, int, f"int mező int eredményt vár: {spec}")
+            self.assertEqual(new_value, expected)
+            out, _ = bse.finish_save(bse.patch_value(buf, vs, ve, new_value))
+            final = bse.Save(out)
+            self.assertTrue(final.is_valid(), f"érvényes patchelt mentő: {spec}")
+            self.assertEqual(final.find_item_int("crystal_jar", "copies")[0], expected)
+
+    def test_jar_counter_live_path_stays_int(self):
+        for spec, expected in (("+1", 11), ("500", 500), ("-2", 8)):
+            save = bse.Save(self.buf)
+            value, vs, ve, _ = save.find_jar_counter()
+            new_value = bse.resolve_value(value, spec)
+            self.assertIsInstance(new_value, int)
+            out, _ = bse.finish_save(bse.patch_value(self.buf, vs, ve, new_value))
+            final = bse.Save(out)
+            self.assertTrue(final.is_valid())
+            self.assertEqual(final.find_jar_counter()[0], expected)
+
+    def test_set_field_int_live_path_stays_int(self):
+        save = bse.Save(self.buf)
+        value, vs, ve, _ = save.find_field_path("vip.points")
+        new_value = bse.resolve_value(value, "+100")
+        self.assertIsInstance(new_value, int)          # 3350 + 100 -> 3450 (int)
+        out, _ = bse.finish_save(bse.patch_value(self.buf, vs, ve, new_value))
+        final = bse.Save(out)
+        self.assertTrue(final.is_valid())
+        self.assertEqual(final.find_field_path("vip.points")[0], 3450)
+
+    def test_float_live_path_stays_float(self):
+        save = bse.Save(self.buf)
+        value, vs, ve, _ = save.find_field_path("user.in_apps_bought_value_in_rewarded")
+        new_value = bse.resolve_value(value, "+500")
+        self.assertIsInstance(new_value, float)        # 3350.0 + 500 -> 3850.0
+        out, _ = bse.finish_save(bse.patch_value(self.buf, vs, ve, new_value))
+        final = bse.Save(out)
+        self.assertTrue(final.is_valid())
+        got, _, _, code = final.find_field_path("user.in_apps_bought_value_in_rewarded")
+        self.assertEqual((got, code), (3850.0, 0xCB))
+
+    def test_fraction_result_on_int_field_raises(self):
+        save = bse.Save(self.buf)
+        value, _, _, _ = save.find_item_int("crystal_jar", "copies")
+        with self.assertRaises(ValueError):
+            bse.resolve_value(value, "+2.5")           # értékben tört int mezőn
+
+
 class RiskyNoteTests(unittest.TestCase):
     def test_known_risky_field(self):
         note = bse.risky_note("user.in_apps_bought_value_in_rewarded")
         self.assertIsNotNone(note)
         self.assertIn("VIP-szintet", note)
+        self.assertIn("5000", note)   # 371: korrigált szöveg, téves incidens nélkül
 
     def test_timestamp_like(self):
         self.assertIsNotNone(bse.risky_note("user.install_time"))

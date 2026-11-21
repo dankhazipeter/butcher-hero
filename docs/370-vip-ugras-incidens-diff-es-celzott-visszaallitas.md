@@ -60,7 +60,33 @@ VIP-pontok jövőbeni növelésére a biztonságos zóna jelenleg ≤3450; enné
 többhez a VIP-küszöbtábla binárisból való kinyerése kellene (362-es
 módszertan, külön kör).
 
-## Amit nem csináltunk
+## JAVÍTÁS (2026-11-21, a teljes napló alapján): a fenti diagnózis TÉVES VOLT
+
+A felhasználó a teljes napi naplót megosztotta, és kiderült: **egetlen
+játékfunkció sem törött el**. A valós eseménysor:
+
+1. A `+500` VIP-módosítás **sikerült és persistálódott** — a felhasználó
+   `make save-diff` kimenetében a `user.in_apps_bought_value_in_rewarded`
+   nem szerepel a változott mezők közt (a játék saját újramentése után is
+   3950,0 maradt), a 10 változás mind normális játékmenet (cashback,
+   daily procok, fegyverszámlálók, órák). A játék egészséges.
+2. A „hammeres elromlott" valójában azt jelentette: a
+   `make save-copies ITEM=mythic_hammer COUNT=+2` **elbukott** — a 369-es
+   float-újítás regressziója miatt (a `resolve_value` minden értéket
+   lebegőpontosított, a `patch_int` az int mezőn elutasította). A
+   korábban működő int-szerkesztés (crystal_jar, gem_ring, soul_essence
+   copies) élőben tönkrement. **A hiba a mi eszközünkben volt, nem a játékban.**
+3. A visszavezetett „VIP-töréshatár 3450…3950 között" elmélet tehát
+   alaptalan; a mező bizonyítottan rendben működik 3950-ig, és a felhasználó
+   szerint a következő VIP-ugrás a játékban **5000-nél** van — a +500 azt
+   el sem érte.
+
+A javítás, a regresszió-teszt (élő út, típusellenőrzéssel) és a korrigált
+kockázatos-mező szöveg a **371-es** dokumentumban. Az itt bevezetett
+save-diff / célzott revert / kockázatos-mező figyelmeztetés eszközök
+változatlanul hasznosak — csak az őket indokoló diagnózis volt hibás.
+
+## Amit nem csináltunk (eredeti zárszó, a javítás előttről)
 
 - Konténer-írás e körben nem történt (eszköz + tesztek + doksi); a
   javító lépéseket a felhasználó futtatja saját termináljából.

@@ -1,5 +1,25 @@
 # Butcher Hero — aktív projektutasítások
 
+## 369-ES REGRESSZIÓ JAVÍTVA; ÉLŐ-ÚT REGRESSZIÓ-TESZT — 2026-11-21 (371)
+
+User teljes napi naplója tisztázta a 370-es TÉVES diagnózist: a játék NEM sérült
+— a +500 VIP-módosítás sikerült és persistálódott (save-diff: a mezó nem a
+változottak közt, a 10 változás normális játékmenet), a következő VIP-ugrás a
+játékban 5000-nél van (a +500 azt el sem érte). A "hammeres elromlott" = a
+make save-copies ITEM=mythic_hammer COUNT=+2 ELBUKOTT: a 369-es resolve_value
+újírás minden értéket lebegőpontosított, a patch_int int mezőn elutasította —
+a korábban működő élő int-út (copies/Jar) tönkrement. A bukás a fájlírás ELŐTT
+állt le, a mentés nem sérült. Teszt-vakfolt: patch-tesztek literál int-eket
+adtak (resolve_value megkerülve), resolve_value-tesztek assertEqual-lal
+(8==8.0 — típuscsere láthatatlan). Javítás: resolve_value int mezőnél típusra
+is int (értékben tört → hiba; "+2.0" egész → int); RISKY_FIELDS szöveg
+korrigálva (valós állás + 5000-es küszöb). Új LivePathRegressionTests: az ÉLŐ
+ÚT (resolve_value→patch_value→finish_save) minden forgatókönyvre TÍPUS-
+ellenőrzéssel — a 369-es hiba ezzel a kapuban elbukna. Tesztek 34→39. A 370-es
+dokba javítószekció került. Konténer-írás nem volt; gyűjtő nem futott. Ez
+felülírja a 370-es diagnózist; a 370-es eszközök (diff/revert/risky-note)
+érvényesek. Részletek: docs/371.
+
 ## VIP-UGRÁS INCIDENS; DIFF-FIGYELÉS + CÉLZOTT REVERT — 2026-11-21 (370)
 
 User éles +500 (3450→3950) a user.in_apps_bought_value_in_rewarded mezőn: a VIP-pont

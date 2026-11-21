@@ -2,6 +2,7 @@
 
 ## Aktuális: Free-gyűjtés és képi javítás, 2026-10-30–31
 
+- [A valódi hiba: a 369-es int→float regresszió és élő-út regresszió-teszt](371-regresszio-javitas-es-elout-teszt.md)
 - [VIP-ugrás incidens: játékreakció-törés, diff-figyelés, célzott visszaállítás](370-vip-ugras-incidens-diff-es-celzott-visszaallitas.md)
 - [Tört (float) mezők támogatása és a VIP-pontok megtalálása](369-tort-mezok-tamogatasa-es-vip-pontok.md)
 - [Szekció-nézelődő és általános mezőszerkesztő](368-szekcio-nezelodo-es-mezoszerkeszto.md)
